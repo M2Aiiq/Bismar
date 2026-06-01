@@ -4,11 +4,11 @@ import type { Card, CardType, Player, Room } from "@/types/game";
 const BOARD_SIZE = 25;
 
 export function createRoomId(length = 5) {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const digits = "0123456789";
 
   return Array.from({ length }, () => {
-    const index = Math.floor(Math.random() * alphabet.length);
-    return alphabet[index];
+    const index = Math.floor(Math.random() * digits.length);
+    return digits[index];
   }).join("");
 }
 

@@ -260,7 +260,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         }
 
         const sanitizedName = validatePlayerName(name);
-        const normalizedRoomCode = roomCode.trim().toUpperCase();
+        const normalizedRoomCode = roomCode.replace(/\D/g, "").slice(0, 5);
 
         if (!normalizedRoomCode) {
           throw new Error("اكتب كود الغرفة أولاً.");

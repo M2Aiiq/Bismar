@@ -4,8 +4,8 @@
     ".write": false,
     "rooms": {
       "$roomId": {
-        ".read": "$roomId.matches(/^[A-Z2-9]{5}$/)",
-        ".write": "$roomId.matches(/^[A-Z2-9]{5}$/)",
+        ".read": "$roomId.matches(/^[0-9]{5}$/)",
+        ".write": "$roomId.matches(/^[0-9]{5}$/)",
         "roomId": {
           ".validate": "newData.isString() && newData.val() === $roomId"
         },
