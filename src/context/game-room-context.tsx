@@ -35,6 +35,7 @@ interface GameRoomContextValue {
   error: string | null;
   firebaseReady: boolean;
   clearError: () => void;
+  savePlayerName: (name: string) => void;
   createRoom: (name: string) => Promise<void>;
   joinRoom: (roomCode: string, name: string) => Promise<void>;
   leaveRoom: () => Promise<void>;
@@ -48,7 +49,7 @@ interface GameRoomContextValue {
 interface SessionState {
   playerId: string;
   playerName: string;
-  roomId: string;
+  roomId?: string;
 }
 
 const SESSION_STORAGE_KEY = "iraqi-codenames-session";
@@ -83,12 +84,20 @@ function writeSession(session: SessionState | null) {
     return;
   }
 
-  if (!session || !session.roomId) {
+  if (!session) {
     window.localStorage.removeItem(SESSION_STORAGE_KEY);
     return;
   }
 
   window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+}
+
+function saveSessionRoom(roomId: string | null, playerId: string, playerName: string) {
+  writeSession({
+    playerId,
+    playerName,
+    roomId: roomId || undefined,
+  });
 }
 
 function buildMessage(error: unknown, fallback: string) {
@@ -170,7 +179,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         if (!snapshot.exists()) {
           setRoom(null);
           setRoomId("");
-          writeSession(null);
+          saveSessionRoom(null, playerId, playerName);
           setError("الغرفة غير موجودة أو انتهت.");
           return;
         }
@@ -188,7 +197,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         setError("فشل الاتصال اللحظي بقاعدة البيانات.");
       },
     );
-  }, [isReady, roomId]);
+  }, [isReady, playerId, playerName, roomId]);
 
   const player = useMemo(() => {
     return room?.players.find((currentPlayer) => currentPlayer.id === playerId) ?? null;
@@ -208,6 +217,16 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const savePlayerName = useCallback(
+    (name: string) => {
+      const sanitizedName = validatePlayerName(name);
+
+      setPlayerName(sanitizedName);
+      saveSessionRoom(roomId || null, playerId, sanitizedName);
+    },
+    [playerId, roomId],
+  );
+
   const createRoom = useCallback(
     async (name: string) =>
       runAction(async () => {
@@ -226,11 +245,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
 
         setPlayerName(sanitizedName);
         setRoomId(nextRoomId);
-        writeSession({
-          playerId,
-          playerName: sanitizedName,
-          roomId: nextRoomId,
-        });
+        saveSessionRoom(nextRoomId, playerId, sanitizedName);
       }, "تعذر إنشاء الغرفة."),
     [playerId, runAction],
   );
@@ -278,11 +293,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
 
         setPlayerName(sanitizedName);
         setRoomId(normalizedRoomCode);
-        writeSession({
-          playerId,
-          playerName: sanitizedName,
-          roomId: normalizedRoomCode,
-        });
+        saveSessionRoom(normalizedRoomCode, playerId, sanitizedName);
       }, "تعذر الانضمام إلى الغرفة."),
     [playerId, runAction],
   );
@@ -330,9 +341,9 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
 
         setRoom(null);
         setRoomId("");
-        writeSession(null);
+        saveSessionRoom(null, playerId, playerName);
       }, "تعذر مغادرة الغرفة."),
-    [playerId, roomId, runAction],
+    [playerId, playerName, roomId, runAction],
   );
 
   const chooseTeam = useCallback(
@@ -588,6 +599,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       error,
       firebaseReady: isFirebaseConfigured,
       clearError: () => setError(null),
+      savePlayerName,
       createRoom,
       joinRoom,
       leaveRoom,
@@ -608,6 +620,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       leaveRoom,
       player,
       playerName,
+      savePlayerName,
       resetGame,
       revealCard,
       room,
