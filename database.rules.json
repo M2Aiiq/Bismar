@@ -1,0 +1,34 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "rooms": {
+      "$roomId": {
+        ".read": "$roomId.matches(/^[A-Z2-9]{5}$/)",
+        ".write": "$roomId.matches(/^[A-Z2-9]{5}$/)",
+        "roomId": {
+          ".validate": "newData.isString() && newData.val() === $roomId"
+        },
+        "gameState": {
+          ".validate": "!newData.exists() || newData.val() === 'Lobby' || newData.val() === 'Playing' || newData.val() === 'GameOver'"
+        },
+        "currentTurn": {
+          ".validate": "!newData.exists() || newData.val() === 'Red' || newData.val() === 'Blue'"
+        },
+        "winner": {
+          ".validate": "!newData.exists() || newData.val() === 'Red' || newData.val() === 'Blue'"
+        },
+        "players": {
+          "$playerIndex": {
+            ".validate": "!newData.exists() || (newData.hasChildren(['id', 'name', 'team', 'role', 'isHost']) && newData.child('id').isString() && newData.child('id').val().length > 0 && newData.child('name').isString() && newData.child('name').val().length >= 2 && newData.child('name').val().length <= 24 && (newData.child('team').val() === 'Red' || newData.child('team').val() === 'Blue' || newData.child('team').val() === 'Unassigned') && (newData.child('role').val() === 'Spymaster' || newData.child('role').val() === 'Operative') && newData.child('isHost').isBoolean())"
+          }
+        },
+        "board": {
+          "$cardIndex": {
+            ".validate": "!newData.exists() || (newData.hasChildren(['id', 'text', 'type', 'isRevealed']) && newData.child('id').exists() && newData.child('text').isString() && newData.child('text').val().length >= 1 && newData.child('text').val().length <= 20 && !newData.child('text').val().matches(/.*\\s.*/) && (newData.child('type').val() === 'Red' || newData.child('type').val() === 'Blue' || newData.child('type').val() === 'Neutral' || newData.child('type').val() === 'Control') && newData.child('isRevealed').isBoolean())"
+          }
+        }
+      }
+    }
+  }
+}

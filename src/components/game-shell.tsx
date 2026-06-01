@@ -12,19 +12,6 @@ export function GameShell() {
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#fff7ed,_#f8fafc_35%,_#e2e8f0_100%)] px-4 py-6 md:px-6 md:py-10">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
-        <header className="rounded-3xl border border-white/60 bg-white/80 p-4 shadow-lg backdrop-blur md:p-6">
-          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-sm font-bold text-amber-700">Iraqi Party Game</p>
-              <h1 className="text-2xl font-black text-slate-950 md:text-3xl">بنية أساسية للعبة كلمات عراقية</h1>
-            </div>
-            <p className="max-w-2xl text-sm leading-6 text-slate-600">
-              مزامنة لحظية من المتصفح مباشرة باستخدام Firebase Realtime Database وواجهة Next.js متجاوبة
-              مع الهواتف.
-            </p>
-          </div>
-        </header>
-
         {error ? (
           <div className="flex items-start justify-between gap-3 rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
             <p>{error}</p>

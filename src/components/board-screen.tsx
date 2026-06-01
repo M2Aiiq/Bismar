@@ -39,7 +39,7 @@ export function BoardScreen() {
         </button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_0.35fr]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_0.28fr]">
         <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-lg md:p-6">
           <GameBoard
             board={room.board}
@@ -50,24 +50,6 @@ export function BoardScreen() {
         </div>
 
         <aside className="flex flex-col gap-4">
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-lg">
-            <h2 className="text-lg font-black text-slate-950">طريقة العرض</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              {showTruth
-                ? "القائد يرى الألوان الحقيقية لكل الكروت لكنه لا يكشفها."
-                : "المحقق يرى الكروت رمادية، ولا تظهر الألوان إلا بعد الكشف."}
-            </p>
-          </div>
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-lg">
-            <h2 className="text-lg font-black text-slate-950">الحالة</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              {canReveal
-                ? "يمكنك الضغط على كارت الآن، وسيصل التحديث فوراً لجميع الأجهزة داخل الغرفة."
-                : "بانتظار دور فريقك أو أنك تلعب حالياً بدور القائد."}
-            </p>
-          </div>
-
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-lg">
             <h2 className="text-lg font-black text-slate-950">الدليل اللوني</h2>
             <div className="mt-3 grid gap-2 text-sm text-slate-700">
