@@ -1,5 +1,5 @@
-import { IRAQI_WORDS } from "@/lib/words";
-import type { Card, CardType, Player, Room } from "@/types/game";
+import { IRAQI_WORDS } from "./words";
+import type { Card, CardType, Player, Room } from "../types/game";
 
 const BOARD_SIZE = 25;
 

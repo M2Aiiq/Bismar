@@ -1,4 +1,4 @@
-import type { Card } from "@/types/game";
+import type { Card } from "../types/game";
 
 interface GameBoardProps {
   board: Card[];
@@ -14,20 +14,20 @@ function cx(...classes: Array<string | false | null | undefined>) {
 
 function resolveCardTone(card: Card, shouldShowTruth: boolean) {
   if (!shouldShowTruth) {
-    return "border-slate-300 bg-slate-200 text-slate-800";
+    return "border-white/10 bg-[#334155] text-[#F8FAFC]";
   }
 
   switch (card.type) {
     case "Red":
-      return "border-red-700 bg-red-600 text-white";
+      return "border-[#DC2626] bg-[#DC2626] text-[#F8FAFC]";
     case "Blue":
-      return "border-blue-700 bg-blue-600 text-white";
+      return "border-[#2563EB] bg-[#2563EB] text-[#F8FAFC]";
     case "Neutral":
-      return "border-stone-400 bg-stone-200 text-stone-900";
+      return "border-[#475569] bg-[#475569] text-[#F8FAFC]";
     case "Control":
-      return "border-slate-950 bg-slate-950 text-white";
+      return "border-[#0F172A] bg-[#0F172A] text-[#F8FAFC]";
     default:
-      return "border-slate-300 bg-slate-200 text-slate-800";
+      return "border-white/10 bg-[#334155] text-[#F8FAFC]";
   }
 }
 
@@ -53,7 +53,7 @@ export function GameBoard({
               "aspect-square rounded-2xl border p-2 text-center text-sm font-bold shadow-sm transition md:text-base",
               "flex items-center justify-center break-words",
               resolveCardTone(card, shouldShowTruth),
-              !card.isRevealed && canReveal && onReveal && "hover:-translate-y-0.5 hover:shadow-lg",
+              !card.isRevealed && canReveal && onReveal && "hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#2563EB]/20",
               (!canReveal || card.isRevealed) && "cursor-default opacity-90",
             )}
           >

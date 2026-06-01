@@ -19,9 +19,9 @@ import {
   createRoomId,
   getOpposingTeam,
   normalizeRoom,
-} from "@/lib/game";
-import { getRealtimeDatabase, isFirebaseConfigured } from "@/lib/firebase";
-import type { Player, Role, Room, Team } from "@/types/game";
+} from "../lib/game";
+import { getRealtimeDatabase, isFirebaseConfigured } from "../lib/firebase";
+import type { Player, Role, Room, Team } from "../types/game";
 
 type PlayerTeam = Exclude<Team, "Unassigned">;
 
