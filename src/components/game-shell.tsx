@@ -1,5 +1,7 @@
 "use client";
 
+import { Suspense } from "react";
+
 import { BoardScreen } from "./board-screen";
 import { GameOverScreen } from "./game-over-screen";
 import { HomeScreen } from "./home-screen";
@@ -27,7 +29,11 @@ export function GameShell() {
           </div>
         ) : null}
 
-        {isReady && (!room || !player) ? <HomeScreen /> : null}
+        {isReady && (!room || !player) ? (
+          <Suspense fallback={null}>
+            <HomeScreen />
+          </Suspense>
+        ) : null}
         {room?.gameState === "Lobby" && player ? <LobbyScreen /> : null}
         {room?.gameState === "Playing" && player ? <BoardScreen /> : null}
         {room?.gameState === "GameOver" && player ? <GameOverScreen /> : null}

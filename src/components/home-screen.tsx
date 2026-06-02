@@ -1,14 +1,22 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { useGameRoom } from "../context/game-room-context";
 
+function normalizeRoomCode(value: string | null) {
+  return (value ?? "").replace(/\D/g, "").slice(0, 5);
+}
+
 export function HomeScreen() {
+  const searchParams = useSearchParams();
   const { createRoom, joinRoom, playerName, isBusy, firebaseReady, savePlayerName } = useGameRoom();
-  const [roomCode, setRoomCode] = useState("");
+  const initialInviteCode = normalizeRoomCode(searchParams.get("room"));
+  const [roomCode, setRoomCode] = useState(initialInviteCode);
   const [draftName, setDraftName] = useState(playerName);
   const [isNameDialogOpen, setIsNameDialogOpen] = useState(!playerName);
+  const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(Boolean(initialInviteCode));
   const [nameError, setNameError] = useState<string | null>(null);
 
   const nameHint = useMemo(() => {
@@ -30,14 +38,19 @@ export function HomeScreen() {
   }
 
   function handleRoomCodeChange(value: string) {
-    setRoomCode(value.replace(/\D/g, "").slice(0, 5));
+    setRoomCode(normalizeRoomCode(value));
+  }
+
+  async function handleJoinRoom() {
+    await joinRoom(roomCode, playerName);
+    setIsJoinDialogOpen(false);
   }
 
   return (
     <section className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col items-center justify-center gap-6 text-center">
       <div className="w-full">
-        <p className="text-sm font-bold uppercase tracking-[0.35em] text-[#2563EB]">Secret Agency</p>
-        <h1 className="mt-3 text-3xl font-black text-[#F8FAFC] md:text-4xl">كلمات عراقية</h1>
+        <h1 className="bismar-brand text-5xl font-black tracking-[0.08em] md:text-6xl">Bismar</h1>
+        <p className="mt-3 text-base font-bold tracking-[0.3em] text-[#F8FAFC]/80">لمح . خمن . فوز</p>
         <p className="mt-3 text-sm leading-6 text-[#F8FAFC]/75">{nameHint}</p>
         <button
           type="button"
@@ -68,28 +81,60 @@ export function HomeScreen() {
           إنشاء غرفة
         </button>
 
-        <label className="flex flex-col gap-2 text-right text-sm font-semibold text-[#F8FAFC]/85">
-          كود الغرفة
-          <input
-            value={roomCode}
-            onChange={(event) => handleRoomCodeChange(event.target.value)}
-            placeholder="مثال: 12345"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={5}
-            className="rounded-2xl border border-white/15 bg-[#1E293B] px-4 py-3 text-center text-base tracking-[0.25em] text-[#F8FAFC] outline-none transition focus:border-[#2563EB]"
-          />
-        </label>
-
         <button
           type="button"
-          onClick={() => joinRoom(roomCode, playerName)}
+          onClick={() => {
+            setRoomCode("");
+            setIsJoinDialogOpen(true);
+          }}
           disabled={isBusy || !firebaseReady || !playerName}
           className="rounded-2xl border border-white/15 bg-[#1E293B] px-5 py-4 text-sm font-bold text-[#F8FAFC] transition hover:border-[#2563EB] hover:bg-[#1E40AF]/25 disabled:cursor-not-allowed disabled:text-[#F8FAFC]/40"
         >
           الانضمام الى غرفة
         </button>
       </div>
+
+      {isJoinDialogOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/80 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#1E293B] p-6 shadow-2xl md:p-8">
+            <h2 className="text-2xl font-black text-[#F8FAFC]">الانضمام الى غرفة</h2>
+            <p className="mt-2 text-sm leading-6 text-[#F8FAFC]/75">
+              اكتب كود الغرفة الرقمي ثم اضغط على زر الانضمام.
+            </p>
+
+            <label className="mt-5 flex flex-col gap-2 text-sm font-semibold text-[#F8FAFC]/85">
+              كود الغرفة
+              <input
+                value={roomCode}
+                onChange={(event) => handleRoomCodeChange(event.target.value)}
+                placeholder="مثال: 12345"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={5}
+                className="rounded-2xl border border-white/15 bg-[#0F172A] px-4 py-3 text-center text-base tracking-[0.25em] text-[#F8FAFC] outline-none transition focus:border-[#2563EB]"
+              />
+            </label>
+
+            <div className="mt-5 flex gap-3">
+              <button
+                type="button"
+                onClick={() => void handleJoinRoom()}
+                disabled={isBusy || !firebaseReady || !playerName}
+                className="flex-1 rounded-2xl bg-[#2563EB] px-5 py-3 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
+              >
+                الانضمام
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsJoinDialogOpen(false)}
+                className="rounded-2xl border border-white/15 px-5 py-3 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#0F172A]"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {isNameDialogOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/80 px-4 backdrop-blur-sm">

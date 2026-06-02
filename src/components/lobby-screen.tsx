@@ -1,5 +1,7 @@
 "use client";
 
+import { useMemo, useState } from "react";
+
 import { useGameRoom } from "../context/game-room-context";
 import type { Role, Team } from "../types/game";
 
@@ -18,6 +20,23 @@ function roleLabel(role: Role) {
 
 export function LobbyScreen() {
   const { room, player, roomId, isBusy, chooseTeam, chooseRole, leaveRoom, startGame } = useGameRoom();
+  const [copiedValue, setCopiedValue] = useState<"code" | "link" | null>(null);
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+
+  const inviteLink = useMemo(() => {
+    if (!origin) {
+      return "";
+    }
+
+    const params = new URLSearchParams({ room: roomId });
+    return `${origin}/?${params.toString()}`;
+  }, [origin, roomId]);
+
+  async function copyValue(value: string, type: "code" | "link") {
+    await navigator.clipboard.writeText(value);
+    setCopiedValue(type);
+    window.setTimeout(() => setCopiedValue((current) => (current === type ? null : current)), 2000);
+  }
 
   if (!room || !player) {
     return null;
@@ -87,7 +106,48 @@ export function LobbyScreen() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-[#1E293B] p-6 shadow-lg">
+        <div className="flex flex-col gap-6">
+          <div className="rounded-3xl border border-white/10 bg-[#1E293B] p-6 shadow-lg">
+            <h2 className="text-xl font-black text-[#F8FAFC]">الدعوة</h2>
+            <p className="mt-2 text-sm leading-6 text-[#F8FAFC]/75">
+              يمكنك مشاركة رمز الدعوة أو رابط الدعوة المباشر مع اللاعبين.
+            </p>
+
+            <div className="mt-5 grid gap-4">
+              <div className="rounded-2xl bg-[#0F172A] p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-bold text-[#F8FAFC]/80">رمز الدعوة</p>
+                  <button
+                    type="button"
+                    onClick={() => void copyValue(roomId, "code")}
+                    className="rounded-xl border border-white/15 px-3 py-2 text-xs font-bold text-[#F8FAFC] transition hover:bg-[#2563EB]/15"
+                  >
+                    {copiedValue === "code" ? "تم النسخ" : "نسخ الرمز"}
+                  </button>
+                </div>
+                <p className="mt-3 text-2xl font-black tracking-[0.35em] text-[#2563EB]">{roomId}</p>
+              </div>
+
+              <div className="rounded-2xl bg-[#0F172A] p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-bold text-[#F8FAFC]/80">رابط الدعوة</p>
+                  <button
+                    type="button"
+                    onClick={() => void copyValue(inviteLink, "link")}
+                    disabled={!inviteLink}
+                    className="rounded-xl border border-white/15 px-3 py-2 text-xs font-bold text-[#F8FAFC] transition hover:bg-[#2563EB]/15 disabled:cursor-not-allowed disabled:text-[#F8FAFC]/40"
+                  >
+                    {copiedValue === "link" ? "تم النسخ" : "نسخ الرابط"}
+                  </button>
+                </div>
+                <p className="mt-3 break-all text-sm leading-6 text-[#F8FAFC]/75">
+                  {inviteLink || "جارٍ تجهيز الرابط..."}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/10 bg-[#1E293B] p-6 shadow-lg">
           <h2 className="text-xl font-black text-[#F8FAFC]">إعدادك</h2>
           <p className="mt-2 text-sm leading-6 text-[#F8FAFC]/75">
             اختر فريقك ودورك. عند اختيار قائد، يتم تثبيت قائد واحد فقط لكل فريق.
@@ -142,6 +202,7 @@ export function LobbyScreen() {
           <div className="mt-6 rounded-2xl bg-[#0F172A] p-4 text-sm leading-6 text-[#F8FAFC]/70">
             تحتاج الجولة إلى فريق أحمر وفريق أزرق، وفي كل فريق قائد ومحقق على الأقل.
           </div>
+        </div>
         </div>
       </div>
     </section>

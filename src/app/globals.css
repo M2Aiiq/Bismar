@@ -30,3 +30,22 @@ button {
 input::placeholder {
   color: #94a3b8;
 }
+
+.bismar-brand {
+  background-image: linear-gradient(120deg, #f8fafc 0%, #f8fafc 35%, #2563eb 55%, #f8fafc 78%, #dbeafe 90%, #f8fafc 100%);
+  background-size: 220% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: bismar-wave 5s linear infinite;
+}
+
+@keyframes bismar-wave {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 200% 50%;
+  }
+}
