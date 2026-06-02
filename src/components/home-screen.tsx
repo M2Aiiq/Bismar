@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { useGameRoom } from "../context/game-room-context";
@@ -12,11 +12,12 @@ function normalizeRoomCode(value: string | null) {
 export function HomeScreen() {
   const searchParams = useSearchParams();
   const { createRoom, joinRoom, playerName, isBusy, firebaseReady, savePlayerName } = useGameRoom();
-  const initialInviteCode = normalizeRoomCode(searchParams.get("room"));
-  const [roomCode, setRoomCode] = useState(initialInviteCode);
+  const inviteRoomCode = normalizeRoomCode(searchParams.get("room"));
+  const autoJoinAttemptRef = useRef<string | null>(null);
+  const [roomCode, setRoomCode] = useState(inviteRoomCode);
   const [draftName, setDraftName] = useState(playerName);
   const [isNameDialogOpen, setIsNameDialogOpen] = useState(!playerName);
-  const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(Boolean(initialInviteCode));
+  const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
 
   const nameHint = useMemo(() => {
@@ -40,6 +41,21 @@ export function HomeScreen() {
   function handleRoomCodeChange(value: string) {
     setRoomCode(normalizeRoomCode(value));
   }
+
+  useEffect(() => {
+    if (!inviteRoomCode || !playerName || !firebaseReady || isNameDialogOpen) {
+      return;
+    }
+
+    if (autoJoinAttemptRef.current === inviteRoomCode) {
+      return;
+    }
+
+    autoJoinAttemptRef.current = inviteRoomCode;
+    void joinRoom(inviteRoomCode, playerName).catch(() => {
+      autoJoinAttemptRef.current = null;
+    });
+  }, [firebaseReady, inviteRoomCode, isNameDialogOpen, joinRoom, playerName]);
 
   async function handleJoinRoom() {
     await joinRoom(roomCode, playerName);
@@ -139,8 +155,7 @@ export function HomeScreen() {
       {isNameDialogOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/80 px-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#1E293B] p-6 shadow-2xl md:p-8">
-            <p className="text-sm font-bold uppercase tracking-[0.3em] text-[#2563EB]">Secret Agency</p>
-            <h2 className="mt-3 text-2xl font-black text-[#F8FAFC]">اكتب اسمك</h2>
+            <h2 className="text-2xl font-black text-[#F8FAFC]">اكتب اسمك</h2>
             <p className="mt-2 text-sm leading-6 text-[#F8FAFC]/75">
               سيتم حفظ الاسم في هذا المتصفح ولن نطلبه منك مرة أخرى.
             </p>
