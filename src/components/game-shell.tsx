@@ -10,26 +10,6 @@ import { useGameRoom } from "../context/game-room-context";
 
 export function GameShell() {
   const { room, player, isReady, error, clearError } = useGameRoom();
-  const isPlaying = room?.gameState === "Playing" && player;
-
-  if (isPlaying) {
-    return (
-      <main className="h-screen overflow-hidden bg-[#0F172A] flex flex-col p-4 justify-between">
-        <div className="relative flex h-full w-full flex-col">
-          {error ? (
-            <div className="absolute inset-x-0 top-0 z-[60] mx-auto flex w-full max-w-3xl items-start justify-between gap-3 rounded-3xl border border-[#DC2626]/40 bg-[#DC2626]/15 p-4 text-sm text-[#F8FAFC] backdrop-blur-sm">
-              <p>{error}</p>
-              <button type="button" onClick={clearError} className="font-bold text-[#F8FAFC]">
-                إغلاق
-              </button>
-            </div>
-          ) : null}
-
-          <BoardScreen />
-        </div>
-      </main>
-    );
-  }
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.18),_#0f172a_32%,_#0f172a_100%)] px-4 py-6 md:px-6 md:py-10">
