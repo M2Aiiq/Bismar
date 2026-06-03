@@ -10,22 +10,24 @@ import { useGameRoom } from "../context/game-room-context";
 
 export function GameShell() {
   const { room, player, isReady, error, clearError } = useGameRoom();
-  const isPlaying = room?.gameState === "Playing" && player;
+  const isPlayingScreen = room?.gameState === "Playing" && !!player;
 
   return (
     <main
       className={
-        isPlaying
-          ? "h-screen overflow-hidden bg-[#0F172A] p-4"
+        isPlayingScreen
+          ? "relative h-screen max-h-screen overflow-hidden bg-[#0F172A]"
           : "min-h-screen bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.18),_#0f172a_32%,_#0f172a_100%)] px-4 py-6 md:px-6 md:py-10"
       }
     >
-      <div className={isPlaying ? "mx-auto flex h-full w-full max-w-7xl flex-col gap-3" : "mx-auto flex w-full max-w-6xl flex-col gap-4"}>
+      <div className={isPlayingScreen ? "h-full w-full" : "mx-auto flex w-full max-w-6xl flex-col gap-4"}>
         {error ? (
           <div
-            className={`flex items-start justify-between gap-3 rounded-3xl border border-[#DC2626]/40 bg-[#DC2626]/15 p-4 text-sm text-[#F8FAFC] ${
-              isPlaying ? "shrink-0" : ""
-            }`}
+            className={
+              isPlayingScreen
+                ? "absolute inset-x-2 top-2 z-20 flex items-start justify-between gap-3 rounded-2xl border border-[#DC2626]/40 bg-[#DC2626]/90 p-3 text-xs text-[#F8FAFC] shadow-lg"
+                : "flex items-start justify-between gap-3 rounded-3xl border border-[#DC2626]/40 bg-[#DC2626]/15 p-4 text-sm text-[#F8FAFC]"
+            }
           >
             <p>{error}</p>
             <button type="button" onClick={clearError} className="font-bold text-[#F8FAFC]">

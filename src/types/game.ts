@@ -5,13 +5,6 @@ export type GameState = "Lobby" | "Playing" | "GameOver";
 export type TeamCount = 2 | 3 | 4;
 export type Winner = Exclude<Team, "Unassigned"> | null;
 
-export interface CurrentClue {
-  word: string;
-  count: number;
-  team: Exclude<Team, "Unassigned">;
-  submittedBy: string;
-}
-
 export interface RoomSettings {
   teamCount: TeamCount;
   roundTimerSeconds: number;
@@ -40,6 +33,5 @@ export interface Room {
   settings: RoomSettings;
   board: Card[];
   currentTurn: Exclude<Team, "Unassigned">;
-  currentClue: CurrentClue | null;
   winner: Winner;
 }

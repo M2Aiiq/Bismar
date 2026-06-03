@@ -45,7 +45,6 @@ interface GameRoomContextValue {
   chooseRole: (role: Role) => Promise<void>;
   updateRoomSettings: (settings: Partial<RoomSettings>) => Promise<void>;
   startGame: () => Promise<void>;
-  submitClue: (word: string, count: number) => Promise<void>;
   revealCard: (cardId: number) => Promise<void>;
   resetGame: () => Promise<void>;
 }
@@ -120,32 +119,6 @@ function validatePlayerName(name: string) {
   }
 
   return trimmed.slice(0, 24);
-}
-
-function validateClueWord(word: string) {
-  const trimmed = word.trim();
-
-  if (trimmed.length < 1) {
-    throw new Error("اكتب كلمة التلميح أولاً.");
-  }
-
-  if (trimmed.length > 24) {
-    throw new Error("كلمة التلميح طويلة جداً.");
-  }
-
-  if (/\s/.test(trimmed)) {
-    throw new Error("التلميح يجب أن يكون كلمة واحدة فقط.");
-  }
-
-  return trimmed;
-}
-
-function validateClueCount(count: number) {
-  if (!Number.isInteger(count) || count < 1 || count > 9) {
-    throw new Error("اختر عدداً بين 1 و 9.");
-  }
-
-  return count;
 }
 
 function upsertPlayer(players: Player[], nextPlayer: Player) {
@@ -583,7 +556,6 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             ...currentRoom,
             board,
             currentTurn,
-            currentClue: null,
             winner: null,
             gameState: "Playing",
           };
@@ -637,7 +609,6 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             return {
               ...currentRoom,
               board: nextBoard,
-              currentClue: null,
               winner: nextTeam(currentRoom.currentTurn, activeTeams),
               gameState: "GameOver",
             };
@@ -649,7 +620,6 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             return {
               ...currentRoom,
               board: nextBoard,
-              currentClue: null,
               winner: winningTeam,
               gameState: "GameOver",
             };
@@ -664,53 +634,9 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             ...currentRoom,
             board: nextBoard,
             currentTurn: nextTurn,
-            currentClue: nextTurn === currentRoom.currentTurn ? currentRoom.currentClue : null,
           };
         });
       }, "تعذر كشف الكارت."),
-    [playerId, roomId, runAction],
-  );
-
-  const submitClue = useCallback(
-    async (word: string, count: number) =>
-      runAction(async () => {
-        if (!roomId) {
-          return;
-        }
-
-        const database = getRealtimeDatabase();
-
-        if (!database) {
-          return;
-        }
-
-        const sanitizedWord = validateClueWord(word);
-        const sanitizedCount = validateClueCount(count);
-
-        await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
-          const currentRoom = normalizeRoom(currentValue);
-
-          if (!currentRoom || currentRoom.gameState !== "Playing") {
-            return currentValue;
-          }
-
-          const actor = currentRoom.players.find((currentPlayer) => currentPlayer.id === playerId);
-
-          if (!actor || actor.role !== "Spymaster" || actor.team !== currentRoom.currentTurn) {
-            return currentValue;
-          }
-
-          return {
-            ...currentRoom,
-            currentClue: {
-              word: sanitizedWord,
-              count: sanitizedCount,
-              team: actor.team,
-              submittedBy: actor.id,
-            },
-          };
-        });
-      }, "تعذر إرسال التلميح."),
     [playerId, roomId, runAction],
   );
 
@@ -740,7 +666,6 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             ...currentRoom,
             board,
             currentTurn,
-            currentClue: null,
             winner: null,
             gameState: "Lobby",
           };
@@ -768,7 +693,6 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       chooseRole,
       updateRoomSettings,
       startGame,
-      submitClue,
       revealCard,
       resetGame,
     }),
@@ -789,7 +713,6 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       room,
       roomId,
       startGame,
-      submitClue,
       updateRoomSettings,
     ],
   );

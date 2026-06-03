@@ -7,6 +7,8 @@ interface GameBoardProps {
   canReveal: boolean;
   revealAll?: boolean;
   onReveal?: (cardId: number) => void;
+  compact?: boolean;
+  fontScale?: "compact" | "comfortable";
 }
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -39,12 +41,22 @@ export function GameBoard({
   canReveal,
   revealAll = false,
   onReveal,
+  compact = false,
+  fontScale = "compact",
 }: GameBoardProps) {
   const columnCount = Math.max(1, Math.round(Math.sqrt(board.length)));
-  const cardSizeClass = columnCount >= 6 ? "p-1.5 text-[11px] md:p-2 md:text-sm" : "p-2 text-sm md:text-base";
+  const rowCount = Math.max(1, Math.ceil(board.length / columnCount));
+  const compactTextClass =
+    fontScale === "comfortable" ? "px-1 text-[11px] sm:text-xs" : "px-0.5 text-[9px] sm:text-[10px]";
 
   return (
-    <div className="grid w-full gap-2 md:gap-3" style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}>
+    <div
+      className={cx("grid", compact ? "h-full min-h-0 w-full gap-1.5" : "gap-2 md:gap-3")}
+      style={{
+        gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
+        ...(compact ? { gridTemplateRows: `repeat(${rowCount}, minmax(0, 1fr))` } : {}),
+      }}
+    >
       {board.map((card) => {
         const shouldShowTruth = revealAll || showTruth || card.isRevealed;
 
@@ -55,9 +67,11 @@ export function GameBoard({
             disabled={!onReveal || !canReveal || card.isRevealed}
             onClick={() => onReveal?.(card.id)}
             className={cx(
-              "aspect-square rounded-2xl border text-center font-bold shadow-sm transition",
-              "flex items-center justify-center break-words",
-              cardSizeClass,
+              "text-center font-bold shadow-sm transition",
+              "flex min-h-0 items-center justify-center break-words",
+              compact
+                ? `h-full rounded-xl border py-1.5 leading-tight ${compactTextClass}`
+                : "aspect-square rounded-2xl border p-2 text-sm md:text-base",
               resolveCardTone(card, shouldShowTruth),
               !card.isRevealed && canReveal && onReveal && "hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#2563EB]/20",
               (!canReveal || card.isRevealed) && "cursor-default opacity-90",
