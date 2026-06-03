@@ -27,17 +27,17 @@ interface TeamPanelProps {
 }
 
 function teamPanelClass(team: ActiveTeam, isCurrentTurn: boolean) {
-  const currentTurnAccent = isCurrentTurn ? "ring-1 ring-inset ring-white/20" : "";
+  const currentTurnAccent = isCurrentTurn ? "ring-2 ring-inset ring-white/35 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]" : "";
 
   switch (team) {
     case "Red":
-      return `border-[#DC2626]/45 bg-[#DC2626]/14 ${currentTurnAccent}`;
+      return `border-[#DC2626] bg-[#DC2626] ${currentTurnAccent}`;
     case "Blue":
-      return `border-[#2563EB]/45 bg-[#2563EB]/14 ${currentTurnAccent}`;
+      return `border-[#2563EB] bg-[#2563EB] ${currentTurnAccent}`;
     case "Green":
-      return `border-[#059669]/45 bg-[#059669]/14 ${currentTurnAccent}`;
+      return `border-[#059669] bg-[#059669] ${currentTurnAccent}`;
     case "Gold":
-      return `border-[#EAB308]/45 bg-[#EAB308]/14 ${currentTurnAccent}`;
+      return `border-[#EAB308] bg-[#EAB308] text-[#0F172A] ${currentTurnAccent}`;
   }
 }
 
