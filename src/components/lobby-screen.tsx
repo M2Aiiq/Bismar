@@ -49,34 +49,26 @@ export function LobbyScreen() {
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-6">
       <div className="rounded-[2rem] border border-white/10 bg-[#1E293B] p-5 shadow-2xl md:p-7">
-        <div className="grid gap-4 lg:grid-cols-[0.55fr_1fr_auto] lg:items-center">
-          <div className="rounded-3xl bg-[#0F172A] p-4">
-            <p className="text-xs font-bold tracking-[0.28em] text-[#F8FAFC]/55">رمز الدعوة</p>
-            <p className="mt-3 text-3xl font-black tracking-[0.35em] text-[#2563EB]">{roomId}</p>
+        <div className="flex flex-col items-center gap-4 text-center">
+          <p className="text-xs font-bold tracking-[0.28em] text-[#F8FAFC]/55">رمز الدعوة</p>
+          <p className="text-4xl font-black tracking-[0.35em] text-[#2563EB] md:text-5xl">{roomId}</p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
             <button
               type="button"
               onClick={() => void copyValue(roomId, "code")}
-              className="mt-4 rounded-2xl border border-white/15 px-4 py-2 text-xs font-bold text-[#F8FAFC] transition hover:bg-[#2563EB]/15"
+              className="rounded-2xl border border-white/15 px-4 py-2 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#2563EB]/15"
             >
               {copiedValue === "code" ? "تم نسخ الرمز" : "نسخ الرمز"}
             </button>
-          </div>
-
-          <div className="rounded-3xl bg-[#0F172A] p-4">
-            <p className="text-xs font-bold tracking-[0.24em] text-[#F8FAFC]/55">رابط الدعوة</p>
-            <p className="mt-3 break-all text-sm leading-7 text-[#F8FAFC]/78">
-              {inviteLink || "جارٍ تجهيز رابط الغرفة..."}
-            </p>
             <button
               type="button"
               onClick={() => void copyValue(inviteLink, "link")}
               disabled={!inviteLink}
-              className="mt-4 rounded-2xl border border-white/15 px-4 py-2 text-xs font-bold text-[#F8FAFC] transition hover:bg-[#2563EB]/15 disabled:cursor-not-allowed disabled:text-[#F8FAFC]/40"
+              className="rounded-2xl border border-white/15 px-4 py-2 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#2563EB]/15 disabled:cursor-not-allowed disabled:text-[#F8FAFC]/40"
             >
               {copiedValue === "link" ? "تم نسخ الرابط" : "نسخ الرابط"}
             </button>
           </div>
-
           <button
             type="button"
             onClick={() => leaveRoom()}
@@ -265,25 +257,15 @@ export function LobbyScreen() {
         </div>
       </div>
 
-      <div className="rounded-[2rem] border border-white/10 bg-[#1E293B] p-5 shadow-2xl">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="text-xl font-black text-[#F8FAFC]">جاهزية البداية</h2>
-            <p className="mt-2 text-sm leading-6 text-[#F8FAFC]/72">
-              الفرق النشطة الآن: {activeTeams.map((team) => teamLabel(team)).join(" . ")}. تأكد من تجهيز قائد ومحقق
-              لكل فريق قبل بدء اللعبة.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => void startGame()}
-            disabled={!canStartGame}
-            className="h-14 min-w-[220px] rounded-2xl bg-[#2563EB] px-6 text-base font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
-          >
-            {player.isHost ? "بدء اللعبة" : "بانتظار المضيف"}
-          </button>
-        </div>
+      <div className="flex justify-center">
+        <button
+          type="button"
+          onClick={() => void startGame()}
+          disabled={!canStartGame}
+          className="h-14 min-w-[220px] rounded-2xl bg-[#2563EB] px-6 text-lg font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
+        >
+          {player.isHost ? "بدء اللعبة" : "بانتظار المضيف"}
+        </button>
       </div>
     </section>
   );
