@@ -67,15 +67,21 @@ export function GameBoard({
 }: GameBoardProps) {
   const columnCount = Math.max(1, Math.round(Math.sqrt(board.length)));
   const rowCount = Math.max(1, Math.ceil(board.length / columnCount));
+  const compactBoardAspectRatio = (columnCount * 1.28) / rowCount;
   const compactTextClass =
     fontScale === "comfortable" ? "px-1 text-[11px] sm:text-xs md:text-sm" : "px-1 text-[11px] sm:text-xs";
 
   return (
     <div
-      className={cx("grid", compact ? "h-full min-h-0 w-full gap-1.5" : "gap-2 md:gap-3")}
+      className={cx("grid", compact ? "w-full max-h-full gap-1.5" : "gap-2 md:gap-3")}
       style={{
         gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
-        ...(compact ? { gridTemplateRows: `repeat(${rowCount}, minmax(0, 1fr))` } : {}),
+        ...(compact
+          ? {
+              gridTemplateRows: `repeat(${rowCount}, minmax(0, 1fr))`,
+              aspectRatio: String(compactBoardAspectRatio),
+            }
+          : {}),
       }}
     >
       {board.map((card) => {
