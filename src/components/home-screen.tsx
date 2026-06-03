@@ -9,6 +9,26 @@ function normalizeRoomCode(value: string | null) {
   return (value ?? "").replace(/\D/g, "").slice(0, 5);
 }
 
+const BACKGROUND_WORDS = [
+  { text: "شفرة", top: "8%", right: "14%", delay: "0s", duration: "17s" },
+  { text: "خيط", top: "16%", right: "60%", delay: "2s", duration: "19s" },
+  { text: "لغز", top: "30%", right: "8%", delay: "4s", duration: "16s" },
+  { text: "رمز", top: "34%", right: "48%", delay: "1s", duration: "18s" },
+  { text: "سر", top: "46%", right: "74%", delay: "3s", duration: "15s" },
+  { text: "خطة", top: "58%", right: "20%", delay: "5s", duration: "20s" },
+  { text: "دليل", top: "66%", right: "56%", delay: "2.5s", duration: "18s" },
+  { text: "هوية", top: "78%", right: "10%", delay: "4.5s", duration: "17s" },
+  { text: "مهمة", top: "82%", right: "70%", delay: "1.5s", duration: "19s" },
+];
+
+const BACKGROUND_LINES = [
+  { top: "14%", right: "20%", width: "28%", rotate: "-12deg", delay: "0s", duration: "21s" },
+  { top: "31%", right: "28%", width: "22%", rotate: "9deg", delay: "1.5s", duration: "19s" },
+  { top: "47%", right: "40%", width: "30%", rotate: "-8deg", delay: "3s", duration: "23s" },
+  { top: "69%", right: "18%", width: "34%", rotate: "13deg", delay: "2s", duration: "20s" },
+  { top: "74%", right: "52%", width: "20%", rotate: "-18deg", delay: "4s", duration: "18s" },
+];
+
 export function HomeScreen() {
   const searchParams = useSearchParams();
   const { createRoom, joinRoom, playerName, isBusy, firebaseReady, savePlayerName } = useGameRoom();
@@ -63,8 +83,43 @@ export function HomeScreen() {
   }
 
   return (
-    <section className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col items-center justify-center gap-6 text-center">
-      <div className="w-full">
+    <section className="relative mx-auto flex min-h-[70vh] w-full max-w-5xl items-center justify-center overflow-hidden rounded-[2rem] px-4 py-8">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(37,99,235,0.14),_transparent_30%),radial-gradient(circle_at_bottom_left,_rgba(248,250,252,0.06),_transparent_30%)]" />
+
+        {BACKGROUND_LINES.map((line, index) => (
+          <span
+            key={`line-${index}`}
+            className="home-network-line absolute"
+            style={{
+              top: line.top,
+              right: line.right,
+              width: line.width,
+              transform: `rotate(${line.rotate})`,
+              animationDelay: line.delay,
+              animationDuration: line.duration,
+            }}
+          />
+        ))}
+
+        {BACKGROUND_WORDS.map((word) => (
+          <span
+            key={word.text}
+            className="home-network-word absolute"
+            style={{
+              top: word.top,
+              right: word.right,
+              animationDelay: word.delay,
+              animationDuration: word.duration,
+            }}
+          >
+            {word.text}
+          </span>
+        ))}
+      </div>
+
+      <div className="relative z-10 flex w-full max-w-md flex-col items-center justify-center gap-6 text-center">
+        <div className="w-full">
         <h1 className="bismar-brand text-5xl font-black tracking-[0.08em] md:text-6xl">Bismar</h1>
         <p className="mt-3 text-base font-bold tracking-[0.3em] text-[#F8FAFC]/80">لمح . خمن . فوز</p>
         <p className="mt-3 text-sm leading-6 text-[#F8FAFC]/75">{nameHint}</p>
@@ -79,35 +134,36 @@ export function HomeScreen() {
         >
           تعديل الاسم
         </button>
-      </div>
-
-      {!firebaseReady ? (
-        <div className="w-full rounded-2xl border border-[#DC2626]/40 bg-[#DC2626]/15 p-4 text-sm leading-6 text-[#F8FAFC]">
-          متغيرات Firebase غير موجودة بعد. أكمل ملف <code>.env.local</code> ثم أعد تشغيل التطبيق.
         </div>
-      ) : null}
 
-      <div className="grid w-full gap-4">
-        <button
-          type="button"
-          onClick={() => createRoom(playerName)}
-          disabled={isBusy || !firebaseReady || !playerName}
-          className="rounded-2xl bg-[#2563EB] px-5 py-4 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
-        >
-          إنشاء غرفة
-        </button>
+        {!firebaseReady ? (
+          <div className="w-full rounded-2xl border border-[#DC2626]/40 bg-[#DC2626]/15 p-4 text-sm leading-6 text-[#F8FAFC]">
+            متغيرات Firebase غير موجودة بعد. أكمل ملف <code>.env.local</code> ثم أعد تشغيل التطبيق.
+          </div>
+        ) : null}
 
-        <button
-          type="button"
-          onClick={() => {
-            setRoomCode("");
-            setIsJoinDialogOpen(true);
-          }}
-          disabled={isBusy || !firebaseReady || !playerName}
-          className="rounded-2xl border border-white/15 bg-[#1E293B] px-5 py-4 text-sm font-bold text-[#F8FAFC] transition hover:border-[#2563EB] hover:bg-[#1E40AF]/25 disabled:cursor-not-allowed disabled:text-[#F8FAFC]/40"
-        >
-          الانضمام الى غرفة
-        </button>
+        <div className="grid w-full gap-4">
+          <button
+            type="button"
+            onClick={() => createRoom(playerName)}
+            disabled={isBusy || !firebaseReady || !playerName}
+            className="rounded-2xl bg-[#2563EB] px-5 py-4 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
+          >
+            إنشاء غرفة
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setRoomCode("");
+              setIsJoinDialogOpen(true);
+            }}
+            disabled={isBusy || !firebaseReady || !playerName}
+            className="rounded-2xl border border-white/15 bg-[#1E293B] px-5 py-4 text-sm font-bold text-[#F8FAFC] transition hover:border-[#2563EB] hover:bg-[#1E40AF]/25 disabled:cursor-not-allowed disabled:text-[#F8FAFC]/40"
+          >
+            الانضمام الى غرفة
+          </button>
+        </div>
       </div>
 
       {isJoinDialogOpen ? (
