@@ -44,13 +44,13 @@ function teamPanelClass(team: ActiveTeam, isCurrentTurn: boolean) {
 function boardScreenBackgroundClass(team: ActiveTeam) {
   switch (team) {
     case "Red":
-      return "bg-[radial-gradient(circle_at_top,_rgba(220,38,38,0.38),_rgba(15,23,42,0.98)_46%,_#0F172A_100%)]";
+      return "bg-[linear-gradient(180deg,_#DC2626_0%,_#B91C1C_38%,_#7F1D1D_100%)]";
     case "Blue":
-      return "bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.38),_rgba(15,23,42,0.98)_46%,_#0F172A_100%)]";
+      return "bg-[linear-gradient(180deg,_#2563EB_0%,_#1D4ED8_38%,_#1E3A8A_100%)]";
     case "Green":
-      return "bg-[radial-gradient(circle_at_top,_rgba(5,150,105,0.38),_rgba(15,23,42,0.98)_46%,_#0F172A_100%)]";
+      return "bg-[linear-gradient(180deg,_#059669_0%,_#047857_38%,_#064E3B_100%)]";
     case "Gold":
-      return "bg-[radial-gradient(circle_at_top,_rgba(234,179,8,0.34),_rgba(15,23,42,0.96)_44%,_#0F172A_100%)]";
+      return "bg-[linear-gradient(180deg,_#EAB308_0%,_#CA8A04_38%,_#854D0E_100%)]";
   }
 }
 
