@@ -4,9 +4,8 @@ import { useMemo, useState } from "react";
 
 import { useGameRoom } from "../context/game-room-context";
 import { getActiveTeams, teamBadgeClass, teamLabel } from "../lib/teams";
-import type { Role, Team, TeamCount } from "../types/game";
+import type { Role, TeamCount } from "../types/game";
 
-const ALL_TEAM_OPTIONS: Team[] = ["Red", "Blue", "Green", "Gold", "Unassigned"];
 const ROLE_OPTIONS: Role[] = ["Spymaster", "Operative"];
 const TEAM_COUNT_OPTIONS: TeamCount[] = [2, 3, 4];
 const LOSS_CARD_OPTIONS = [1, 2, 3, 4] as const;
@@ -19,6 +18,7 @@ export function LobbyScreen() {
   const { room, player, roomId, isBusy, chooseTeam, chooseRole, leaveRoom, startGame, updateRoomSettings } =
     useGameRoom();
   const [copiedValue, setCopiedValue] = useState<"code" | "link" | null>(null);
+  const [roundTimerDraft, setRoundTimerDraft] = useState<string | null>(null);
   const origin = typeof window !== "undefined" ? window.location.origin : "";
 
   const inviteLink = useMemo(() => {
@@ -41,10 +41,22 @@ export function LobbyScreen() {
   }
 
   const activeTeams = getActiveTeams(room.settings.teamCount);
-  const availableTeamOptions = ALL_TEAM_OPTIONS.filter(
-    (team) => team === "Unassigned" || activeTeams.includes(team as Exclude<Team, "Unassigned">),
-  );
   const canStartGame = player.isHost && !isBusy;
+  const roundTimerValue = roundTimerDraft ?? String(room.settings.roundTimerSeconds);
+
+  async function commitRoundTimer() {
+    if (roundTimerDraft === null) {
+      return;
+    }
+
+    if (!roundTimerDraft.trim()) {
+      setRoundTimerDraft(null);
+      return;
+    }
+
+    await updateRoomSettings({ roundTimerSeconds: Number(roundTimerDraft) });
+    setRoundTimerDraft(null);
+  }
 
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-6">
@@ -127,10 +139,14 @@ export function LobbyScreen() {
                   min={15}
                   max={600}
                   step={5}
-                  value={room.settings.roundTimerSeconds}
-                  onChange={(event) =>
-                    void updateRoomSettings({ roundTimerSeconds: Number(event.target.value || 60) })
-                  }
+                  value={roundTimerValue}
+                  onChange={(event) => setRoundTimerDraft(event.target.value.replace(/\D/g, "").slice(0, 3))}
+                  onBlur={() => void commitRoundTimer()}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.currentTarget.blur();
+                    }
+                  }}
                   disabled={isBusy || !player.isHost}
                   className="mt-3 h-12 w-full rounded-2xl border border-white/15 bg-[#0F172A] px-4 text-base font-bold text-[#F8FAFC] outline-none transition focus:border-[#2563EB] disabled:cursor-not-allowed disabled:opacity-60"
                 />
@@ -175,7 +191,7 @@ export function LobbyScreen() {
             <div className="mt-6">
               <p className="text-sm font-bold text-[#F8FAFC]">اختر فريقك</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {availableTeamOptions.map((team) => (
+                {activeTeams.map((team) => (
                   <button
                     key={team}
                     type="button"
@@ -257,15 +273,17 @@ export function LobbyScreen() {
         </div>
       </div>
 
-      <div className="flex justify-center">
-        <button
-          type="button"
-          onClick={() => void startGame()}
-          disabled={!canStartGame}
-          className="h-14 min-w-[220px] rounded-2xl bg-[#2563EB] px-6 text-lg font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
-        >
-          {player.isHost ? "بدء اللعبة" : "بانتظار المضيف"}
-        </button>
+      <div className="rounded-[2rem] border border-white/10 bg-[#1E293B] p-5 shadow-2xl">
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => void startGame()}
+            disabled={!canStartGame}
+            className="h-14 min-w-[220px] rounded-2xl bg-[#2563EB] px-6 text-lg font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
+          >
+            {player.isHost ? "بدء اللعبة" : "بانتظار المضيف"}
+          </button>
+        </div>
       </div>
     </section>
   );
