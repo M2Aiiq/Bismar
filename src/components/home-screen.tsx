@@ -223,7 +223,6 @@ export function HomeScreen() {
             <h2 className="text-2xl font-black text-[#F8FAFC]">اكتب اسمك</h2>
 
             <label className="mt-5 flex flex-col gap-2 text-sm font-semibold text-[#F8FAFC]/85">
-              الاسم
               <input
                 value={draftName}
                 onChange={(event) => setDraftName(event.target.value)}
