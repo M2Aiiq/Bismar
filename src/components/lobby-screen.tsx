@@ -96,12 +96,7 @@ export function LobbyScreen() {
         <div className="flex flex-col gap-6">
           <div className="rounded-[2rem] border border-white/10 bg-[#1E293B] p-6 shadow-lg">
             <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-black text-[#F8FAFC]">إعدادات الغرفة</h2>
-                <p className="mt-2 text-sm leading-6 text-[#F8FAFC]/72">
-                  المضيف يحدد عدد الفرق، مؤقت الجولة، وعدد كلمات الخسارة قبل البدء.
-                </p>
-              </div>
+              <h2 className="text-2xl font-black text-[#F8FAFC]">إعدادات الغرفة</h2>
               <span className="rounded-full bg-[#0F172A] px-3 py-1 text-xs font-bold text-[#F8FAFC]/80">
                 {player.isHost ? "أنت المضيف" : "للقراءة فقط"}
               </span>
@@ -273,17 +268,15 @@ export function LobbyScreen() {
         </div>
       </div>
 
-      <div className="rounded-[2rem] border border-white/10 bg-[#1E293B] p-5 shadow-2xl">
-        <div className="flex justify-center">
-          <button
-            type="button"
-            onClick={() => void startGame()}
-            disabled={!canStartGame}
-            className="h-14 min-w-[220px] rounded-2xl bg-[#2563EB] px-6 text-lg font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
-          >
-            {player.isHost ? "بدء اللعبة" : "بانتظار المضيف"}
-          </button>
-        </div>
+      <div className="w-full">
+        <button
+          type="button"
+          onClick={() => void startGame()}
+          disabled={!canStartGame}
+          className="w-full rounded-2xl bg-[#2563EB] px-5 py-4 text-lg font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
+        >
+          {player.isHost ? "بدء اللعبة" : "بانتظار المضيف"}
+        </button>
       </div>
     </section>
   );
