@@ -59,7 +59,13 @@ function TeamPanel({
     <div
       className={`relative flex min-h-0 flex-col justify-between overflow-hidden border px-2 pb-2 pt-1 text-[#F8FAFC] ${teamPanelClass(team, isCurrentTurn)}`}
     >
-      <div className="flex items-start justify-end">
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <span className="select-none text-[5.5rem] font-black leading-none text-white/16">
+          {remainingCards}
+        </span>
+      </div>
+
+      <div className="relative z-10 flex items-start justify-end">
         {canJoinTeam ? (
           <button
             type="button"
@@ -76,14 +82,10 @@ function TeamPanel({
         ) : null}
       </div>
 
-      <div className="flex flex-1 items-center justify-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full border border-white/20 bg-white/12 text-[#F8FAFC] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-sm">
-          <span className="text-4xl font-black leading-none">{remainingCards}</span>
-        </div>
-      </div>
+      <div className="flex flex-1" />
 
       {isCurrentTurn ? (
-        <div className="mt-1 grid grid-cols-[minmax(0,1fr)_46px_30px] gap-1">
+        <div className="relative z-10 mt-1 grid grid-cols-[minmax(0,1fr)_46px_30px] gap-1">
           <input
             dir="rtl"
             value={clueDraft}
