@@ -15,7 +15,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
 
 function resolveCardTone(card: Card, shouldShowTruth: boolean) {
   if (!shouldShowTruth) {
-    return "border-white/12 bg-white/[0.055] text-[#FFFFFF] shadow-[0_18px_45px_rgba(2,8,23,0.24)] backdrop-blur-md";
+    return "border-white/10 bg-[#334155] text-[#F8FAFC]";
   }
 
   switch (card.type) {
@@ -23,13 +23,13 @@ function resolveCardTone(card: Card, shouldShowTruth: boolean) {
     case "Blue":
     case "Green":
     case "Gold":
-      return `${teamCardClass(card.type as ActiveTeam)} shadow-[0_24px_55px_rgba(2,8,23,0.26)]`;
+      return teamCardClass(card.type as ActiveTeam);
     case "Neutral":
-      return "border-white/12 bg-[#94A3B8] text-[#0B1220] shadow-[0_22px_48px_rgba(2,8,23,0.24)]";
+      return "border-[#475569] bg-[#475569] text-[#F8FAFC]";
     case "Control":
-      return "border-[#F59E0B]/45 bg-[#0F172A] text-[#FFFFFF] shadow-[0_0_0_1px_rgba(245,158,11,0.18),0_22px_48px_rgba(2,8,23,0.34)]";
+      return "border-[#0F172A] bg-[#0F172A] text-[#F8FAFC]";
     default:
-      return "border-white/12 bg-white/[0.055] text-[#FFFFFF] shadow-[0_18px_45px_rgba(2,8,23,0.24)] backdrop-blur-md";
+      return "border-white/10 bg-[#334155] text-[#F8FAFC]";
   }
 }
 
@@ -41,9 +41,10 @@ export function GameBoard({
   onReveal,
 }: GameBoardProps) {
   const columnCount = Math.max(1, Math.round(Math.sqrt(board.length)));
+  const cardSizeClass = columnCount >= 6 ? "p-1.5 text-[11px] md:p-2 md:text-sm" : "p-2 text-sm md:text-base";
 
   return (
-    <div className="grid gap-2.5 md:gap-3.5" style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}>
+    <div className="grid w-full gap-2 md:gap-3" style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}>
       {board.map((card) => {
         const shouldShowTruth = revealAll || showTruth || card.isRevealed;
 
@@ -54,19 +55,15 @@ export function GameBoard({
             disabled={!onReveal || !canReveal || card.isRevealed}
             onClick={() => onReveal?.(card.id)}
             className={cx(
-              "group relative aspect-square overflow-hidden rounded-[1.35rem] border p-2.5 text-center text-sm font-black transition duration-200 md:rounded-[1.6rem] md:p-3 md:text-base",
-              "flex items-center justify-center break-words leading-tight",
+              "aspect-square rounded-2xl border text-center font-bold shadow-sm transition",
+              "flex items-center justify-center break-words",
+              cardSizeClass,
               resolveCardTone(card, shouldShowTruth),
-              !card.isRevealed &&
-                canReveal &&
-                onReveal &&
-                "hover:-translate-y-1 hover:scale-[1.015] hover:border-white/20 hover:bg-white/[0.08] hover:shadow-[0_24px_60px_rgba(59,130,246,0.18)]",
-              (!canReveal || card.isRevealed) && "cursor-default",
-              card.isRevealed && "opacity-96",
+              !card.isRevealed && canReveal && onReveal && "hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#2563EB]/20",
+              (!canReveal || card.isRevealed) && "cursor-default opacity-90",
             )}
           >
-            <span className="pointer-events-none absolute inset-x-2 top-0 h-px bg-white/18" />
-            <span className="relative z-10 text-balance">{card.text}</span>
+            {card.text}
           </button>
         );
       })}

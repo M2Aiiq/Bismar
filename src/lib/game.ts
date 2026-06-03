@@ -1,6 +1,6 @@
 import { IRAQI_WORDS } from "./words";
 import { getActiveTeams, type ActiveTeam } from "./teams";
-import type { Card, CardType, Player, Room, RoomSettings, TeamCount } from "../types/game";
+import type { Card, CardType, CurrentClue, Player, Room, RoomSettings, TeamCount } from "../types/game";
 
 const DEFAULT_SETTINGS: RoomSettings = {
   teamCount: 2,
@@ -111,6 +111,7 @@ export function createInitialRoom(roomId: string, host: Player): Room {
     settings,
     board,
     currentTurn,
+    currentClue: null,
     winner: null,
   };
 }
@@ -125,6 +126,38 @@ function sanitizeTeamCount(value: unknown): TeamCount {
 
 function sanitizeLossCardCount(value: unknown): RoomSettings["lossCardCount"] {
   return value === 2 || value === 3 || value === 4 ? value : 1;
+}
+
+function sanitizeCurrentClue(value: unknown, teamCount: TeamCount): CurrentClue | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const clue = value as CurrentClue;
+  const activeTeams = getActiveTeams(teamCount);
+
+  if (
+    typeof clue.word !== "string" ||
+    clue.word.trim().length < 1 ||
+    clue.word.trim().length > 24 ||
+    /\s/.test(clue.word.trim()) ||
+    typeof clue.count !== "number" ||
+    !Number.isInteger(clue.count) ||
+    clue.count < 1 ||
+    clue.count > 9 ||
+    !activeTeams.includes(clue.team) ||
+    typeof clue.submittedBy !== "string" ||
+    clue.submittedBy.length < 1
+  ) {
+    return null;
+  }
+
+  return {
+    word: clue.word.trim(),
+    count: clue.count,
+    team: clue.team,
+    submittedBy: clue.submittedBy,
+  };
 }
 
 function sanitizeRoundTimerSeconds(value: unknown) {
@@ -160,11 +193,13 @@ export function normalizeRoom(value: unknown): Room | null {
     : fallbackTurn;
   const normalizedWinner =
     room.winner && activeTeams.includes(room.winner as ActiveTeam) ? (room.winner as ActiveTeam) : null;
+  const normalizedClue = sanitizeCurrentClue((room as { currentClue?: unknown }).currentClue, teamCount);
 
   return {
     ...room,
     settings: normalizedSettings,
     currentTurn: normalizedTurn,
+    currentClue: normalizedClue,
     winner: normalizedWinner,
   };
 }

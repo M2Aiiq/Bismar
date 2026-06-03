@@ -27,6 +27,9 @@
         "currentTurn": {
           ".validate": "!newData.exists() || newData.val() === 'Red' || newData.val() === 'Blue' || newData.val() === 'Green' || newData.val() === 'Gold'"
         },
+        "currentClue": {
+          ".validate": "!newData.exists() || (newData.hasChildren(['word', 'count', 'team', 'submittedBy']) && newData.child('word').isString() && newData.child('word').val().length >= 1 && newData.child('word').val().length <= 24 && !newData.child('word').val().matches(/.*\\s.*/) && newData.child('count').isNumber() && newData.child('count').val() >= 1 && newData.child('count').val() <= 9 && (newData.child('team').val() === 'Red' || newData.child('team').val() === 'Blue' || newData.child('team').val() === 'Green' || newData.child('team').val() === 'Gold') && newData.child('submittedBy').isString() && newData.child('submittedBy').val().length > 0)"
+        },
         "winner": {
           ".validate": "!newData.exists() || newData.val() === 'Red' || newData.val() === 'Blue' || newData.val() === 'Green' || newData.val() === 'Gold'"
         },
