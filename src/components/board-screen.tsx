@@ -41,6 +41,19 @@ function teamPanelClass(team: ActiveTeam, isCurrentTurn: boolean) {
   }
 }
 
+function boardScreenBackgroundClass(team: ActiveTeam) {
+  switch (team) {
+    case "Red":
+      return "bg-[radial-gradient(circle_at_top,_rgba(220,38,38,0.38),_rgba(15,23,42,0.98)_46%,_#0F172A_100%)]";
+    case "Blue":
+      return "bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.38),_rgba(15,23,42,0.98)_46%,_#0F172A_100%)]";
+    case "Green":
+      return "bg-[radial-gradient(circle_at_top,_rgba(5,150,105,0.38),_rgba(15,23,42,0.98)_46%,_#0F172A_100%)]";
+    case "Gold":
+      return "bg-[radial-gradient(circle_at_top,_rgba(234,179,8,0.34),_rgba(15,23,42,0.96)_44%,_#0F172A_100%)]";
+  }
+}
+
 function TeamPanel({
   team,
   remainingCards,
@@ -153,7 +166,10 @@ export function BoardScreen() {
   };
 
   return (
-    <section className="flex h-full w-full max-h-screen flex-col overflow-hidden bg-[#0F172A] text-[#F8FAFC]" dir="rtl">
+    <section
+      className={`flex h-full w-full max-h-screen flex-col overflow-hidden text-[#F8FAFC] ${boardScreenBackgroundClass(currentTeam)}`}
+      dir="rtl"
+    >
       <div className={`grid min-h-0 grid-cols-2 gap-0 ${teamGridHeightClass} ${usesMultiRowTeamGrid ? "grid-rows-2" : ""}`}>
         {teamSlots.map((team, index) =>
           team ? (
