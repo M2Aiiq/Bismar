@@ -17,13 +17,13 @@ import {
   createInitialRoom,
   createPlayer,
   createRoomId,
-  getOpposingTeam,
   normalizeRoom,
 } from "../lib/game";
 import { getRealtimeDatabase, isFirebaseConfigured } from "../lib/firebase";
-import type { Player, Role, Room, Team } from "../types/game";
+import { getActiveTeams, isActiveTeam, nextTeam, type ActiveTeam } from "../lib/teams";
+import type { Player, Role, Room, RoomSettings, Team, TeamCount } from "../types/game";
 
-type PlayerTeam = Exclude<Team, "Unassigned">;
+type PlayerTeam = ActiveTeam;
 
 interface GameRoomContextValue {
   room: Room | null;
@@ -41,6 +41,7 @@ interface GameRoomContextValue {
   leaveRoom: () => Promise<void>;
   chooseTeam: (team: Team) => Promise<void>;
   chooseRole: (role: Role) => Promise<void>;
+  updateRoomSettings: (settings: Partial<RoomSettings>) => Promise<void>;
   startGame: () => Promise<void>;
   revealCard: (cardId: number) => Promise<void>;
   resetGame: () => Promise<void>;
@@ -123,18 +124,53 @@ function upsertPlayer(players: Player[], nextPlayer: Player) {
   return [...remainingPlayers, nextPlayer];
 }
 
-function ensurePlayableTeams(players: Player[]) {
-  const redPlayers = players.filter((player) => player.team === "Red");
-  const bluePlayers = players.filter((player) => player.team === "Blue");
+function ensurePlayableTeams(players: Player[], teamCount: TeamCount) {
+  return getActiveTeams(teamCount).every((team) => {
+    const teamPlayers = players.filter((player) => player.team === team);
+    return (
+      teamPlayers.some((player) => player.role === "Spymaster") &&
+      teamPlayers.some((player) => player.role === "Operative")
+    );
+  });
+}
 
-  const redReady =
-    redPlayers.some((player) => player.role === "Spymaster") &&
-    redPlayers.some((player) => player.role === "Operative");
-  const blueReady =
-    bluePlayers.some((player) => player.role === "Spymaster") &&
-    bluePlayers.some((player) => player.role === "Operative");
+function sanitizeTeamCount(value: unknown): TeamCount {
+  return value === 3 || value === 4 ? value : 2;
+}
 
-  return redReady && blueReady;
+function sanitizeRoundTimerSeconds(value: unknown) {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return 60;
+  }
+
+  return Math.min(600, Math.max(15, Math.round(value)));
+}
+
+function sanitizeLossCardCount(value: unknown): RoomSettings["lossCardCount"] {
+  return value === 2 || value === 3 || value === 4 ? value : 1;
+}
+
+function sanitizeSettingsUpdate(
+  currentSettings: RoomSettings,
+  partialSettings: Partial<RoomSettings>,
+): RoomSettings {
+  return {
+    teamCount: sanitizeTeamCount(partialSettings.teamCount ?? currentSettings.teamCount),
+    roundTimerSeconds: sanitizeRoundTimerSeconds(
+      partialSettings.roundTimerSeconds ?? currentSettings.roundTimerSeconds,
+    ),
+    lossCardCount: sanitizeLossCardCount(partialSettings.lossCardCount ?? currentSettings.lossCardCount),
+  };
+}
+
+function applyTeamCountToPlayers(players: Player[], teamCount: TeamCount) {
+  const activeTeams = getActiveTeams(teamCount);
+
+  return players.map((currentPlayer) =>
+    isActiveTeam(currentPlayer.team) && !activeTeams.includes(currentPlayer.team)
+      ? { ...currentPlayer, team: "Unassigned" as const, role: "Operative" as const }
+      : currentPlayer,
+  );
 }
 
 export function GameRoomProvider({ children }: { children: ReactNode }) {
@@ -372,11 +408,15 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             return currentValue;
           }
 
+          const activeTeams = getActiveTeams(currentRoom.settings.teamCount);
+          const nextTeamSelection =
+            team === "Unassigned" || (isActiveTeam(team) && activeTeams.includes(team)) ? team : "Unassigned";
+
           return {
             ...currentRoom,
             players: upsertPlayer(currentRoom.players, {
               ...currentPlayer,
-              team,
+              team: nextTeamSelection,
             }),
           };
         });
@@ -432,6 +472,48 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
     [playerId, roomId, runAction],
   );
 
+  const updateRoomSettings = useCallback(
+    async (settings: Partial<RoomSettings>) =>
+      runAction(async () => {
+        if (!roomId) {
+          return;
+        }
+
+        const database = getRealtimeDatabase();
+
+        if (!database) {
+          return;
+        }
+
+        await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
+          const currentRoom = normalizeRoom(currentValue);
+
+          if (!currentRoom || currentRoom.gameState !== "Lobby") {
+            return currentValue;
+          }
+
+          const currentPlayer = currentRoom.players.find((entry) => entry.id === playerId);
+
+          if (!currentPlayer?.isHost) {
+            return currentValue;
+          }
+
+          const nextSettings = sanitizeSettingsUpdate(currentRoom.settings, settings);
+          const nextPlayers = applyTeamCountToPlayers(currentRoom.players, nextSettings.teamCount);
+          const activeTeams = getActiveTeams(nextSettings.teamCount);
+
+          return {
+            ...currentRoom,
+            players: nextPlayers,
+            settings: nextSettings,
+            currentTurn: activeTeams.includes(currentRoom.currentTurn) ? currentRoom.currentTurn : activeTeams[0],
+            winner: currentRoom.winner && activeTeams.includes(currentRoom.winner) ? currentRoom.winner : null,
+          };
+        });
+      }, "تعذر تحديث إعدادات الغرفة."),
+    [playerId, roomId, runAction],
+  );
+
   const startGame = useCallback(
     async () =>
       runAction(async () => {
@@ -439,8 +521,8 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           throw new Error("فقط المضيف يمكنه بدء الجولة.");
         }
 
-        if (!ensurePlayableTeams(room.players)) {
-          throw new Error("يجب تجهيز قائد ومحقق لكل فريق قبل بدء الجولة.");
+        if (!ensurePlayableTeams(room.players, room.settings.teamCount)) {
+          throw new Error("يجب تجهيز قائد ومحقق لكل فريق نشط قبل بدء الجولة.");
         }
 
         const database = getRealtimeDatabase();
@@ -456,7 +538,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             return currentValue;
           }
 
-          const { board, currentTurn } = createBoardState();
+          const { board, currentTurn } = createBoardState(currentRoom.settings);
 
           return {
             ...currentRoom,
@@ -509,32 +591,24 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             return currentValue;
           }
 
+          const activeTeams = getActiveTeams(currentRoom.settings.teamCount);
+
           if (selectedCard.type === "Control") {
             return {
               ...currentRoom,
               board: nextBoard,
-              winner: getOpposingTeam(currentRoom.currentTurn),
+              winner: nextTeam(currentRoom.currentTurn, activeTeams),
               gameState: "GameOver",
             };
           }
 
-          const redRemaining = countHiddenCards(nextBoard, "Red");
-          const blueRemaining = countHiddenCards(nextBoard, "Blue");
+          const winningTeam = activeTeams.find((team) => countHiddenCards(nextBoard, team) === 0);
 
-          if (redRemaining === 0) {
+          if (winningTeam) {
             return {
               ...currentRoom,
               board: nextBoard,
-              winner: "Red",
-              gameState: "GameOver",
-            };
-          }
-
-          if (blueRemaining === 0) {
-            return {
-              ...currentRoom,
-              board: nextBoard,
-              winner: "Blue",
+              winner: winningTeam,
               gameState: "GameOver",
             };
           }
@@ -542,7 +616,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           const nextTurn: PlayerTeam =
             selectedCard.type === currentRoom.currentTurn
               ? currentRoom.currentTurn
-              : getOpposingTeam(currentRoom.currentTurn);
+              : nextTeam(currentRoom.currentTurn, activeTeams);
 
           return {
             ...currentRoom,
@@ -574,7 +648,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             return currentValue;
           }
 
-          const { board, currentTurn } = createBoardState();
+          const { board, currentTurn } = createBoardState(currentRoom.settings);
 
           return {
             ...currentRoom,
@@ -605,6 +679,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       leaveRoom,
       chooseTeam,
       chooseRole,
+      updateRoomSettings,
       startGame,
       revealCard,
       resetGame,
@@ -626,6 +701,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       room,
       roomId,
       startGame,
+      updateRoomSettings,
     ],
   );
 

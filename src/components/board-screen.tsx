@@ -2,10 +2,7 @@
 
 import { GameBoard } from "./game-board";
 import { useGameRoom } from "../context/game-room-context";
-
-function teamLabel(team: "Red" | "Blue") {
-  return team === "Red" ? "الأحمر" : "الأزرق";
-}
+import { getActiveTeams, teamCardClass, teamLabel } from "../lib/teams";
 
 export function BoardScreen() {
   const { room, player, isBusy, leaveRoom, revealCard } = useGameRoom();
@@ -16,16 +13,19 @@ export function BoardScreen() {
 
   const showTruth = player.role === "Spymaster";
   const canReveal = player.role === "Operative" && player.team === room.currentTurn;
+  const activeTeams = getActiveTeams(room.settings.teamCount);
 
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-6">
       <div className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-[#1E293B] p-6 text-[#F8FAFC] shadow-2xl md:flex-row md:items-center md:justify-between md:p-8">
         <div>
-          <p className="text-sm text-[#2563EB]">Secret Agency</p>
           <h1 className="mt-2 text-3xl font-black">الدور الحالي: فريق {teamLabel(room.currentTurn)}</h1>
           <p className="mt-2 text-sm text-[#F8FAFC]/75">
             أنت تلعب كـ {player.role === "Spymaster" ? "قائد" : "محقق"} ضمن فريق{" "}
             {player.team === "Unassigned" ? "غير محدد" : teamLabel(player.team)}.
+          </p>
+          <p className="mt-2 text-xs text-[#F8FAFC]/55">
+            مؤقت الجولة: {room.settings.roundTimerSeconds} ثانية . كلمات الخسارة: {room.settings.lossCardCount}
           </p>
         </div>
 
@@ -53,10 +53,13 @@ export function BoardScreen() {
           <div className="rounded-3xl border border-white/10 bg-[#1E293B] p-5 shadow-lg">
             <h2 className="text-lg font-black text-[#F8FAFC]">الدليل اللوني</h2>
             <div className="mt-3 grid gap-2 text-sm text-[#F8FAFC]">
-              <div className="rounded-2xl bg-[#DC2626] px-3 py-2">أحمر</div>
-              <div className="rounded-2xl bg-[#2563EB] px-3 py-2">أزرق</div>
+              {activeTeams.map((team) => (
+                <div key={team} className={`rounded-2xl px-3 py-2 ${teamCardClass(team)}`}>
+                  {teamLabel(team)}
+                </div>
+              ))}
               <div className="rounded-2xl bg-[#334155] px-3 py-2">محايد</div>
-              <div className="rounded-2xl bg-[#0F172A] px-3 py-2">تحكم</div>
+              <div className="rounded-2xl bg-[#0F172A] px-3 py-2">خسارة</div>
             </div>
           </div>
         </aside>

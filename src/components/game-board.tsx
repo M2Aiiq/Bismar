@@ -1,4 +1,5 @@
 import type { Card } from "../types/game";
+import { teamCardClass, type ActiveTeam } from "../lib/teams";
 
 interface GameBoardProps {
   board: Card[];
@@ -19,9 +20,10 @@ function resolveCardTone(card: Card, shouldShowTruth: boolean) {
 
   switch (card.type) {
     case "Red":
-      return "border-[#DC2626] bg-[#DC2626] text-[#F8FAFC]";
     case "Blue":
-      return "border-[#2563EB] bg-[#2563EB] text-[#F8FAFC]";
+    case "Green":
+    case "Gold":
+      return teamCardClass(card.type as ActiveTeam);
     case "Neutral":
       return "border-[#475569] bg-[#475569] text-[#F8FAFC]";
     case "Control":

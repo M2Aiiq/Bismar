@@ -152,7 +152,7 @@ export function HomeScreen() {
           disabled={isBusy || !firebaseReady || !playerName}
           className="rounded-2xl bg-[#2563EB] px-5 py-4 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
         >
-          إنشاء غرفة
+          إنشاء لعبة
         </button>
 
         <div
@@ -171,7 +171,7 @@ export function HomeScreen() {
                 : "translate-y-0 opacity-100 hover:border-[#2563EB] hover:bg-[#1E40AF]/25"
             } disabled:cursor-not-allowed disabled:text-[#F8FAFC]/40`}
           >
-            الانضمام الى غرفة
+            الانضمام الى لعبة
           </button>
 
           <div
@@ -223,6 +223,7 @@ export function HomeScreen() {
             <h2 className="text-2xl font-black text-[#F8FAFC]">اكتب اسمك</h2>
 
             <label className="mt-5 flex flex-col gap-2 text-sm font-semibold text-[#F8FAFC]/85">
+
               <input
                 value={draftName}
                 onChange={(event) => setDraftName(event.target.value)}

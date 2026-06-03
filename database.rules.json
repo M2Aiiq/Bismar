@@ -12,20 +12,32 @@
         "gameState": {
           ".validate": "!newData.exists() || newData.val() === 'Lobby' || newData.val() === 'Playing' || newData.val() === 'GameOver'"
         },
+        "settings": {
+          ".validate": "!newData.exists() || newData.hasChildren(['teamCount', 'roundTimerSeconds', 'lossCardCount'])",
+          "teamCount": {
+            ".validate": "newData.val() === 2 || newData.val() === 3 || newData.val() === 4"
+          },
+          "roundTimerSeconds": {
+            ".validate": "newData.isNumber() && newData.val() >= 15 && newData.val() <= 600"
+          },
+          "lossCardCount": {
+            ".validate": "newData.val() === 1 || newData.val() === 2 || newData.val() === 3 || newData.val() === 4"
+          }
+        },
         "currentTurn": {
-          ".validate": "!newData.exists() || newData.val() === 'Red' || newData.val() === 'Blue'"
+          ".validate": "!newData.exists() || newData.val() === 'Red' || newData.val() === 'Blue' || newData.val() === 'Green' || newData.val() === 'Gold'"
         },
         "winner": {
-          ".validate": "!newData.exists() || newData.val() === 'Red' || newData.val() === 'Blue'"
+          ".validate": "!newData.exists() || newData.val() === 'Red' || newData.val() === 'Blue' || newData.val() === 'Green' || newData.val() === 'Gold'"
         },
         "players": {
           "$playerIndex": {
-            ".validate": "!newData.exists() || (newData.hasChildren(['id', 'name', 'team', 'role', 'isHost']) && newData.child('id').isString() && newData.child('id').val().length > 0 && newData.child('name').isString() && newData.child('name').val().length >= 2 && newData.child('name').val().length <= 24 && (newData.child('team').val() === 'Red' || newData.child('team').val() === 'Blue' || newData.child('team').val() === 'Unassigned') && (newData.child('role').val() === 'Spymaster' || newData.child('role').val() === 'Operative') && newData.child('isHost').isBoolean())"
+            ".validate": "!newData.exists() || (newData.hasChildren(['id', 'name', 'team', 'role', 'isHost']) && newData.child('id').isString() && newData.child('id').val().length > 0 && newData.child('name').isString() && newData.child('name').val().length >= 2 && newData.child('name').val().length <= 24 && (newData.child('team').val() === 'Red' || newData.child('team').val() === 'Blue' || newData.child('team').val() === 'Green' || newData.child('team').val() === 'Gold' || newData.child('team').val() === 'Unassigned') && (newData.child('role').val() === 'Spymaster' || newData.child('role').val() === 'Operative') && newData.child('isHost').isBoolean())"
           }
         },
         "board": {
           "$cardIndex": {
-            ".validate": "!newData.exists() || (newData.hasChildren(['id', 'text', 'type', 'isRevealed']) && newData.child('id').exists() && newData.child('text').isString() && newData.child('text').val().length >= 1 && newData.child('text').val().length <= 20 && !newData.child('text').val().matches(/.*\\s.*/) && (newData.child('type').val() === 'Red' || newData.child('type').val() === 'Blue' || newData.child('type').val() === 'Neutral' || newData.child('type').val() === 'Control') && newData.child('isRevealed').isBoolean())"
+            ".validate": "!newData.exists() || (newData.hasChildren(['id', 'text', 'type', 'isRevealed']) && newData.child('id').exists() && newData.child('text').isString() && newData.child('text').val().length >= 1 && newData.child('text').val().length <= 20 && !newData.child('text').val().matches(/.*\\s.*/) && (newData.child('type').val() === 'Red' || newData.child('type').val() === 'Blue' || newData.child('type').val() === 'Green' || newData.child('type').val() === 'Gold' || newData.child('type').val() === 'Neutral' || newData.child('type').val() === 'Control') && newData.child('isRevealed').isBoolean())"
           }
         }
       }

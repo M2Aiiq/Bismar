@@ -2,6 +2,7 @@
 
 import { GameBoard } from "./game-board";
 import { useGameRoom } from "../context/game-room-context";
+import { teamLabel } from "../lib/teams";
 
 export function GameOverScreen() {
   const { room, player, isBusy, leaveRoom, resetGame } = useGameRoom();
@@ -13,9 +14,8 @@ export function GameOverScreen() {
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-6">
       <div className="rounded-3xl border border-white/10 bg-[#1E293B] p-6 text-[#F8FAFC] shadow-2xl md:p-8">
-        <p className="text-sm text-[#DC2626]">Secret Agency</p>
         <h1 className="mt-2 text-4xl font-black">
-          الفائز: فريق {room.winner === "Red" ? "الأحمر" : "الأزرق"}
+          {room.winner ? `الفائز: فريق ${teamLabel(room.winner)}` : "انتهت الجولة"}
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-7 text-[#F8FAFC]/75">
           تم كشف اللوحة كاملة. يمكن للمضيف إعادة الجولة مع الإبقاء على اللاعبين داخل نفس الغرفة.

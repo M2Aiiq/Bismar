@@ -1,7 +1,13 @@
 import { IRAQI_WORDS } from "./words";
-import type { Card, CardType, Player, Room } from "../types/game";
+import { getActiveTeams, type ActiveTeam } from "./teams";
+import type { Card, CardType, Player, Room, RoomSettings, TeamCount } from "../types/game";
 
 const BOARD_SIZE = 25;
+const DEFAULT_SETTINGS: RoomSettings = {
+  teamCount: 2,
+  roundTimerSeconds: 60,
+  lossCardCount: 1,
+};
 
 export function createRoomId(length = 5) {
   const digits = "0123456789";
@@ -23,27 +29,44 @@ export function shuffleList<T>(items: T[]) {
   return copy;
 }
 
-export function getOpposingTeam(team: "Red" | "Blue") {
-  return team === "Red" ? "Blue" : "Red";
+export function getDefaultRoomSettings(): RoomSettings {
+  return { ...DEFAULT_SETTINGS };
 }
 
-function createCardTypes(startingTeam: "Red" | "Blue") {
-  const redCount = startingTeam === "Red" ? 9 : 8;
-  const blueCount = startingTeam === "Blue" ? 9 : 8;
+function createCardTypes(activeTeams: ActiveTeam[], startingTeam: ActiveTeam, lossCardCount: number) {
+  const teamCardCounts = activeTeams.reduce<Record<ActiveTeam, number>>(
+    (counts, team) => ({
+      ...counts,
+      [team]: activeTeams.length === 2 ? 8 : activeTeams.length === 3 ? 6 : 5,
+    }),
+    {
+      Red: 0,
+      Blue: 0,
+      Green: 0,
+      Gold: 0,
+    },
+  );
+
+  if (activeTeams.length < 4 || lossCardCount <= 3) {
+    teamCardCounts[startingTeam] += 1;
+  }
+
+  const totalTeamCards = activeTeams.reduce((sum, team) => sum + teamCardCounts[team], 0);
+  const neutralCount = Math.max(0, BOARD_SIZE - totalTeamCards - lossCardCount);
   const types: CardType[] = [
-    ...Array.from({ length: redCount }, () => "Red" as const),
-    ...Array.from({ length: blueCount }, () => "Blue" as const),
-    ...Array.from({ length: 7 }, () => "Neutral" as const),
-    "Control",
+    ...activeTeams.flatMap((team) => Array.from({ length: teamCardCounts[team] }, () => team)),
+    ...Array.from({ length: neutralCount }, () => "Neutral" as const),
+    ...Array.from({ length: lossCardCount }, () => "Control" as const),
   ];
 
   return shuffleList(types);
 }
 
-export function createBoardState() {
-  const currentTurn: "Red" | "Blue" = Math.random() > 0.5 ? "Red" : "Blue";
+export function createBoardState(settings: RoomSettings = DEFAULT_SETTINGS) {
+  const activeTeams = getActiveTeams(settings.teamCount);
+  const currentTurn = activeTeams[Math.floor(Math.random() * activeTeams.length)];
   const words = shuffleList(IRAQI_WORDS).slice(0, BOARD_SIZE);
-  const types = createCardTypes(currentTurn);
+  const types = createCardTypes(activeTeams, currentTurn, settings.lossCardCount);
 
   const board: Card[] = words.map((text, index) => ({
     id: index,
@@ -69,20 +92,38 @@ export function createPlayer(playerId: string, name: string, isHost = false): Pl
 }
 
 export function createInitialRoom(roomId: string, host: Player): Room {
-  const { board, currentTurn } = createBoardState();
+  const settings = getDefaultRoomSettings();
+  const { board, currentTurn } = createBoardState(settings);
 
   return {
     roomId,
     players: [host],
     gameState: "Lobby",
+    settings,
     board,
     currentTurn,
     winner: null,
   };
 }
 
-export function countHiddenCards(board: Card[], team: "Red" | "Blue") {
+export function countHiddenCards(board: Card[], team: ActiveTeam) {
   return board.filter((card) => card.type === team && !card.isRevealed).length;
+}
+
+function sanitizeTeamCount(value: unknown): TeamCount {
+  return value === 3 || value === 4 ? value : 2;
+}
+
+function sanitizeLossCardCount(value: unknown): RoomSettings["lossCardCount"] {
+  return value === 2 || value === 3 || value === 4 ? value : 1;
+}
+
+function sanitizeRoundTimerSeconds(value: unknown) {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return 60;
+  }
+
+  return Math.min(600, Math.max(15, Math.round(value)));
 }
 
 export function normalizeRoom(value: unknown): Room | null {
@@ -96,5 +137,25 @@ export function normalizeRoom(value: unknown): Room | null {
     return null;
   }
 
-  return room;
+  const settings = room.settings ?? DEFAULT_SETTINGS;
+  const teamCount = sanitizeTeamCount(settings.teamCount);
+  const normalizedSettings: RoomSettings = {
+    teamCount,
+    roundTimerSeconds: sanitizeRoundTimerSeconds(settings.roundTimerSeconds),
+    lossCardCount: sanitizeLossCardCount(settings.lossCardCount),
+  };
+  const activeTeams = getActiveTeams(teamCount);
+  const fallbackTurn = activeTeams[0];
+  const normalizedTurn = activeTeams.includes(room.currentTurn as ActiveTeam)
+    ? (room.currentTurn as ActiveTeam)
+    : fallbackTurn;
+  const normalizedWinner =
+    room.winner && activeTeams.includes(room.winner as ActiveTeam) ? (room.winner as ActiveTeam) : null;
+
+  return {
+    ...room,
+    settings: normalizedSettings,
+    currentTurn: normalizedTurn,
+    winner: normalizedWinner,
+  };
 }
