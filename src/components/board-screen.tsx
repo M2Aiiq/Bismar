@@ -126,8 +126,6 @@ export function BoardScreen() {
   const { room, player, isBusy, chooseTeam, revealCard } = useGameRoom();
   const [clueDraft, setClueDraft] = useState("");
   const [clueCount, setClueCount] = useState("1");
-  const [fontScale, setFontScale] = useState<"compact" | "comfortable">("compact");
-  const [showRosterTicker, setShowRosterTicker] = useState(false);
 
   if (!room || !player) {
     return null;
@@ -141,10 +139,8 @@ export function BoardScreen() {
   const usesMultiRowTeamGrid = activeTeams.length > 2;
   const teamSlots: Array<ActiveTeam | null> = activeTeams.length === 3 ? [...activeTeams, null] : activeTeams;
   const teamGridHeightClass = usesMultiRowTeamGrid ? "h-[25vh]" : "h-[22vh]";
-  const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[65vh]" : "h-[68vh]";
-  const tickerText = showRosterTicker
-    ? `اللاعبون: ${room.players.map((entry) => entry.name).join(" . ")}`
-    : `الدور الآن: فريق ${teamLabel(currentTeam)} | أنت: ${player.role === "Spymaster" ? "قائد" : "محقق"} | المؤقت: ${room.settings.roundTimerSeconds}ث`;
+  const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[69vh]" : "h-[72vh]";
+  const tickerText = `الدور الآن: فريق ${teamLabel(currentTeam)} | أنت: ${player.role === "Spymaster" ? "قائد" : "محقق"} | المؤقت: ${room.settings.roundTimerSeconds}ث`;
   const boardWidthClass = room.board.length > 25 ? "max-w-lg" : "max-w-md";
 
   const handleClueSend = () => {
@@ -157,7 +153,7 @@ export function BoardScreen() {
   };
 
   return (
-    <section className="flex h-full w-full max-h-screen flex-col justify-between overflow-hidden bg-[#0F172A] text-[#F8FAFC]" dir="rtl">
+    <section className="flex h-full w-full max-h-screen flex-col overflow-hidden bg-[#0F172A] text-[#F8FAFC]" dir="rtl">
       <div className={`grid min-h-0 grid-cols-2 gap-0 ${teamGridHeightClass} ${usesMultiRowTeamGrid ? "grid-rows-2" : ""}`}>
         {teamSlots.map((team, index) =>
           team ? (
@@ -189,55 +185,17 @@ export function BoardScreen() {
         </div>
       </div>
 
-      <div className={`my-auto flex min-h-0 items-center overflow-hidden px-2 ${boardSectionHeightClass}`}>
-        <div className={`mx-auto flex h-full w-full ${boardWidthClass} items-center justify-center overflow-hidden`}>
+      <div className={`mt-1 flex min-h-0 items-start overflow-hidden px-2 ${boardSectionHeightClass}`}>
+        <div className={`mx-auto flex h-full w-full ${boardWidthClass} items-start justify-center overflow-hidden`}>
           <GameBoard
             board={room.board}
             showTruth={showTruth}
             canReveal={canReveal && !isBusy}
             onReveal={(cardId: number) => revealCard(cardId)}
             compact
-            fontScale={fontScale}
+            fontScale="compact"
           />
         </div>
-      </div>
-
-      <div className="mt-auto flex h-[6vh] min-h-[40px] items-center justify-between gap-1 border-t border-slate-900/50 px-2">
-        <button
-          type="button"
-          onClick={() => setShowRosterTicker((current) => !current)}
-          className="flex h-8 min-w-0 flex-1 items-center justify-center rounded-full border border-white/10 bg-[#1E293B] px-2 text-[10px] font-bold text-[#F8FAFC]/80"
-        >
-          ضبط
-        </button>
-        <button
-          type="button"
-          onClick={() => setFontScale((current) => (current === "compact" ? "comfortable" : "compact"))}
-          className="flex h-8 min-w-0 flex-1 items-center justify-center rounded-full border border-[#2563EB]/30 bg-[#2563EB]/12 px-2 text-[10px] font-bold text-[#F8FAFC]"
-        >
-          حجم
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowRosterTicker((current) => !current)}
-          className="flex h-8 min-w-0 flex-1 items-center justify-center rounded-full border border-white/10 bg-[#1E293B] px-2 text-[10px] font-bold text-[#F8FAFC]/80"
-        >
-          لاعبين
-        </button>
-        <button
-          type="button"
-          onClick={() => setClueDraft("")}
-          className="flex h-8 min-w-0 flex-1 items-center justify-center rounded-full border border-[#DC2626]/30 bg-[#DC2626]/12 px-2 text-[10px] font-bold text-[#F8FAFC]"
-        >
-          بلاغ
-        </button>
-        <button
-          type="button"
-          onClick={() => setClueCount("1")}
-          className="flex h-8 min-w-0 flex-1 items-center justify-center rounded-full border border-white/10 bg-[#1E293B] px-2 text-[10px] font-bold text-[#F8FAFC]/80"
-        >
-          Discord
-        </button>
       </div>
     </section>
   );
