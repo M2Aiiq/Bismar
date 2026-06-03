@@ -40,8 +40,10 @@ export function GameBoard({
   revealAll = false,
   onReveal,
 }: GameBoardProps) {
+  const columnCount = Math.max(1, Math.round(Math.sqrt(board.length)));
+
   return (
-    <div className="grid grid-cols-5 gap-2 md:gap-3">
+    <div className="grid gap-2 md:gap-3" style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}>
       {board.map((card) => {
         const shouldShowTruth = revealAll || showTruth || card.isRevealed;
 

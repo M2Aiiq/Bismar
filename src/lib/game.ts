@@ -2,7 +2,6 @@ import { IRAQI_WORDS } from "./words";
 import { getActiveTeams, type ActiveTeam } from "./teams";
 import type { Card, CardType, Player, Room, RoomSettings, TeamCount } from "../types/game";
 
-const BOARD_SIZE = 25;
 const DEFAULT_SETTINGS: RoomSettings = {
   teamCount: 2,
   roundTimerSeconds: 60,
@@ -33,7 +32,16 @@ export function getDefaultRoomSettings(): RoomSettings {
   return { ...DEFAULT_SETTINGS };
 }
 
-function createCardTypes(activeTeams: ActiveTeam[], startingTeam: ActiveTeam, lossCardCount: number) {
+function getBoardSize(teamCount: TeamCount) {
+  return teamCount === 2 ? 25 : 36;
+}
+
+function createCardTypes(
+  activeTeams: ActiveTeam[],
+  startingTeam: ActiveTeam,
+  lossCardCount: number,
+  boardSize: number,
+) {
   const teamCardCounts = activeTeams.reduce<Record<ActiveTeam, number>>(
     (counts, team) => ({
       ...counts,
@@ -52,7 +60,7 @@ function createCardTypes(activeTeams: ActiveTeam[], startingTeam: ActiveTeam, lo
   }
 
   const totalTeamCards = activeTeams.reduce((sum, team) => sum + teamCardCounts[team], 0);
-  const neutralCount = Math.max(0, BOARD_SIZE - totalTeamCards - lossCardCount);
+  const neutralCount = Math.max(0, boardSize - totalTeamCards - lossCardCount);
   const types: CardType[] = [
     ...activeTeams.flatMap((team) => Array.from({ length: teamCardCounts[team] }, () => team)),
     ...Array.from({ length: neutralCount }, () => "Neutral" as const),
@@ -64,9 +72,10 @@ function createCardTypes(activeTeams: ActiveTeam[], startingTeam: ActiveTeam, lo
 
 export function createBoardState(settings: RoomSettings = DEFAULT_SETTINGS) {
   const activeTeams = getActiveTeams(settings.teamCount);
+  const boardSize = getBoardSize(settings.teamCount);
   const currentTurn = activeTeams[Math.floor(Math.random() * activeTeams.length)];
-  const words = shuffleList(IRAQI_WORDS).slice(0, BOARD_SIZE);
-  const types = createCardTypes(activeTeams, currentTurn, settings.lossCardCount);
+  const words = shuffleList(IRAQI_WORDS).slice(0, boardSize);
+  const types = createCardTypes(activeTeams, currentTurn, settings.lossCardCount, boardSize);
 
   const board: Card[] = words.map((text, index) => ({
     id: index,
