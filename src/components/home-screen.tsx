@@ -3,19 +3,37 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-import { IRAQI_WORDS } from "../lib/words";
 import { useGameRoom } from "../context/game-room-context";
 
 function normalizeRoomCode(value: string | null) {
   return (value ?? "").replace(/\D/g, "").slice(0, 5);
 }
 
-const FLOATING_WORDS = IRAQI_WORDS.slice(0, 18).map((word, index) => ({
+const FLOATING_WORDS = [
+  "شكو",
+  "شلون",
+  "هسة",
+  "باچر",
+  "هواي",
+  "خوش",
+  "عفية",
+  "يمعود",
+  "يمه",
+  "صوج",
+  "موزين",
+  "شسمة",
+  "دگة",
+  "كفو",
+  "لتزعل",
+  "تره",
+  "يلا",
+  "عال",
+].map((word, index) => ({
   word,
   top: `${(index * 11) % 82 + 6}%`,
   left: `${(index * 17) % 86 + 4}%`,
   size: `${1 + (index % 4) * 0.28}rem`,
-  opacity: 0.06 + (index % 3) * 0.02,
+  opacity: 0.13 + (index % 3) * 0.03,
   duration: `${18 + (index % 5) * 4}s`,
   delay: `${(index % 6) * -2.2}s`,
   className: index % 2 === 0 ? "floating-word-a" : "floating-word-b",
@@ -26,10 +44,11 @@ export function HomeScreen() {
   const { createRoom, joinRoom, playerName, isBusy, firebaseReady, savePlayerName } = useGameRoom();
   const inviteRoomCode = normalizeRoomCode(searchParams.get("room"));
   const autoJoinAttemptRef = useRef<string | null>(null);
+  const joinInputRef = useRef<HTMLInputElement | null>(null);
   const [roomCode, setRoomCode] = useState(inviteRoomCode);
   const [draftName, setDraftName] = useState(playerName);
   const [isNameDialogOpen, setIsNameDialogOpen] = useState(!playerName);
-  const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
+  const [isJoinExpanded, setIsJoinExpanded] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
 
   const nameHint = useMemo(() => {
@@ -69,9 +88,17 @@ export function HomeScreen() {
     });
   }, [firebaseReady, inviteRoomCode, isNameDialogOpen, joinRoom, playerName]);
 
+  useEffect(() => {
+    if (!isJoinExpanded) {
+      return;
+    }
+
+    joinInputRef.current?.focus();
+  }, [isJoinExpanded]);
+
   async function handleJoinRoom() {
     await joinRoom(roomCode, playerName);
-    setIsJoinDialogOpen(false);
+    setIsJoinExpanded(false);
   }
 
   return (
@@ -80,7 +107,7 @@ export function HomeScreen() {
         {FLOATING_WORDS.map((item) => (
           <span
             key={`${item.word}-${item.top}-${item.left}`}
-            className={`absolute select-none font-black text-white/10 ${item.className}`}
+            className={`absolute select-none font-black text-[#F8FAFC]/20 ${item.className}`}
             style={{
               top: item.top,
               left: item.left,
@@ -128,60 +155,70 @@ export function HomeScreen() {
           إنشاء غرفة
         </button>
 
-        <button
-          type="button"
-          onClick={() => {
-            setRoomCode("");
-            setIsJoinDialogOpen(true);
-          }}
-          disabled={isBusy || !firebaseReady || !playerName}
-          className="rounded-2xl border border-white/15 bg-[#1E293B] px-5 py-4 text-sm font-bold text-[#F8FAFC] transition hover:border-[#2563EB] hover:bg-[#1E40AF]/25 disabled:cursor-not-allowed disabled:text-[#F8FAFC]/40"
+        <div
+          className={`relative overflow-hidden rounded-2xl border border-white/15 bg-[#1E293B] transition-all duration-300 ${
+            isJoinExpanded ? "min-h-[7.5rem] p-3" : "min-h-[3.75rem]"
+          }`}
         >
-          الانضمام الى غرفة
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={() => {
+              setRoomCode("");
+              setIsJoinExpanded(true);
+            }}
+            disabled={isBusy || !firebaseReady || !playerName || isJoinExpanded}
+            className={`absolute inset-0 flex items-center justify-center px-5 text-sm font-bold text-[#F8FAFC] transition-all duration-300 ${
+              isJoinExpanded
+                ? "pointer-events-none translate-y-6 opacity-0"
+                : "translate-y-0 opacity-100 hover:border-[#2563EB] hover:bg-[#1E40AF]/25"
+            } disabled:cursor-not-allowed disabled:text-[#F8FAFC]/40`}
+          >
+            الانضمام الى غرفة
+          </button>
 
-      {isJoinDialogOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/80 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#1E293B] p-6 shadow-2xl md:p-8">
-            <h2 className="text-2xl font-black text-[#F8FAFC]">الانضمام الى غرفة</h2>
-            <p className="mt-2 text-sm leading-6 text-[#F8FAFC]/75">
-              اكتب كود الغرفة الرقمي ثم اضغط على زر الانضمام.
-            </p>
+          <div
+            className={`flex flex-col gap-3 transition-all duration-300 ${
+              isJoinExpanded ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0"
+            }`}
+          >
+            <p className="pt-1 text-sm font-bold text-[#F8FAFC]/75">ادخل كود الغرفة</p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setRoomCode("");
+                  setIsJoinExpanded(false);
+                }}
+                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 text-lg font-bold text-[#F8FAFC] transition hover:bg-[#0F172A]"
+                aria-label="إغلاق"
+              >
+                ×
+              </button>
 
-            <label className="mt-5 flex flex-col gap-2 text-sm font-semibold text-[#F8FAFC]/85">
-              كود الغرفة
               <input
+                ref={joinInputRef}
                 value={roomCode}
                 onChange={(event) => handleRoomCodeChange(event.target.value)}
-                placeholder="مثال: 12345"
+                placeholder="12345"
                 inputMode="numeric"
                 pattern="[0-9]*"
                 maxLength={5}
-                className="rounded-2xl border border-white/15 bg-[#0F172A] px-4 py-3 text-center text-base tracking-[0.25em] text-[#F8FAFC] outline-none transition focus:border-[#2563EB]"
+                className="h-11 flex-1 rounded-2xl border border-white/15 bg-[#0F172A] px-4 text-center text-base font-bold tracking-[0.25em] text-[#F8FAFC] outline-none transition focus:border-[#2563EB]"
               />
-            </label>
 
-            <div className="mt-5 flex gap-3">
               <button
                 type="button"
                 onClick={() => void handleJoinRoom()}
                 disabled={isBusy || !firebaseReady || !playerName}
-                className="flex-1 rounded-2xl bg-[#2563EB] px-5 py-3 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
+                className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#2563EB] text-xl font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
+                aria-label="الدخول إلى الغرفة"
               >
-                الانضمام
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsJoinDialogOpen(false)}
-                className="rounded-2xl border border-white/15 px-5 py-3 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#0F172A]"
-              >
-                إلغاء
+                →
               </button>
             </div>
           </div>
         </div>
-      ) : null}
+      </div>
 
       {isNameDialogOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/80 px-4 backdrop-blur-sm">
