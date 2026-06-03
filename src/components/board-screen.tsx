@@ -43,7 +43,6 @@ function teamPanelClass(team: ActiveTeam, isCurrentTurn: boolean) {
 
 function TeamPanel({
   team,
-  players,
   remainingCards,
   isCurrentTurn,
   isPlayerTeam,
@@ -56,29 +55,11 @@ function TeamPanel({
   onClueSend,
   onJoinTeam,
 }: TeamPanelProps) {
-  const playersLabel = players.length ? players.map((entry) => entry.name).join(" . ") : "بانتظار لاعبين";
-
   return (
     <div
-      className={`flex min-h-0 flex-col justify-between overflow-hidden rounded-2xl border p-2 text-[#F8FAFC] ${teamPanelClass(team, isCurrentTurn)}`}
+      className={`relative flex min-h-0 flex-col justify-between overflow-hidden border px-2 pb-2 pt-1 text-[#F8FAFC] ${teamPanelClass(team, isCurrentTurn)}`}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="truncate text-[10px] font-bold uppercase tracking-[0.2em] text-[#F8FAFC]/60">
-            فريق {teamLabel(team)}
-          </p>
-          <p className="mt-0.5 truncate text-[10px] text-[#F8FAFC]/75">{playersLabel}</p>
-        </div>
-
-        <div className="shrink-0 text-left">
-          <p className="text-[9px] text-[#F8FAFC]/65">المتبقي</p>
-          <p className="text-2xl font-black leading-none">{remainingCards}</p>
-        </div>
-      </div>
-
-      <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-[#F8FAFC]/80">
-        <span className="truncate">{players.length} لاعب</span>
-
+      <div className="flex items-start justify-end">
         {canJoinTeam ? (
           <button
             type="button"
@@ -93,6 +74,12 @@ function TeamPanel({
             فريقك
           </span>
         ) : null}
+      </div>
+
+      <div className="flex flex-1 items-center justify-center">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full border border-white/20 bg-white/12 text-[#F8FAFC] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-sm">
+          <span className="text-4xl font-black leading-none">{remainingCards}</span>
+        </div>
       </div>
 
       {isCurrentTurn ? (
@@ -160,8 +147,8 @@ export function BoardScreen() {
   };
 
   return (
-    <section className="flex h-full w-full max-h-screen flex-col justify-between overflow-hidden bg-[#0F172A] p-2 text-[#F8FAFC]" dir="rtl">
-      <div className="grid h-[22vh] min-h-0 grid-cols-2 gap-2">
+    <section className="flex h-full w-full max-h-screen flex-col justify-between overflow-hidden bg-[#0F172A] text-[#F8FAFC]" dir="rtl">
+      <div className="grid h-[22vh] min-h-0 grid-cols-2 gap-0">
         {activeTeams.map((team) => (
           <TeamPanel
             key={team}
@@ -182,13 +169,13 @@ export function BoardScreen() {
         ))}
       </div>
 
-      <div className="mt-2 h-[4vh] min-h-[28px] rounded-full bg-black/20 px-3 text-xs text-slate-300">
+      <div className="mx-2 mt-2 h-[4vh] min-h-[28px] rounded-full bg-black/20 px-3 text-xs text-slate-300">
         <div className="flex h-full items-center justify-center overflow-hidden">
           <p className="truncate">{tickerText}</p>
         </div>
       </div>
 
-      <div className="my-auto flex h-[68vh] min-h-0 items-center overflow-hidden">
+      <div className="my-auto flex h-[68vh] min-h-0 items-center overflow-hidden px-2">
         <div className={`mx-auto flex h-full w-full ${boardWidthClass} items-center justify-center overflow-hidden`}>
           <GameBoard
             board={room.board}
@@ -201,7 +188,7 @@ export function BoardScreen() {
         </div>
       </div>
 
-      <div className="mt-auto flex h-[6vh] min-h-[40px] items-center justify-between gap-1 border-t border-slate-900/50 px-1">
+      <div className="mt-auto flex h-[6vh] min-h-[40px] items-center justify-between gap-1 border-t border-slate-900/50 px-2">
         <button
           type="button"
           onClick={() => setShowRosterTicker((current) => !current)}
