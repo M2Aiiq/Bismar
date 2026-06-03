@@ -221,9 +221,6 @@ export function HomeScreen() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/80 px-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#1E293B] p-6 shadow-2xl md:p-8">
             <h2 className="text-2xl font-black text-[#F8FAFC]">اكتب اسمك</h2>
-            <p className="mt-2 text-sm leading-6 text-[#F8FAFC]/75">
-              سيتم حفظ الاسم في هذا المتصفح ولن نطلبه منك مرة أخرى.
-            </p>
 
             <label className="mt-5 flex flex-col gap-2 text-sm font-semibold text-[#F8FAFC]/85">
               الاسم
