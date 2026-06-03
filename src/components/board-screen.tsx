@@ -140,6 +140,8 @@ export function BoardScreen() {
   const playerHasActiveTeam = isActiveTeam(player.team);
   const usesMultiRowTeamGrid = activeTeams.length > 2;
   const teamSlots: Array<ActiveTeam | null> = activeTeams.length === 3 ? [...activeTeams, null] : activeTeams;
+  const teamGridHeightClass = usesMultiRowTeamGrid ? "h-[25vh]" : "h-[22vh]";
+  const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[65vh]" : "h-[68vh]";
   const tickerText = showRosterTicker
     ? `اللاعبون: ${room.players.map((entry) => entry.name).join(" . ")}`
     : `الدور الآن: فريق ${teamLabel(currentTeam)} | أنت: ${player.role === "Spymaster" ? "قائد" : "محقق"} | المؤقت: ${room.settings.roundTimerSeconds}ث`;
@@ -156,7 +158,7 @@ export function BoardScreen() {
 
   return (
     <section className="flex h-full w-full max-h-screen flex-col justify-between overflow-hidden bg-[#0F172A] text-[#F8FAFC]" dir="rtl">
-      <div className={`grid h-[22vh] min-h-0 grid-cols-2 gap-0 ${usesMultiRowTeamGrid ? "grid-rows-2" : ""}`}>
+      <div className={`grid min-h-0 grid-cols-2 gap-0 ${teamGridHeightClass} ${usesMultiRowTeamGrid ? "grid-rows-2" : ""}`}>
         {teamSlots.map((team, index) =>
           team ? (
             <TeamPanel
@@ -187,7 +189,7 @@ export function BoardScreen() {
         </div>
       </div>
 
-      <div className="my-auto flex h-[68vh] min-h-0 items-center overflow-hidden px-2">
+      <div className={`my-auto flex min-h-0 items-center overflow-hidden px-2 ${boardSectionHeightClass}`}>
         <div className={`mx-auto flex h-full w-full ${boardWidthClass} items-center justify-center overflow-hidden`}>
           <GameBoard
             board={room.board}
