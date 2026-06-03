@@ -138,6 +138,8 @@ export function BoardScreen() {
   const activeTeams = getActiveTeams(room.settings.teamCount);
   const currentTeam = room.currentTurn;
   const playerHasActiveTeam = isActiveTeam(player.team);
+  const usesMultiRowTeamGrid = activeTeams.length > 2;
+  const teamSlots: Array<ActiveTeam | null> = activeTeams.length === 3 ? [...activeTeams, null] : activeTeams;
   const tickerText = showRosterTicker
     ? `اللاعبون: ${room.players.map((entry) => entry.name).join(" . ")}`
     : `الدور الآن: فريق ${teamLabel(currentTeam)} | أنت: ${player.role === "Spymaster" ? "قائد" : "محقق"} | المؤقت: ${room.settings.roundTimerSeconds}ث`;
@@ -154,25 +156,29 @@ export function BoardScreen() {
 
   return (
     <section className="flex h-full w-full max-h-screen flex-col justify-between overflow-hidden bg-[#0F172A] text-[#F8FAFC]" dir="rtl">
-      <div className="grid h-[22vh] min-h-0 grid-cols-2 gap-0">
-        {activeTeams.map((team) => (
-          <TeamPanel
-            key={team}
-            team={team}
-            players={room.players.filter((entry) => entry.team === team)}
-            remainingCards={countHiddenCards(room.board, team)}
-            isCurrentTurn={team === currentTeam}
-            isPlayerTeam={player.team === team}
-            canJoinTeam={!playerHasActiveTeam}
-            isBusy={isBusy}
-            clueDraft={team === currentTeam ? clueDraft : ""}
-            clueCount={team === currentTeam ? clueCount : "1"}
-            onClueDraftChange={setClueDraft}
-            onClueCountChange={setClueCount}
-            onClueSend={handleClueSend}
-            onJoinTeam={(nextTeam) => chooseTeam(nextTeam)}
-          />
-        ))}
+      <div className={`grid h-[22vh] min-h-0 grid-cols-2 gap-0 ${usesMultiRowTeamGrid ? "grid-rows-2" : ""}`}>
+        {teamSlots.map((team, index) =>
+          team ? (
+            <TeamPanel
+              key={team}
+              team={team}
+              players={room.players.filter((entry) => entry.team === team)}
+              remainingCards={countHiddenCards(room.board, team)}
+              isCurrentTurn={team === currentTeam}
+              isPlayerTeam={player.team === team}
+              canJoinTeam={!playerHasActiveTeam}
+              isBusy={isBusy}
+              clueDraft={team === currentTeam ? clueDraft : ""}
+              clueCount={team === currentTeam ? clueCount : "1"}
+              onClueDraftChange={setClueDraft}
+              onClueCountChange={setClueCount}
+              onClueSend={handleClueSend}
+              onJoinTeam={(nextTeam) => chooseTeam(nextTeam)}
+            />
+          ) : (
+            <div key={`team-slot-${index}`} aria-hidden="true" className="border border-transparent opacity-0" />
+          ),
+        )}
       </div>
 
       <div className="mx-2 mt-2 h-[4vh] min-h-[28px] rounded-full bg-black/20 px-3 text-xs text-slate-300">
