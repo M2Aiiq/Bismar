@@ -21,7 +21,7 @@ export function teamLabel(team: Team) {
     case "Green":
       return "الأخضر";
     case "Gold":
-      return "الذهبي";
+      return "الأصفر";
     default:
       return "غير محدد";
   }
@@ -36,7 +36,7 @@ export function teamCardClass(team: ActiveTeam) {
     case "Green":
       return "border-[#059669] bg-[#059669] text-[#F8FAFC]";
     case "Gold":
-      return "border-[#D97706] bg-[#D97706] text-[#F8FAFC]";
+      return "border-[#EAB308] bg-[#EAB308] text-[#0F172A]";
   }
 }
 
@@ -57,7 +57,7 @@ export function teamBadgeClass(team: Team, selected = false) {
     case "Green":
       return "bg-[#059669] text-[#F8FAFC]";
     case "Gold":
-      return "bg-[#D97706] text-[#F8FAFC]";
+      return "bg-[#EAB308] text-[#0F172A]";
     default:
       return "bg-[#334155] text-[#F8FAFC]";
   }

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { useGameRoom } from "../context/game-room-context";
-import { getActiveTeams, teamBadgeClass, teamLabel } from "../lib/teams";
+import { getActiveTeams, isActiveTeam, teamBadgeClass, teamCardClass, teamLabel } from "../lib/teams";
 import type { Role, TeamCount } from "../types/game";
 
 const ROLE_OPTIONS: Role[] = ["Spymaster", "Operative"];
@@ -228,12 +228,7 @@ export function LobbyScreen() {
 
         <div className="rounded-[2rem] border border-white/10 bg-[#1E293B] p-6 shadow-lg">
           <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-2xl font-black text-[#F8FAFC]">اللاعبون</h2>
-              <p className="mt-2 text-sm leading-6 text-[#F8FAFC]/72">
-                توزيع سريع للفرق والأدوار داخل الغرفة الحالية.
-              </p>
-            </div>
+            <h2 className="text-2xl font-black text-[#F8FAFC]">اللاعبون</h2>
             <span className="rounded-full bg-[#0F172A] px-3 py-1 text-xs font-bold text-[#F8FAFC]/80">
               {room.players.length} لاعب
             </span>
@@ -241,24 +236,28 @@ export function LobbyScreen() {
 
           <div className="mt-6 grid gap-3">
             {room.players.map((entry) => (
-              <div key={entry.id} className="rounded-3xl border border-white/10 bg-[#0F172A] p-4">
+              <div
+                key={entry.id}
+                className={`rounded-2xl border p-3 ${
+                  isActiveTeam(entry.team)
+                    ? teamCardClass(entry.team)
+                    : "border-white/10 bg-[#0F172A] text-[#F8FAFC]"
+                }`}
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-base font-black text-[#F8FAFC]">
+                    <p className="text-base font-black">
                       {entry.name} {entry.id === player.id ? "(أنت)" : ""}
-                    </p>
-                    <p className="mt-2 text-sm text-[#F8FAFC]/62">
-                      فريق {teamLabel(entry.team)} . {roleLabel(entry.role)}
                     </p>
                   </div>
                   <div className="flex flex-wrap justify-end gap-2">
                     {entry.isHost ? (
-                      <span className="rounded-full bg-[#2563EB]/15 px-3 py-1 text-xs font-bold text-[#2563EB]">
+                      <span className="rounded-full border border-white/30 bg-[#F8FAFC]/15 px-3 py-1 text-xs font-bold text-inherit">
                         المضيف
                       </span>
                     ) : null}
-                    <span className={`rounded-full px-3 py-1 text-xs font-bold ${teamBadgeClass(entry.team, true)}`}>
-                      {teamLabel(entry.team)}
+                    <span className="rounded-full border border-white/30 bg-[#F8FAFC]/15 px-3 py-1 text-xs font-bold text-inherit">
+                      {roleLabel(entry.role)}
                     </span>
                   </div>
                 </div>
