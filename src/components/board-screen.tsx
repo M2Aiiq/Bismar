@@ -85,33 +85,37 @@ function TeamPanel({
       <div className="flex flex-1" />
 
       {isCurrentTurn ? (
-        <div className="relative z-10 mt-1 grid grid-cols-[minmax(0,1fr)_46px_30px] gap-1">
-          <input
-            dir="rtl"
-            value={clueDraft}
-            onChange={(event) => onClueDraftChange(event.target.value)}
-            placeholder="كلمة التلميح"
-            className="h-7 min-w-0 rounded-lg border border-white/10 bg-[#0F172A]/70 px-2 text-[10px] text-[#F8FAFC] outline-none placeholder:text-[#F8FAFC]/35"
-          />
-          <select
-            value={clueCount}
-            onChange={(event) => onClueCountChange(event.target.value)}
-            className="h-7 min-w-0 rounded-lg border border-white/10 bg-[#0F172A]/70 px-1 text-[10px] font-bold text-[#F8FAFC] outline-none"
-          >
-            {CLUE_COUNT_OPTIONS.map((value) => (
-              <option key={value} value={value} className="bg-[#0F172A] text-[#F8FAFC]">
-                {value}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            onClick={onClueSend}
-            disabled={!clueDraft.trim()}
-            className="h-7 rounded-lg bg-[#F8FAFC] text-xs font-black text-[#0F172A] transition active:scale-95 disabled:opacity-40"
-          >
-            {">"}
-          </button>
+        <div className="relative z-10 mt-1 overflow-hidden rounded-full border border-white/70 bg-white/10 backdrop-blur-sm">
+          <div className="grid h-8 grid-cols-[minmax(0,1fr)_52px_38px] items-center">
+            <input
+              dir="rtl"
+              value={clueDraft}
+              onChange={(event) => onClueDraftChange(event.target.value)}
+              placeholder="كلمة التلميح"
+              className="h-full min-w-0 bg-transparent px-3 text-[10px] text-[#F8FAFC] outline-none placeholder:text-[#F8FAFC]/45"
+            />
+            <div className="h-full border-x border-white/25">
+              <select
+                value={clueCount}
+                onChange={(event) => onClueCountChange(event.target.value)}
+                className="h-full w-full bg-transparent px-1 text-center text-[10px] font-bold text-[#F8FAFC] outline-none"
+              >
+                {CLUE_COUNT_OPTIONS.map((value) => (
+                  <option key={value} value={value} className="bg-[#0F172A] text-[#F8FAFC]">
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              type="button"
+              onClick={onClueSend}
+              disabled={!clueDraft.trim()}
+              className="h-full bg-white/15 text-xs font-black text-[#F8FAFC] transition active:scale-95 disabled:opacity-40"
+            >
+              {">"}
+            </button>
+          </div>
         </div>
       ) : null}
     </div>
