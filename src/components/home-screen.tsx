@@ -10,24 +10,24 @@ function normalizeRoomCode(value: string | null) {
 }
 
 const FLOATING_WORDS = [
-  "شكو",
-  "شلون",
-  "هسة",
-  "باچر",
-  "هواي",
-  "خوش",
-  "عفية",
-  "يمعود",
-  "يمه",
-  "صوج",
-  "موزين",
-  "شسمة",
-  "دگة",
-  "كفو",
-  "لتزعل",
-  "تره",
-  "يلا",
-  "عال",
+  "بحر",
+  "غزال",
+  "اسد",
+  "صيدلية",
+  "رقم",
+  "شفرة",
+  "سيارة",
+  "طيارة",
+  "دولمة",
+  "مصطفى",
+  "حيدر",
+  "بغداد",
+  "خريطة",
+  "غلط",
+  "زعل",
+  "فضاء",
+  "شمس",
+  "قمر",
 ].map((word, index) => ({
   word,
   top: `${(index * 11) % 82 + 6}%`,
@@ -156,9 +156,7 @@ export function HomeScreen() {
         </button>
 
         <div
-          className={`relative overflow-hidden rounded-2xl border border-white/15 bg-[#1E293B] transition-all duration-300 ${
-            isJoinExpanded ? "min-h-[7.5rem] p-3" : "min-h-[3.75rem]"
-          }`}
+          className="relative h-14 overflow-hidden rounded-2xl border border-white/15 bg-[#1E293B] transition-all duration-300"
         >
           <button
             type="button"
@@ -169,7 +167,7 @@ export function HomeScreen() {
             disabled={isBusy || !firebaseReady || !playerName || isJoinExpanded}
             className={`absolute inset-0 flex items-center justify-center px-5 text-sm font-bold text-[#F8FAFC] transition-all duration-300 ${
               isJoinExpanded
-                ? "pointer-events-none translate-y-6 opacity-0"
+                ? "pointer-events-none translate-y-5 opacity-0"
                 : "translate-y-0 opacity-100 hover:border-[#2563EB] hover:bg-[#1E40AF]/25"
             } disabled:cursor-not-allowed disabled:text-[#F8FAFC]/40`}
           >
@@ -177,22 +175,31 @@ export function HomeScreen() {
           </button>
 
           <div
-            className={`flex flex-col gap-3 transition-all duration-300 ${
+            className={`absolute inset-0 transition-all duration-300 ${
               isJoinExpanded ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0"
             }`}
           >
-            <p className="pt-1 text-sm font-bold text-[#F8FAFC]/75">ادخل كود الغرفة</p>
-            <div className="flex items-center gap-2">
+            <div className="relative h-full">
               <button
                 type="button"
                 onClick={() => {
                   setRoomCode("");
                   setIsJoinExpanded(false);
                 }}
-                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 text-lg font-bold text-[#F8FAFC] transition hover:bg-[#0F172A]"
+                className="absolute left-1 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl border border-white/15 text-lg font-bold text-[#F8FAFC] transition hover:bg-[#0F172A]"
                 aria-label="إغلاق"
               >
                 ×
+              </button>
+
+              <button
+                type="button"
+                onClick={() => void handleJoinRoom()}
+                disabled={isBusy || !firebaseReady || !playerName}
+                className="absolute left-12 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl bg-[#2563EB] text-xl font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
+                aria-label="الدخول إلى الغرفة"
+              >
+                →
               </button>
 
               <input
@@ -203,18 +210,8 @@ export function HomeScreen() {
                 inputMode="numeric"
                 pattern="[0-9]*"
                 maxLength={5}
-                className="h-11 flex-1 rounded-2xl border border-white/15 bg-[#0F172A] px-4 text-center text-base font-bold tracking-[0.25em] text-[#F8FAFC] outline-none transition focus:border-[#2563EB]"
+                className="h-full w-full rounded-2xl bg-[#0F172A] px-4 pl-24 text-center text-base font-bold tracking-[0.25em] text-[#F8FAFC] outline-none transition focus:ring-1 focus:ring-[#2563EB]"
               />
-
-              <button
-                type="button"
-                onClick={() => void handleJoinRoom()}
-                disabled={isBusy || !firebaseReady || !playerName}
-                className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#2563EB] text-xl font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
-                aria-label="الدخول إلى الغرفة"
-              >
-                →
-              </button>
             </div>
           </div>
         </div>
