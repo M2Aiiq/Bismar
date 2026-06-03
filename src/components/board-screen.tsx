@@ -85,13 +85,13 @@ function TeamPanel({
       <div className="flex flex-1" />
 
       {isCurrentTurn ? (
-        <div className="relative z-10 mt-1 overflow-hidden rounded-full border border-white/70 bg-white/10 backdrop-blur-sm">
-          <div className="grid h-8 grid-cols-[minmax(0,1fr)_52px_38px] items-center">
+        <div className="relative z-10 mt-1 overflow-hidden rounded-xl border border-white/70 bg-white/10 backdrop-blur-sm">
+          <div className="grid h-8 grid-cols-[minmax(0,1fr)_40px_38px] items-center">
             <input
               dir="rtl"
               value={clueDraft}
               onChange={(event) => onClueDraftChange(event.target.value)}
-              placeholder="كلمة التلميح"
+              placeholder="التلميح"
               className="h-full min-w-0 bg-transparent px-3 text-[10px] text-[#F8FAFC] outline-none placeholder:text-[#F8FAFC]/45"
             />
             <div className="h-full border-x border-white/25">
