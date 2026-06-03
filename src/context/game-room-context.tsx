@@ -24,6 +24,8 @@ import { getActiveTeams, isActiveTeam, nextTeam, type ActiveTeam } from "../lib/
 import type { Player, Role, Room, RoomSettings, Team, TeamCount } from "../types/game";
 
 type PlayerTeam = ActiveTeam;
+// Temporary bypass requested by the user to preview the next screen before restoring team readiness rules.
+const BYPASS_LOBBY_READY_CHECK = true;
 
 interface GameRoomContextValue {
   room: Room | null;
@@ -125,6 +127,10 @@ function upsertPlayer(players: Player[], nextPlayer: Player) {
 }
 
 function ensurePlayableTeams(players: Player[], teamCount: TeamCount) {
+  if (BYPASS_LOBBY_READY_CHECK) {
+    return players.length > 0;
+  }
+
   return getActiveTeams(teamCount).every((team) => {
     const teamPlayers = players.filter((player) => player.team === team);
     return (
