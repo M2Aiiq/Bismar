@@ -356,13 +356,19 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             return currentValue;
           }
 
+          const leavingPlayer = currentRoom.players.find((currentPlayer) => currentPlayer.id === playerId);
+
+          if (!leavingPlayer) {
+            return currentValue;
+          }
+
           const remainingPlayers = currentRoom.players.filter((currentPlayer) => currentPlayer.id !== playerId);
 
           if (!remainingPlayers.length) {
             return null;
           }
 
-          if (!remainingPlayers.some((currentPlayer) => currentPlayer.isHost)) {
+          if (leavingPlayer.isHost && !remainingPlayers.some((currentPlayer) => currentPlayer.isHost)) {
             remainingPlayers[0] = {
               ...remainingPlayers[0],
               isHost: true,
