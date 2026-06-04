@@ -111,6 +111,7 @@ export function BoardScreen() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isClueBarVisible, setIsClueBarVisible] = useState(false);
   const [isClueInputFocused, setIsClueInputFocused] = useState(false);
+  const [lockedViewportHeight, setLockedViewportHeight] = useState(() => window.innerHeight);
   const [clueBarBottomOffset, setClueBarBottomOffset] = useState(12);
   const [nowMs, setNowMs] = useState(() => Date.now());
 
@@ -173,23 +174,33 @@ export function BoardScreen() {
   useEffect(() => {
     const viewport = window.visualViewport;
 
-    if (!viewport) {
-      setClueBarBottomOffset(12);
-      return;
-    }
+    const updateViewportLayout = () => {
+      const viewportHeight = viewport ? viewport.height + viewport.offsetTop : window.innerHeight;
+      const keyboardInset = viewport ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop) : 0;
 
-    const updateClueBarOffset = () => {
-      const keyboardInset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+      if (keyboardInset < 120) {
+        setLockedViewportHeight(viewportHeight);
+      }
+
       setClueBarBottomOffset(isClueInputFocused ? keyboardInset + 12 : 12);
     };
 
-    updateClueBarOffset();
-    viewport.addEventListener("resize", updateClueBarOffset);
-    viewport.addEventListener("scroll", updateClueBarOffset);
+    updateViewportLayout();
+
+    if (!viewport) {
+      window.addEventListener("resize", updateViewportLayout);
+
+      return () => {
+        window.removeEventListener("resize", updateViewportLayout);
+      };
+    }
+
+    viewport.addEventListener("resize", updateViewportLayout);
+    viewport.addEventListener("scroll", updateViewportLayout);
 
     return () => {
-      viewport.removeEventListener("resize", updateClueBarOffset);
-      viewport.removeEventListener("scroll", updateClueBarOffset);
+      viewport.removeEventListener("resize", updateViewportLayout);
+      viewport.removeEventListener("scroll", updateViewportLayout);
     };
   }, [isClueInputFocused]);
 
@@ -206,8 +217,8 @@ export function BoardScreen() {
   const shouldUseExpandedDenseFont = isLargeFont && room.board.length >= 36 && activeTeams.length >= 3;
   const shouldShowClueBar = true;
   const teamSlots: Array<ActiveTeam | null> = activeTeams.length === 3 ? [...activeTeams, null] : activeTeams;
-  const teamGridHeightClass = usesMultiRowTeamGrid ? "h-[25vh]" : "h-[22vh]";
-  const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[58vh]" : "h-[61vh]";
+  const teamGridHeightClass = usesMultiRowTeamGrid ? "h-[25%]" : "h-[22%]";
+  const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[58%]" : "h-[61%]";
   const tickerText = `الدور الآن: فريق ${teamLabel(currentTeam)} | أنت: ${player.role === "Spymaster" ? "قائد" : "محقق"} | المؤقت: ${room.settings.roundTimerSeconds}ث`;
   const boardWidthClass = room.board.length > 25 ? "max-w-[44rem]" : "max-w-md";
   const boardFontScale = shouldUseExpandedDenseFont ? "expanded" : isLargeFont ? "comfortable" : "compact";
@@ -227,6 +238,7 @@ export function BoardScreen() {
   return (
     <section
       className={`fixed inset-0 flex w-full flex-col overflow-hidden pb-[84px] text-[#F8FAFC] ${boardScreenBackgroundClass(currentTeam)}`}
+      style={{ height: `${lockedViewportHeight}px` }}
       dir="rtl"
     >
       <div className={`grid min-h-0 grid-cols-2 gap-0 ${teamGridHeightClass} ${usesMultiRowTeamGrid ? "grid-rows-2" : ""}`}>
@@ -258,7 +270,7 @@ export function BoardScreen() {
         </div>
       </div>
 
-      <div className="mx-2 mt-2 h-[4vh] min-h-[28px] rounded-full bg-black/20 px-3 text-xs text-slate-300">
+      <div className="mx-2 mt-2 h-8 min-h-[28px] rounded-full bg-black/20 px-3 text-xs text-slate-300">
         <div className="flex h-full min-w-0 items-center justify-center overflow-hidden">
           <p className="truncate">{tickerText}</p>
         </div>
