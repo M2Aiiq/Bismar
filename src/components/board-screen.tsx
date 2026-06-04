@@ -385,7 +385,7 @@ export function BoardScreen() {
       return;
     }
 
-    const nextBannerKey = `${room.currentTurn}-${room.turnPhase}-${room.turnEndsAt ?? "none"}`;
+    const nextBannerKey = room.currentTurn;
 
     if (latestTurnBannerKeyRef.current === null) {
       latestTurnBannerKeyRef.current = nextBannerKey;
@@ -397,7 +397,7 @@ export function BoardScreen() {
     }
 
     latestTurnBannerKeyRef.current = nextBannerKey;
-    setTurnBannerState({ team: room.currentTurn, phase: room.turnPhase });
+    setTurnBannerState({ team: room.currentTurn, phase: "Clue" });
     setIsTurnBannerVisible(true);
 
     const fadeTimeoutId = window.setTimeout(() => {
@@ -405,7 +405,7 @@ export function BoardScreen() {
     }, 1100);
     const clearTimeoutId = window.setTimeout(() => {
       setTurnBannerState((currentValue) =>
-        currentValue && currentValue.team === room.currentTurn && currentValue.phase === room.turnPhase ? null : currentValue,
+        currentValue && currentValue.team === room.currentTurn ? null : currentValue,
       );
     }, 1500);
 
