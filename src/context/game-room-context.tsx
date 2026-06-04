@@ -766,14 +766,10 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
 
           const activeTeams = getActiveTeams(currentRoom.settings.teamCount);
           const nextTurn = nextTeam(currentRoom.currentTurn, activeTeams);
-          const nextClues =
-            currentRoom.turnPhase === "Guess"
-              ? currentRoom.clues.filter((clue) => clue.team !== currentRoom.currentTurn)
-              : currentRoom.clues;
 
           return {
             ...currentRoom,
-            ...getNextCluePhaseState(currentRoom, nextTurn, nextClues),
+            ...getNextCluePhaseState(currentRoom, nextTurn, currentRoom.clues),
           };
         });
       }, "تعذر إنهاء الدور بعد انتهاء الوقت."),
@@ -864,11 +860,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           return {
             ...currentRoom,
             board: nextBoard,
-            ...getNextCluePhaseState(
-              currentRoom,
-              nextTurn,
-              currentRoom.clues.filter((clue) => clue.team !== currentRoom.currentTurn),
-            ),
+            ...getNextCluePhaseState(currentRoom, nextTurn, currentRoom.clues),
           };
         });
       }, "تعذر كشف الكارت."),
