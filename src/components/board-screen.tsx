@@ -223,7 +223,7 @@ function TeamPanel({
     >
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
         {isEliminated ? (
-          <img src="/dead.png" alt="" className="h-16 w-16 select-none object-contain opacity-80" />
+          <img src="/dead.png" alt="" className="h-20 w-20 select-none object-contain opacity-85" />
         ) : (
           <span className="select-none text-[5.5rem] font-black leading-none text-white/16">{remainingCards}</span>
         )}
