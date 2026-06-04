@@ -111,10 +111,15 @@ export function BoardScreen() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isClueBarVisible, setIsClueBarVisible] = useState(false);
   const [isClueInputFocused, setIsClueInputFocused] = useState(false);
-  const [clueBarBottomPx, setClueBarBottomPx] = useState(12);
   const [nowMs, setNowMs] = useState(() => Date.now());
-  const actionButtonsRef = useRef<HTMLDivElement | null>(null);
-  const clueBarRef = useRef<HTMLDivElement | null>(null);
+  const bodyStyleRef = useRef({
+    overflow: "",
+    position: "",
+    top: "",
+    width: "",
+    touchAction: "",
+  });
+  const lockedScrollYRef = useRef(0);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -125,32 +130,46 @@ export function BoardScreen() {
   }, []);
 
   useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    const previousPosition = document.body.style.position;
-    const previousTop = document.body.style.top;
-    const previousWidth = document.body.style.width;
-    const previousTouchAction = document.body.style.touchAction;
-    const scrollY = window.scrollY;
+    bodyStyleRef.current = {
+      overflow: document.body.style.overflow,
+      position: document.body.style.position,
+      top: document.body.style.top,
+      width: document.body.style.width,
+      touchAction: document.body.style.touchAction,
+    };
 
+    return () => {
+      document.body.style.overflow = bodyStyleRef.current.overflow;
+      document.body.style.position = bodyStyleRef.current.position;
+      document.body.style.top = bodyStyleRef.current.top;
+      document.body.style.width = bodyStyleRef.current.width;
+      document.body.style.touchAction = bodyStyleRef.current.touchAction;
+      window.scrollTo(0, lockedScrollYRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isClueInputFocused) {
+      document.body.style.overflow = bodyStyleRef.current.overflow;
+      document.body.style.position = bodyStyleRef.current.position;
+      document.body.style.top = bodyStyleRef.current.top;
+      document.body.style.width = bodyStyleRef.current.width;
+      document.body.style.touchAction = bodyStyleRef.current.touchAction;
+      return;
+    }
+
+    const scrollY = window.scrollY;
+    lockedScrollYRef.current = scrollY;
     document.body.style.overflow = "hidden";
     document.body.style.position = "fixed";
     document.body.style.top = `-${scrollY}px`;
     document.body.style.width = "100%";
     document.body.style.touchAction = "none";
     window.scrollTo(0, 0);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.body.style.position = previousPosition;
-      document.body.style.top = previousTop;
-      document.body.style.width = previousWidth;
-      document.body.style.touchAction = previousTouchAction;
-      window.scrollTo(0, scrollY);
-    };
-  }, []);
+  }, [isClueInputFocused]);
 
   useEffect(() => {
-    if (!isSettingsOpen) {
+    if (!isSettingsOpen || isClueInputFocused) {
       return;
     }
 
@@ -171,43 +190,6 @@ export function BoardScreen() {
 
     return () => window.clearTimeout(timeoutId);
   }, [room?.currentTurn]);
-
-  useEffect(() => {
-    if (!isClueInputFocused) {
-      setClueBarBottomPx(12);
-      return;
-    }
-
-    const updateClueBarPosition = () => {
-      const actionButtonsElement = actionButtonsRef.current;
-      const clueBarElement = clueBarRef.current;
-      const viewport = window.visualViewport;
-      const viewportHeight = viewport?.height ?? window.innerHeight;
-      const viewportOffsetTop = viewport?.offsetTop ?? 0;
-      const keyboardInset = Math.max(0, window.innerHeight - viewportHeight - viewportOffsetTop);
-      const clueBarHeight = clueBarElement?.getBoundingClientRect().height ?? 48;
-
-      if (!actionButtonsElement) {
-        setClueBarBottomPx(keyboardInset + 12);
-        return;
-      }
-
-      const { bottom } = actionButtonsElement.getBoundingClientRect();
-      const maxBottomBelowActions = Math.max(12, window.innerHeight - (bottom + 12) - clueBarHeight);
-      setClueBarBottomPx(Math.min(keyboardInset + 12, maxBottomBelowActions));
-    };
-
-    updateClueBarPosition();
-    window.addEventListener("resize", updateClueBarPosition);
-    window.visualViewport?.addEventListener("resize", updateClueBarPosition);
-    window.visualViewport?.addEventListener("scroll", updateClueBarPosition);
-
-    return () => {
-      window.removeEventListener("resize", updateClueBarPosition);
-      window.visualViewport?.removeEventListener("resize", updateClueBarPosition);
-      window.visualViewport?.removeEventListener("scroll", updateClueBarPosition);
-    };
-  }, [isClueInputFocused]);
 
   if (!room || !player) {
     return null;
@@ -293,7 +275,7 @@ export function BoardScreen() {
             />
           </div>
 
-          <div ref={actionButtonsRef} className="mt-2 flex w-full shrink-0 items-center justify-center gap-2">
+          <div className="mt-2 flex w-full shrink-0 items-center justify-center gap-2">
             <button
               type="button"
               onClick={() => setIsSettingsOpen(true)}
@@ -320,11 +302,9 @@ export function BoardScreen() {
 
       {shouldShowClueBar ? (
         <div
-          ref={clueBarRef}
           className={`fixed inset-x-3 bottom-3 z-20 transition-all duration-300 ease-out ${
             isClueBarVisible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
           }`}
-          style={{ bottom: `${clueBarBottomPx}px` }}
         >
           <div className="mx-auto w-full max-w-[44rem] overflow-hidden rounded-2xl border border-white/20 bg-black/25 shadow-lg backdrop-blur-sm">
             <div className="grid h-12 grid-cols-[40px_46px_minmax(0,1fr)] items-center">
