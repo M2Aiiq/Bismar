@@ -250,6 +250,7 @@ export function BoardScreen() {
   const shouldShowClueInput =
     player.role === "Spymaster" && player.team === room.currentTurn && room.turnPhase === "Clue";
   const shouldShowClueStrip = visibleClues.length > 0;
+  const orderedVisibleClues = [...visibleClues].reverse();
   const teamSlots: Array<ActiveTeam | null> = activeTeams.length === 3 ? [...activeTeams, null] : activeTeams;
   const teamGridHeightClass = usesMultiRowTeamGrid ? "h-[25vh]" : "h-[22vh]";
   const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[62vh]" : "h-[65vh]";
@@ -380,7 +381,7 @@ export function BoardScreen() {
               className="overflow-x-auto overscroll-x-contain rounded-2xl px-0.5 py-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             >
               <div className="flex min-w-full justify-start gap-2">
-                {visibleClues.map((clue) => (
+                {orderedVisibleClues.map((clue) => (
                   <div
                     key={`${clue.team}-${clue.createdAt}`}
                     dir="rtl"
