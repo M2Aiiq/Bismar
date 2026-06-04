@@ -105,8 +105,10 @@ function TeamPanel({
         </span>
       </div>
 
-      <div className="relative z-10 flex flex-col items-end text-right">
-        <div className={`-mx-2 -mt-1 w-[calc(100%+1rem)] px-2 pt-1 ${spymaster ? "bg-black/20 pb-2" : ""}`}>
+      <div className="relative z-10 flex w-full flex-col items-end text-right">
+        <div
+          className={`-mx-2 -mt-1 w-[calc(100%+1rem)] px-2 pt-1 text-right ${spymaster ? "bg-black/20 pb-2" : ""}`}
+        >
           <div className="flex items-start justify-end">
             {canJoinTeam ? (
               <button
@@ -120,13 +122,13 @@ function TeamPanel({
             ) : null}
           </div>
           {spymaster ? (
-            <div className="mt-2 overflow-hidden text-xs font-black text-[#F8FAFC]">{spymaster.name}</div>
+            <div className="mt-2 overflow-hidden text-right text-xs font-black text-[#F8FAFC]">{spymaster.name}</div>
           ) : null}
         </div>
         {spymaster && operatives.length ? <div className="h-px w-full bg-white/40" /> : null}
-        <div className="mt-1 flex flex-col items-end gap-1 overflow-hidden text-right text-[11px] font-bold text-[#F8FAFC]/95">
+        <div className="mt-1 flex w-full flex-col items-end gap-1 overflow-hidden text-right text-[11px] font-bold text-[#F8FAFC]/95">
           {operatives.map((currentPlayer) => (
-            <span key={currentPlayer.id} className="max-w-full">
+            <span key={currentPlayer.id} className="max-w-full self-end text-right">
               {currentPlayer.name}
             </span>
           ))}
