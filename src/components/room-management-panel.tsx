@@ -51,6 +51,7 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
   const canStartGame = player.isHost && !isBusy;
   const roundTimerValue = roundTimerDraft ?? String(room.settings.roundTimerSeconds);
   const isModal = mode === "modal";
+  const isLobbyModal = isModal && room.gameState === "Lobby";
   const setupControlsDisabled = isBusy || room.gameState !== "Lobby";
   const teamCountControlsDisabled = isBusy || !player.isHost;
 
@@ -77,17 +78,18 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
       <section className="mx-auto flex w-full max-w-3xl flex-col">
         <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#1E293B] shadow-2xl">
           <div className="bg-[#0F172A] px-5 pb-5 pt-3 text-center md:px-7">
-            <div className="flex items-center justify-between gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                aria-label="إغلاق الإعدادات"
-                className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/15 bg-[#152033] text-xl font-black text-[#F8FAFC] transition hover:bg-[#17233a]"
-              >
-                ×
-              </button>
+            <div className="relative flex items-center justify-center gap-3">
+              {onClose ? (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label="إغلاق الإعدادات"
+                  className="absolute right-5 top-3 flex h-10 w-10 items-center justify-center rounded-2xl border border-white/15 bg-[#152033] text-xl font-black text-[#F8FAFC] transition hover:bg-[#17233a] md:right-7"
+                >
+                  ×
+                </button>
+              ) : null}
               <p className="text-sm font-bold tracking-[0.24em] text-[#F8FAFC]/60 md:text-base">رمز الدعوة</p>
-              <div className="h-10 w-10 shrink-0" aria-hidden="true" />
             </div>
             <p className="mt-3 text-4xl font-black tracking-[0.35em] text-[#2563EB] md:text-5xl">{roomId}</p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
@@ -207,6 +209,19 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                 ))}
               </div>
             </div>
+
+            {isLobbyModal ? (
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => void startGame()}
+                  disabled={!canStartGame}
+                  className="w-full rounded-2xl bg-[#2563EB] px-5 py-4 text-lg font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
+                >
+                  {player.isHost ? "بدء اللعبة" : "بانتظار المضيف"}
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       </section>

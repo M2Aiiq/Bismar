@@ -194,6 +194,12 @@ export function BoardScreen() {
   }, [isSettingsOpen]);
 
   useEffect(() => {
+    if (room?.gameState === "Lobby" && player?.isHost) {
+      setIsSettingsOpen(true);
+    }
+  }, [player?.isHost, room?.gameState]);
+
+  useEffect(() => {
     setIsClueBarVisible(false);
 
     const timeoutId = window.setTimeout(() => {
@@ -375,7 +381,10 @@ export function BoardScreen() {
         <div className="fixed inset-0 z-50 overflow-hidden bg-[#0F172A]/88 backdrop-blur-sm">
           <div className="flex h-full w-full items-start justify-center px-4 py-4">
             <div className="w-full max-w-6xl overflow-y-auto overscroll-contain">
-              <RoomManagementPanel mode="modal" onClose={() => setIsSettingsOpen(false)} />
+              <RoomManagementPanel
+                mode="modal"
+                onClose={room.gameState === "Lobby" ? undefined : () => setIsSettingsOpen(false)}
+              />
             </div>
           </div>
         </div>
