@@ -123,34 +123,25 @@ export function BoardScreen() {
   }, []);
 
   useEffect(() => {
-    const previousHtmlOverflow = document.documentElement.style.overflow;
-    const previousHtmlHeight = document.documentElement.style.height;
     const previousOverflow = document.body.style.overflow;
     const previousPosition = document.body.style.position;
     const previousTop = document.body.style.top;
     const previousWidth = document.body.style.width;
-    const previousHeight = document.body.style.height;
     const previousTouchAction = document.body.style.touchAction;
     const scrollY = window.scrollY;
 
-    document.documentElement.style.overflow = "hidden";
-    document.documentElement.style.height = "100%";
     document.body.style.overflow = "hidden";
     document.body.style.position = "fixed";
     document.body.style.top = `-${scrollY}px`;
     document.body.style.width = "100%";
-    document.body.style.height = "100%";
     document.body.style.touchAction = "none";
     window.scrollTo(0, 0);
 
     return () => {
-      document.documentElement.style.overflow = previousHtmlOverflow;
-      document.documentElement.style.height = previousHtmlHeight;
       document.body.style.overflow = previousOverflow;
       document.body.style.position = previousPosition;
       document.body.style.top = previousTop;
       document.body.style.width = previousWidth;
-      document.body.style.height = previousHeight;
       document.body.style.touchAction = previousTouchAction;
       window.scrollTo(0, scrollY);
     };
@@ -180,31 +171,25 @@ export function BoardScreen() {
   }, [room?.currentTurn]);
 
   useEffect(() => {
-    if (!isClueInputFocused) {
-      setClueBarBottomOffset(12);
-      return;
-    }
-
     const viewport = window.visualViewport;
 
     if (!viewport) {
+      setClueBarBottomOffset(12);
       return;
     }
 
-    const syncClueBarPosition = () => {
+    const updateClueBarOffset = () => {
       const keyboardInset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
-      setClueBarBottomOffset(12 + keyboardInset);
-      window.scrollTo(0, 0);
+      setClueBarBottomOffset(isClueInputFocused ? keyboardInset + 12 : 12);
     };
 
-    syncClueBarPosition();
-    viewport.addEventListener("resize", syncClueBarPosition);
-    viewport.addEventListener("scroll", syncClueBarPosition);
+    updateClueBarOffset();
+    viewport.addEventListener("resize", updateClueBarOffset);
+    viewport.addEventListener("scroll", updateClueBarOffset);
 
     return () => {
-      viewport.removeEventListener("resize", syncClueBarPosition);
-      viewport.removeEventListener("scroll", syncClueBarPosition);
-      setClueBarBottomOffset(12);
+      viewport.removeEventListener("resize", updateClueBarOffset);
+      viewport.removeEventListener("scroll", updateClueBarOffset);
     };
   }, [isClueInputFocused]);
 
@@ -241,9 +226,8 @@ export function BoardScreen() {
 
   return (
     <section
-      className={`fixed inset-0 z-10 flex w-full flex-col overflow-hidden pb-[84px] text-[#F8FAFC] ${boardScreenBackgroundClass(currentTeam)}`}
+      className={`fixed inset-0 flex w-full flex-col overflow-hidden pb-[84px] text-[#F8FAFC] ${boardScreenBackgroundClass(currentTeam)}`}
       dir="rtl"
-      style={{ height: "100dvh" }}
     >
       <div className={`grid min-h-0 grid-cols-2 gap-0 ${teamGridHeightClass} ${usesMultiRowTeamGrid ? "grid-rows-2" : ""}`}>
         {teamSlots.map((team, index) =>
@@ -352,10 +336,7 @@ export function BoardScreen() {
                 dir="rtl"
                 value={clueDraft}
                 onChange={(event) => setClueDraft(event.target.value)}
-                onFocus={() => {
-                  setIsClueInputFocused(true);
-                  window.scrollTo(0, 0);
-                }}
+                onFocus={() => setIsClueInputFocused(true)}
                 onBlur={() => setIsClueInputFocused(false)}
                 placeholder={`تلميح فريق ${teamLabel(currentTeam)}`}
                 className="h-full min-w-0 bg-transparent px-4 text-sm font-bold text-[#F8FAFC] outline-none placeholder:text-[#F8FAFC]/45"
