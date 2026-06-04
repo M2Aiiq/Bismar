@@ -481,6 +481,10 @@ export function BoardScreen() {
   const canStartNewGame = room.gameState === "GameOver" && player.isHost;
   const activeTeams = getActiveTeams(room.settings.teamCount);
   const currentTeam = room.currentTurn;
+  const isAssassinGameOver = room.gameState === "GameOver" && room.board.some((card) => card.type === "Control" && card.isRevealed);
+  const displayedEliminatedTeams = isAssassinGameOver
+    ? Array.from(new Set<ActiveTeam>([...room.eliminatedTeams, room.currentTurn]))
+    : room.eliminatedTeams;
   const usesMultiRowTeamGrid = activeTeams.length > 2;
   const shouldUseExpandedDenseFont = isLargeFont && room.board.length >= 36 && activeTeams.length >= 3;
   const shouldShowClueInput =
@@ -541,7 +545,7 @@ export function BoardScreen() {
               currentPlayer={player}
               remainingCards={countHiddenCards(room.board, team)}
               isCurrentTurn={team === currentTeam}
-              isEliminated={room.eliminatedTeams.includes(team)}
+              isEliminated={displayedEliminatedTeams.includes(team)}
               isBusy={isBusy}
               onJoinAsOperative={(nextTeam) => joinTeamAs(nextTeam, "Operative")}
               onJoinAsSpymaster={(nextTeam) => joinTeamAs(nextTeam, "Spymaster")}
