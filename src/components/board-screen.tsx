@@ -233,19 +233,19 @@ export function BoardScreen() {
       </div>
 
       {shouldShowClueBar ? (
-        <div className="mx-2 mt-2 shrink-0">
+        <div className="mx-2 shrink-0">
           <div
             className={`mx-auto w-full max-w-[44rem] transition-all duration-300 ease-out ${
               isClueBarVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
             }`}
           >
             <div className="overflow-hidden rounded-2xl border border-white/20 bg-black/25 shadow-lg backdrop-blur-sm">
-              <div className="grid h-12 grid-cols-[40px_46px_minmax(0,1fr)] items-center">
+              <div className="grid h-10 grid-cols-[38px_44px_minmax(0,1fr)] items-center">
                 <button
                   type="button"
                   onClick={handleClueSend}
                   disabled={!clueDraft.trim()}
-                  className="h-full bg-white/15 text-sm font-black text-[#F8FAFC] transition active:scale-95 disabled:opacity-40"
+                  className="h-full bg-white/15 text-xs font-black text-[#F8FAFC] transition active:scale-95 disabled:opacity-40"
                 >
                   {">"}
                 </button>
@@ -267,7 +267,7 @@ export function BoardScreen() {
                   value={clueDraft}
                   onChange={(event) => setClueDraft(event.target.value)}
                   placeholder={`تلميح فريق ${teamLabel(currentTeam)}`}
-                  className="h-full min-w-0 bg-transparent px-4 text-sm font-bold text-[#F8FAFC] outline-none placeholder:text-[#F8FAFC]/45"
+                  className="h-full min-w-0 bg-transparent px-3 text-sm font-bold text-[#F8FAFC] outline-none placeholder:text-[#F8FAFC]/45"
                 />
               </div>
             </div>
