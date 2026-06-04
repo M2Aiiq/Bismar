@@ -28,18 +28,18 @@ function cardTextClass(cardText: string, fontScale: GameBoardProps["fontScale"],
       if (denseBoard) {
         if (normalizedTextLength <= 6) {
           return boostedDenseFont
-            ? singleWordTextClass("px-0.5 text-[11px] font-black leading-none sm:px-1 sm:text-[12px]")
+            ? singleWordTextClass("px-0.5 text-[12px] font-black leading-none sm:px-1 sm:text-[13px]")
             : singleWordTextClass("px-0.5 text-[10px] font-black leading-none sm:px-1 sm:text-[11px]");
         }
 
         if (normalizedTextLength <= 8) {
           return boostedDenseFont
-            ? singleWordTextClass("px-0.5 text-[10px] font-black leading-none tracking-[-0.01em] sm:px-1 sm:text-[11px]")
+            ? singleWordTextClass("px-0.5 text-[11px] font-black leading-none tracking-[-0.01em] sm:px-1 sm:text-[12px]")
             : singleWordTextClass("px-0.5 text-[9px] font-black leading-none tracking-[-0.02em] sm:px-1 sm:text-[10px]");
         }
 
         return boostedDenseFont
-          ? singleWordTextClass("px-0.5 text-[9px] font-black leading-none tracking-[-0.02em] sm:px-1 sm:text-[10px]")
+          ? singleWordTextClass("px-0.5 text-[10px] font-black leading-none tracking-[-0.02em] sm:px-1 sm:text-[11px]")
           : singleWordTextClass("px-0.5 text-[8px] font-black leading-none tracking-[-0.03em] sm:px-1 sm:text-[9px]");
       }
 
@@ -57,7 +57,7 @@ function cardTextClass(cardText: string, fontScale: GameBoardProps["fontScale"],
 
   if (fontScale === "comfortable" || boostedDenseFont) {
     return boostedDenseFont && denseBoard
-      ? "block w-full max-w-full whitespace-normal break-normal px-1 text-center text-[10px] font-black leading-[1.1] [text-wrap:balance] sm:px-1.5 sm:text-[11px]"
+      ? "block w-full max-w-full whitespace-normal break-normal px-1 text-center text-[11px] font-black leading-[1.12] [text-wrap:balance] sm:px-1.5 sm:text-[12px]"
       : "block w-full max-w-full whitespace-normal break-normal px-1 text-center text-[9px] font-black leading-[1.08] [text-wrap:balance] sm:px-1.5 sm:text-[10px]";
   }
 
