@@ -115,15 +115,11 @@ function TeamPanel({
           >
             انضم للفريق
           </button>
-        ) : isPlayerTeam ? (
-          <span className="shrink-0 rounded-full border border-white/20 bg-white/10 px-2 py-1 text-[10px] font-bold">
-            فريقك
-          </span>
         ) : null}
       </div>
 
-      <div className="relative z-10 mt-auto pt-2">
-        <div className="flex flex-col items-end gap-1 overflow-hidden text-right">
+      <div className="relative z-10 mt-2">
+        <div className="flex flex-col items-start gap-1 overflow-hidden text-left">
           {spymaster ? (
             <span className="max-w-full rounded-full bg-black/30 px-2 py-1 text-[10px] font-bold text-[#F8FAFC]">
               {spymaster.name}
