@@ -22,10 +22,15 @@ function roleLabel(role: Role) {
 }
 
 export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementPanelProps) {
-  const { room, player, roomId, isBusy, chooseTeam, chooseRole, leaveRoom, startGame, updateRoomSettings } =
+  const { room, player, roomId, isBusy, chooseTeam, chooseRole, leaveRoom, startGame, launchGameWithSettings } =
     useGameRoom();
   const [copiedValue, setCopiedValue] = useState<"code" | "link" | null>(null);
-  const [roundTimerDraft, setRoundTimerDraft] = useState<string | null>(null);
+  const [draftSettings, setDraftSettings] = useState<{
+    teamCount: TeamCount;
+    wordCategory: WordCategory;
+    roundTimerSeconds: string;
+    lossCardCount: (typeof LOSS_CARD_OPTIONS)[number];
+  } | null>(null);
   const origin = typeof window !== "undefined" ? window.location.origin : "";
 
   const inviteLink = useMemo(() => {
@@ -47,31 +52,45 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
     return null;
   }
 
+  useEffect(() => {
+    setDraftSettings({
+      teamCount: room.settings.teamCount,
+      wordCategory: room.settings.wordCategory,
+      roundTimerSeconds: String(room.settings.roundTimerSeconds),
+      lossCardCount: room.settings.lossCardCount,
+    });
+  }, [
+    room.settings.lossCardCount,
+    room.settings.roundTimerSeconds,
+    room.settings.teamCount,
+    room.settings.wordCategory,
+  ]);
+
   const activeTeams = getActiveTeams(room.settings.teamCount);
   const canStartGame = player.isHost && !isBusy;
-  const roundTimerValue = roundTimerDraft ?? String(room.settings.roundTimerSeconds);
+  const roundTimerValue = draftSettings?.roundTimerSeconds ?? String(room.settings.roundTimerSeconds);
   const isModal = mode === "modal";
   const isLobbyModal = isModal && room.gameState === "Lobby";
   const setupControlsDisabled = isBusy || room.gameState !== "Lobby";
   const teamCountControlsDisabled = isBusy || !player.isHost;
+  const canApplyDraft = player.isHost && !isBusy && draftSettings !== null;
 
-  useEffect(() => {
-    if (roundTimerDraft === null || !roundTimerDraft.trim()) {
+  const handleApplyAndStart = () => {
+    if (!draftSettings) {
       return;
     }
 
-    const nextValue = Number(roundTimerDraft);
-
-    if (!Number.isFinite(nextValue) || nextValue === room.settings.roundTimerSeconds) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      void updateRoomSettings({ roundTimerSeconds: nextValue });
-    }, 350);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [roundTimerDraft, room.settings.roundTimerSeconds, updateRoomSettings]);
+    void launchGameWithSettings({
+      teamCount: draftSettings.teamCount,
+      wordCategory: draftSettings.wordCategory,
+      roundTimerSeconds: Number(draftSettings.roundTimerSeconds),
+      lossCardCount: draftSettings.lossCardCount,
+    }).then(() => {
+      if (mode === "modal") {
+        onClose?.();
+      }
+    });
+  };
 
   if (isModal) {
     return (
@@ -132,10 +151,10 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                   <button
                     key={count}
                     type="button"
-                    onClick={() => void updateRoomSettings({ teamCount: count })}
+                    onClick={() => setDraftSettings((currentValue) => (currentValue ? { ...currentValue, teamCount: count } : currentValue))}
                     disabled={teamCountControlsDisabled}
                     className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${
-                      room.settings.teamCount === count
+                      draftSettings?.teamCount === count
                         ? "bg-[#2563EB] text-[#F8FAFC]"
                         : "border border-white/15 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-[#111d34]"
                     } disabled:cursor-not-allowed disabled:opacity-60`}
@@ -153,8 +172,12 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
               </div>
               <div className="mt-3">
                 <select
-                  value={room.settings.wordCategory}
-                  onChange={(event) => void updateRoomSettings({ wordCategory: event.target.value as WordCategory })}
+                  value={draftSettings?.wordCategory ?? room.settings.wordCategory}
+                  onChange={(event) =>
+                    setDraftSettings((currentValue) =>
+                      currentValue ? { ...currentValue, wordCategory: event.target.value as WordCategory } : currentValue,
+                    )
+                  }
                   disabled={isBusy || !player.isHost}
                   className="h-12 w-full rounded-2xl border border-white/15 bg-[#0F172A] px-4 text-base font-bold text-[#F8FAFC] outline-none transition focus:border-[#2563EB] disabled:cursor-not-allowed disabled:opacity-60"
                 >
@@ -178,11 +201,24 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                 max={600}
                 step={5}
                 value={roundTimerValue}
-                onChange={(event) => setRoundTimerDraft(event.target.value.replace(/\D/g, "").slice(0, 3))}
+                onChange={(event) =>
+                  setDraftSettings((currentValue) =>
+                    currentValue
+                      ? { ...currentValue, roundTimerSeconds: event.target.value.replace(/\D/g, "").slice(0, 3) }
+                      : currentValue,
+                  )
+                }
                 onBlur={() => {
-                  if (!roundTimerDraft?.trim()) {
-                    setRoundTimerDraft(null);
-                  }
+                  setDraftSettings((currentValue) =>
+                    currentValue
+                      ? {
+                          ...currentValue,
+                          roundTimerSeconds: currentValue.roundTimerSeconds.trim()
+                            ? currentValue.roundTimerSeconds
+                            : String(room.settings.roundTimerSeconds),
+                        }
+                      : currentValue,
+                  );
                 }}
                 disabled={isBusy || !player.isHost}
                 className="mt-3 h-12 w-full rounded-2xl border border-white/15 bg-[#0F172A] px-4 text-base font-bold text-[#F8FAFC] outline-none transition focus:border-[#2563EB] disabled:cursor-not-allowed disabled:opacity-60"
@@ -196,10 +232,12 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                   <button
                     key={count}
                     type="button"
-                    onClick={() => void updateRoomSettings({ lossCardCount: count })}
+                    onClick={() =>
+                      setDraftSettings((currentValue) => (currentValue ? { ...currentValue, lossCardCount: count } : currentValue))
+                    }
                     disabled={isBusy || !player.isHost}
                     className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${
-                      room.settings.lossCardCount === count
+                      draftSettings?.lossCardCount === count
                         ? "bg-[#DC2626] text-[#F8FAFC]"
                         : "border border-white/15 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-[#221523]"
                     } disabled:cursor-not-allowed disabled:opacity-60`}
@@ -214,14 +252,25 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
               <div className="pt-2">
                 <button
                   type="button"
-                  onClick={() => void startGame()}
-                  disabled={!canStartGame}
+                  onClick={handleApplyAndStart}
+                  disabled={!canApplyDraft}
                   className="w-full rounded-2xl bg-[#2563EB] px-5 py-4 text-lg font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
                 >
-                  {player.isHost ? "بدء اللعبة" : "بانتظار المضيف"}
+                  {player.isHost ? "بدء لعبة جديدة" : "بانتظار المضيف"}
                 </button>
               </div>
-            ) : null}
+            ) : (
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={handleApplyAndStart}
+                  disabled={!canApplyDraft}
+                  className="w-full rounded-2xl bg-[#2563EB] px-5 py-4 text-lg font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
+                >
+                  {player.isHost ? "بدء لعبة جديدة" : "بانتظار المضيف"}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -280,10 +329,12 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                     <button
                       key={count}
                       type="button"
-                      onClick={() => void updateRoomSettings({ teamCount: count })}
+                      onClick={() =>
+                        setDraftSettings((currentValue) => (currentValue ? { ...currentValue, teamCount: count } : currentValue))
+                      }
                       disabled={teamCountControlsDisabled}
                       className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${
-                        room.settings.teamCount === count
+                        draftSettings?.teamCount === count
                           ? "bg-[#2563EB] text-[#F8FAFC]"
                           : "border border-white/15 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-[#111d34]"
                       } disabled:cursor-not-allowed disabled:opacity-60`}
@@ -301,8 +352,12 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                 </div>
                 <div className="mt-3">
                   <select
-                    value={room.settings.wordCategory}
-                    onChange={(event) => void updateRoomSettings({ wordCategory: event.target.value as WordCategory })}
+                    value={draftSettings?.wordCategory ?? room.settings.wordCategory}
+                    onChange={(event) =>
+                      setDraftSettings((currentValue) =>
+                        currentValue ? { ...currentValue, wordCategory: event.target.value as WordCategory } : currentValue,
+                      )
+                    }
                     disabled={isBusy || !player.isHost}
                     className="h-12 w-full rounded-2xl border border-white/15 bg-[#0F172A] px-4 text-base font-bold text-[#F8FAFC] outline-none transition focus:border-[#2563EB] disabled:cursor-not-allowed disabled:opacity-60"
                   >
@@ -326,11 +381,24 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                   max={600}
                   step={5}
                   value={roundTimerValue}
-                  onChange={(event) => setRoundTimerDraft(event.target.value.replace(/\D/g, "").slice(0, 3))}
+                  onChange={(event) =>
+                    setDraftSettings((currentValue) =>
+                      currentValue
+                        ? { ...currentValue, roundTimerSeconds: event.target.value.replace(/\D/g, "").slice(0, 3) }
+                        : currentValue,
+                    )
+                  }
                   onBlur={() => {
-                    if (!roundTimerDraft?.trim()) {
-                      setRoundTimerDraft(null);
-                    }
+                    setDraftSettings((currentValue) =>
+                      currentValue
+                        ? {
+                            ...currentValue,
+                            roundTimerSeconds: currentValue.roundTimerSeconds.trim()
+                              ? currentValue.roundTimerSeconds
+                              : String(room.settings.roundTimerSeconds),
+                          }
+                        : currentValue,
+                    );
                   }}
                   onKeyDown={(event) => {
                     if (event.key === "Enter") {
@@ -349,10 +417,12 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                     <button
                       key={count}
                       type="button"
-                      onClick={() => void updateRoomSettings({ lossCardCount: count })}
+                      onClick={() =>
+                        setDraftSettings((currentValue) => (currentValue ? { ...currentValue, lossCardCount: count } : currentValue))
+                      }
                       disabled={isBusy || !player.isHost}
                       className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${
-                        room.settings.lossCardCount === count
+                        draftSettings?.lossCardCount === count
                           ? "bg-[#DC2626] text-[#F8FAFC]"
                           : "border border-white/15 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-[#221523]"
                       } disabled:cursor-not-allowed disabled:opacity-60`}
@@ -473,11 +543,11 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
         <div className="w-full">
           <button
             type="button"
-            onClick={() => void startGame()}
-            disabled={!canStartGame}
+            onClick={handleApplyAndStart}
+            disabled={!canApplyDraft}
             className="w-full rounded-2xl bg-[#2563EB] px-5 py-4 text-lg font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
           >
-            {player.isHost ? "بدء اللعبة" : "بانتظار المضيف"}
+            {player.isHost ? "بدء لعبة جديدة" : "بانتظار المضيف"}
           </button>
         </div>
       )}

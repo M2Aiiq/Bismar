@@ -84,6 +84,7 @@ interface GameRoomContextValue {
   chooseRole: (role: Role) => Promise<void>;
   joinTeamAs: (team: ActiveTeam, role: Role) => Promise<void>;
   updateRoomSettings: (settings: Partial<RoomSettings>) => Promise<void>;
+  launchGameWithSettings: (settings: Partial<RoomSettings>) => Promise<void>;
   startGame: () => Promise<void>;
   sendClue: (text: string, count: number) => Promise<void>;
   expireTurnTimer: () => Promise<void>;
@@ -711,6 +712,53 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
     [player, room, roomId, runAction],
   );
 
+  const launchGameWithSettings = useCallback(
+    async (settings: Partial<RoomSettings>) =>
+      runAction(async () => {
+        if (!roomId || !player?.isHost) {
+          throw new Error("فقط المضيف يمكنه بدء الجولة.");
+        }
+
+        const database = getRealtimeDatabase();
+
+        if (!database) {
+          return;
+        }
+
+        await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
+          const currentRoom = normalizeRoom(currentValue);
+
+          if (!currentRoom) {
+            return currentValue;
+          }
+
+          const nextSettings = sanitizeSettingsUpdate(currentRoom.settings, settings);
+          const nextPlayers = applyTeamCountToPlayers(currentRoom.players, nextSettings.teamCount);
+
+          if (!ensurePlayableTeams(nextPlayers, nextSettings.teamCount)) {
+            throw new Error("يجب تجهيز قائد ومحقق لكل فريق نشط قبل بدء الجولة.");
+          }
+
+          const { board, currentTurn } = createBoardState(nextSettings);
+
+          return {
+            ...currentRoom,
+            players: nextPlayers,
+            settings: nextSettings,
+            board,
+            clues: [],
+            eliminatedTeams: [],
+            currentTurn,
+            turnPhase: "Clue",
+            turnEndsAt: getNextTurnEndsAt(nextSettings.roundTimerSeconds),
+            winner: null,
+            gameState: "Playing",
+          };
+        });
+      }, "تعذر بدء اللعبة بالإعدادات الجديدة."),
+    [player, roomId, runAction],
+  );
+
   const sendClue = useCallback(
     async (text: string, count: number) =>
       runAction(async () => {
@@ -1017,6 +1065,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       chooseTeam,
       chooseRole,
       joinTeamAs,
+      launchGameWithSettings,
       updateRoomSettings,
       startGame,
       sendClue,
@@ -1034,6 +1083,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       isReady,
       joinRoom,
       joinTeamAs,
+      launchGameWithSettings,
       leaveRoom,
       player,
       playerName,

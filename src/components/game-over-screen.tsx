@@ -35,6 +35,21 @@ function winnerTextClass(team: string | null) {
   }
 }
 
+function winnerBadgeClass(team: string | null) {
+  switch (team) {
+    case "Red":
+      return "border-[#DC2626]/20 bg-[#DC2626]/10 text-[#EF4444]";
+    case "Blue":
+      return "border-[#2563EB]/20 bg-[#2563EB]/10 text-[#60A5FA]";
+    case "Green":
+      return "border-[#10B981]/20 bg-[#10B981]/10 text-[#34D399]";
+    case "Gold":
+      return "border-[#EAB308]/20 bg-[#EAB308]/10 text-[#FACC15]";
+    default:
+      return "border-slate-700 bg-slate-800/40 text-slate-300";
+  }
+}
+
 export function GameOverScreen() {
   const { room, player, isBusy, resetGame } = useGameRoom();
   const [isDismissed, setIsDismissed] = useState(false);
@@ -65,13 +80,15 @@ export function GameOverScreen() {
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0F172A]/72 p-4 backdrop-blur-md" dir="rtl">
       <div
         className={`flex w-full max-w-sm flex-col justify-between rounded-2xl border-2 bg-[#1E293B] p-6 text-[#F8FAFC] ${
-          isAssassinLoss ? "border-[#DC2626] shadow-[0_0_20px_rgba(220,38,38,0.15)]" : winnerFrameClass(room.winner)
+          isAssassinLoss ? winnerFrameClass(room.winner) : winnerFrameClass(room.winner)
         }`}
       >
         {isAssassinLoss ? (
           <>
-            <h1 className="text-center text-2xl font-black text-[#DC2626]">تم تفعيل المسمار القاتل</h1>
-            <span className="mx-auto mt-2 block w-max rounded-full border border-[#DC2626]/20 bg-[#DC2626]/10 px-3 py-1 text-xs font-bold text-[#EF4444]">
+            <h1 className={`text-center text-2xl font-black ${winnerTextClass(room.winner)}`}>تم تفعيل المسمار القاتل</h1>
+            <span
+              className={`mx-auto mt-2 block w-max rounded-full border px-3 py-1 text-xs font-bold ${winnerBadgeClass(room.winner)}`}
+            >
               {winnerLabel}
             </span>
 
@@ -79,7 +96,7 @@ export function GameOverScreen() {
               <span className="mb-2 block text-[10px] uppercase tracking-[0.24em] text-slate-500">
                 الكلمة المحظورة المسببة للخرق
               </span>
-              <div className="text-4xl font-black text-white drop-shadow-[0_0_8px_rgba(220,38,38,0.5)]">{breachedWord}</div>
+              <div className={`text-4xl font-black text-white ${winnerTextClass(room.winner)}`}>{breachedWord}</div>
             </div>
           </>
         ) : (
