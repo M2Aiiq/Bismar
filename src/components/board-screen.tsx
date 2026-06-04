@@ -182,7 +182,7 @@ export function BoardScreen() {
   const shouldShowClueBar = true;
   const teamSlots: Array<ActiveTeam | null> = activeTeams.length === 3 ? [...activeTeams, null] : activeTeams;
   const teamGridHeightClass = usesMultiRowTeamGrid ? "h-[25vh]" : "h-[22vh]";
-  const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[64vh]" : "h-[67vh]";
+  const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[58vh]" : "h-[61vh]";
   const tickerText = `الدور الآن: فريق ${teamLabel(currentTeam)} | أنت: ${player.role === "Spymaster" ? "قائد" : "محقق"} | المؤقت: ${room.settings.roundTimerSeconds}ث`;
   const boardWidthClass = room.board.length > 25 ? "max-w-[44rem]" : "max-w-md";
   const boardFontScale = shouldUseExpandedDenseFont ? "expanded" : isLargeFont ? "comfortable" : "compact";
@@ -201,7 +201,7 @@ export function BoardScreen() {
 
   return (
     <section
-      className={`flex h-full w-full max-h-screen flex-col overflow-hidden text-[#F8FAFC] ${boardScreenBackgroundClass(currentTeam)}`}
+      className={`flex h-full w-full max-h-screen flex-col overflow-hidden pb-[84px] text-[#F8FAFC] ${boardScreenBackgroundClass(currentTeam)}`}
       dir="rtl"
     >
       <div className={`grid min-h-0 grid-cols-2 gap-0 ${teamGridHeightClass} ${usesMultiRowTeamGrid ? "grid-rows-2" : ""}`}>
@@ -274,48 +274,49 @@ export function BoardScreen() {
             </button>
           </div>
 
-          {shouldShowClueBar ? (
-            <div
-              className={`mt-3 w-full shrink-0 transition-all duration-300 ease-out ${
-                isClueBarVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-              }`}
-            >
-              <div className="overflow-hidden rounded-2xl border border-white/20 bg-black/20 shadow-lg backdrop-blur-sm">
-                <div className="grid h-11 grid-cols-[38px_44px_minmax(0,1fr)] items-center">
-                  <button
-                    type="button"
-                    onClick={handleClueSend}
-                    disabled={!clueDraft.trim()}
-                    className="h-full bg-white/15 text-sm font-black text-[#F8FAFC] transition active:scale-95 disabled:opacity-40"
-                  >
-                    {">"}
-                  </button>
-                  <div className="h-full border-x border-white/15">
-                    <select
-                      value={clueCount}
-                      onChange={(event) => setClueCount(event.target.value)}
-                      className="h-full w-full bg-transparent px-1 text-center text-xs font-bold text-[#F8FAFC] outline-none"
-                    >
-                      {CLUE_COUNT_OPTIONS.map((value) => (
-                        <option key={value} value={value} className="bg-[#0F172A] text-[#F8FAFC]">
-                          {value}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <input
-                    dir="rtl"
-                    value={clueDraft}
-                    onChange={(event) => setClueDraft(event.target.value)}
-                    placeholder={`تلميح فريق ${teamLabel(currentTeam)}`}
-                    className="h-full min-w-0 bg-transparent px-4 text-sm font-bold text-[#F8FAFC] outline-none placeholder:text-[#F8FAFC]/45"
-                  />
-                </div>
-              </div>
-            </div>
-          ) : null}
         </div>
       </div>
+
+      {shouldShowClueBar ? (
+        <div
+          className={`fixed inset-x-3 bottom-3 z-20 transition-all duration-300 ease-out ${
+            isClueBarVisible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
+          }`}
+        >
+          <div className="mx-auto w-full max-w-[44rem] overflow-hidden rounded-2xl border border-white/20 bg-black/25 shadow-lg backdrop-blur-sm">
+            <div className="grid h-12 grid-cols-[40px_46px_minmax(0,1fr)] items-center">
+              <button
+                type="button"
+                onClick={handleClueSend}
+                disabled={!clueDraft.trim()}
+                className="h-full bg-white/15 text-sm font-black text-[#F8FAFC] transition active:scale-95 disabled:opacity-40"
+              >
+                {">"}
+              </button>
+              <div className="h-full border-x border-white/15">
+                <select
+                  value={clueCount}
+                  onChange={(event) => setClueCount(event.target.value)}
+                  className="h-full w-full bg-transparent px-1 text-center text-xs font-bold text-[#F8FAFC] outline-none"
+                >
+                  {CLUE_COUNT_OPTIONS.map((value) => (
+                    <option key={value} value={value} className="bg-[#0F172A] text-[#F8FAFC]">
+                      {value}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <input
+                dir="rtl"
+                value={clueDraft}
+                onChange={(event) => setClueDraft(event.target.value)}
+                placeholder={`تلميح فريق ${teamLabel(currentTeam)}`}
+                className="h-full min-w-0 bg-transparent px-4 text-sm font-bold text-[#F8FAFC] outline-none placeholder:text-[#F8FAFC]/45"
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {isSettingsOpen ? (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-[#0F172A]/88 px-4 py-4 backdrop-blur-sm">
