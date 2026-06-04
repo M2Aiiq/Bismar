@@ -7,7 +7,7 @@ import { RoomManagementPanel } from "./room-management-panel";
 import { useGameRoom } from "../context/game-room-context";
 import { countHiddenCards } from "../lib/game";
 import { getActiveTeams, isActiveTeam, teamLabel, type ActiveTeam } from "../lib/teams";
-import type { Clue, Player } from "../types/game";
+import type { Clue, Player, TurnPhase } from "../types/game";
 
 const CLUE_COUNT_OPTIONS = Array.from({ length: 9 }, (_, index) => String(index + 1));
 
@@ -99,6 +99,67 @@ function clueModalBadgeClass(team: ActiveTeam) {
     case "Gold":
       return "bg-[#EAB308] text-[#0F172A]";
   }
+}
+
+function turnBannerFrameClass(team: ActiveTeam) {
+  switch (team) {
+    case "Red":
+      return "border-[#DC2626] shadow-[0_0_15px_rgba(220,38,38,0.2)]";
+    case "Blue":
+      return "border-[#2563EB] shadow-[0_0_15px_rgba(37,99,235,0.2)]";
+    case "Green":
+      return "border-[#10B981] shadow-[0_0_15px_rgba(16,185,129,0.2)]";
+    case "Gold":
+      return "border-[#EAB308] shadow-[0_0_15px_rgba(234,179,8,0.2)]";
+  }
+}
+
+function turnBannerTeamTextClass(team: ActiveTeam) {
+  switch (team) {
+    case "Red":
+      return "text-[#FCA5A5]";
+    case "Blue":
+      return "text-[#93C5FD]";
+    case "Green":
+      return "text-[#6EE7B7]";
+    case "Gold":
+      return "text-[#FDE68A]";
+  }
+}
+
+function turnBannerPhaseLabel(team: ActiveTeam, phase: TurnPhase) {
+  if (phase === "Guess") {
+    return `مرحلة تخمين الفريق ${teamLabel(team)}`;
+  }
+
+  return `دور قائد الفريق ${teamLabel(team)}`;
+}
+
+interface TurnTransitionBannerProps {
+  team: ActiveTeam;
+  phase: TurnPhase;
+  isVisible: boolean;
+}
+
+function TurnTransitionBanner({ team, phase, isVisible }: TurnTransitionBannerProps) {
+  return (
+    <div
+      className={`pointer-events-none fixed left-0 right-0 top-1/4 z-50 w-full border-y bg-[#1E293B]/90 py-4 backdrop-blur-md transition-all duration-500 ${
+        isVisible ? "translate-x-0 opacity-100" : "translate-x-8 opacity-0"
+      } ${turnBannerFrameClass(team)}`}
+      dir="rtl"
+    >
+      <div className="flex flex-col items-center justify-center px-4 text-center">
+        <span className="mb-1 text-[10px] uppercase tracking-[0.28em] text-slate-400">[ تحديث شيفرة العمليات ]</span>
+        <div className="text-xl font-black text-white md:text-2xl">انتقال القيادة التكتيكية</div>
+        <div
+          className={`mt-2 rounded-full border border-current/20 bg-[#0F172A]/70 px-4 py-1 text-sm font-black ${turnBannerTeamTextClass(team)}`}
+        >
+          {turnBannerPhaseLabel(team, phase)}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 interface ClueNotificationModalProps {
@@ -210,10 +271,13 @@ export function BoardScreen() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isClueBarVisible, setIsClueBarVisible] = useState(false);
   const [incomingClue, setIncomingClue] = useState<Clue | null>(null);
+  const [turnBannerState, setTurnBannerState] = useState<{ team: ActiveTeam; phase: TurnPhase } | null>(null);
+  const [isTurnBannerVisible, setIsTurnBannerVisible] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const handledExpiredTurnRef = useRef<string | null>(null);
   const latestClueRef = useRef<HTMLDivElement | null>(null);
   const latestSeenClueKeyRef = useRef<string | null>(null);
+  const latestTurnBannerKeyRef = useRef<string | null>(null);
   const visibleClues = room?.clues ?? [];
 
   useEffect(() => {
@@ -284,7 +348,10 @@ export function BoardScreen() {
   useEffect(() => {
     if (!room) {
       latestSeenClueKeyRef.current = null;
+      latestTurnBannerKeyRef.current = null;
       setIncomingClue(null);
+      setTurnBannerState(null);
+      setIsTurnBannerVisible(false);
       return;
     }
 
@@ -308,6 +375,44 @@ export function BoardScreen() {
 
     latestSeenClueKeyRef.current = latestClueKey;
     setIncomingClue(latestClue);
+  }, [room]);
+
+  useEffect(() => {
+    if (!room || room.gameState !== "Playing") {
+      latestTurnBannerKeyRef.current = null;
+      setTurnBannerState(null);
+      setIsTurnBannerVisible(false);
+      return;
+    }
+
+    const nextBannerKey = `${room.currentTurn}-${room.turnPhase}-${room.turnEndsAt ?? "none"}`;
+
+    if (latestTurnBannerKeyRef.current === null) {
+      latestTurnBannerKeyRef.current = nextBannerKey;
+      return;
+    }
+
+    if (latestTurnBannerKeyRef.current === nextBannerKey) {
+      return;
+    }
+
+    latestTurnBannerKeyRef.current = nextBannerKey;
+    setTurnBannerState({ team: room.currentTurn, phase: room.turnPhase });
+    setIsTurnBannerVisible(true);
+
+    const fadeTimeoutId = window.setTimeout(() => {
+      setIsTurnBannerVisible(false);
+    }, 1100);
+    const clearTimeoutId = window.setTimeout(() => {
+      setTurnBannerState((currentValue) =>
+        currentValue && currentValue.team === room.currentTurn && currentValue.phase === room.turnPhase ? null : currentValue,
+      );
+    }, 1500);
+
+    return () => {
+      window.clearTimeout(fadeTimeoutId);
+      window.clearTimeout(clearTimeoutId);
+    };
   }, [room]);
 
   useEffect(() => {
@@ -547,6 +652,13 @@ export function BoardScreen() {
         </div>
       ) : null}
       {incomingClue ? <ClueNotificationModal clue={incomingClue} /> : null}
+      {turnBannerState ? (
+        <TurnTransitionBanner
+          team={turnBannerState.team}
+          phase={turnBannerState.phase}
+          isVisible={isTurnBannerVisible}
+        />
+      ) : null}
     </section>
   );
 }
