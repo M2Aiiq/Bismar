@@ -150,8 +150,8 @@ function TurnTransitionBanner({ team, phase, isVisible }: TurnTransitionBannerPr
       dir="rtl"
     >
       <div className="flex flex-col items-center justify-center px-4 text-center">
-        <span className="mb-1 text-[10px] uppercase tracking-[0.28em] text-slate-400">[ تحديث شيفرة العمليات ]</span>
-        <div className="text-xl font-black text-white md:text-2xl">انتقال القيادة التكتيكية</div>
+        <span className="mb-1 text-[10px] uppercase tracking-[0.28em] text-slate-400">[ خاص وقتك]</span>
+        <div className="text-xl font-black text-white md:text-2xl">انتقال الدور</div>
         <div
           className={`mt-2 rounded-full border border-current/20 bg-[#0F172A]/70 px-4 py-1 text-sm font-black ${turnBannerTeamTextClass(team)}`}
         >
@@ -264,7 +264,7 @@ function TeamPanel({
 }
 
 export function BoardScreen() {
-  const { room, player, isBusy, joinTeamAs, sendClue, expireTurnTimer, revealCard } = useGameRoom();
+  const { room, player, isBusy, joinTeamAs, sendClue, expireTurnTimer, endGuessTurn, revealCard } = useGameRoom();
   const [clueDraft, setClueDraft] = useState("");
   const [clueCount, setClueCount] = useState("1");
   const [isLargeFont, setIsLargeFont] = useState(false);
@@ -449,6 +449,7 @@ export function BoardScreen() {
 
   const showTruth = player.role === "Spymaster";
   const canReveal = player.role === "Operative" && player.team === room.currentTurn && room.turnPhase === "Guess";
+  const canEndTurn = player.role === "Operative" && player.team === room.currentTurn && room.turnPhase === "Guess";
   const activeTeams = getActiveTeams(room.settings.teamCount);
   const currentTeam = room.currentTurn;
   const usesMultiRowTeamGrid = activeTeams.length > 2;
@@ -598,6 +599,21 @@ export function BoardScreen() {
                 />
               </div>
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {canEndTurn ? (
+        <div className="mx-2 mt-1 shrink-0">
+          <div className="mx-auto flex w-full max-w-[44rem] justify-center">
+            <button
+              type="button"
+              onClick={() => void endGuessTurn()}
+              disabled={isBusy}
+              className="h-8 rounded-full border border-white/25 bg-black/20 px-5 text-xs font-black text-[#F8FAFC] transition active:scale-95 disabled:opacity-50"
+            >
+              إنهاء الدور
+            </button>
           </div>
         </div>
       ) : null}

@@ -61,6 +61,7 @@ interface GameRoomContextValue {
   startGame: () => Promise<void>;
   sendClue: (text: string, count: number) => Promise<void>;
   expireTurnTimer: () => Promise<void>;
+  endGuessTurn: () => Promise<void>;
   revealCard: (cardId: number) => Promise<void>;
   resetGame: () => Promise<void>;
 }
@@ -776,6 +777,44 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
     [roomId, runAction],
   );
 
+  const endGuessTurn = useCallback(
+    async () =>
+      runAction(async () => {
+        if (!roomId) {
+          return;
+        }
+
+        const database = getRealtimeDatabase();
+
+        if (!database) {
+          return;
+        }
+
+        await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
+          const currentRoom = normalizeRoom(currentValue);
+
+          if (!currentRoom || currentRoom.gameState !== "Playing" || currentRoom.turnPhase !== "Guess") {
+            return currentValue;
+          }
+
+          const actor = currentRoom.players.find((currentPlayer) => currentPlayer.id === playerId);
+
+          if (!actor || actor.role !== "Operative" || actor.team !== currentRoom.currentTurn) {
+            return currentValue;
+          }
+
+          const activeTeams = getActiveTeams(currentRoom.settings.teamCount);
+          const nextTurn = nextTeam(currentRoom.currentTurn, activeTeams);
+
+          return {
+            ...currentRoom,
+            ...getNextCluePhaseState(currentRoom, nextTurn, currentRoom.clues),
+          };
+        });
+      }, "تعذر إنهاء الدور."),
+    [playerId, roomId, runAction],
+  );
+
   const revealCard = useCallback(
     async (cardId: number) =>
       runAction(async () => {
@@ -926,6 +965,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       startGame,
       sendClue,
       expireTurnTimer,
+      endGuessTurn,
       revealCard,
       resetGame,
     }),
@@ -949,6 +989,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       startGame,
       sendClue,
       expireTurnTimer,
+      endGuessTurn,
       updateRoomSettings,
     ],
   );
