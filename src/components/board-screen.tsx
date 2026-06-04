@@ -328,6 +328,35 @@ export function BoardScreen() {
         </div>
       </div>
 
+      {shouldShowClueStrip ? (
+        <div className="mx-2 shrink-0">
+          <div
+            className={`mx-auto w-full max-w-[44rem] transition-all duration-300 ease-out ${
+              isClueBarVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+            }`}
+          >
+            <div
+              dir="rtl"
+              className="overflow-x-auto overscroll-x-contain rounded-2xl px-0.5 py-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            >
+              <div className="flex min-w-full justify-start gap-2">
+                {[...visibleClues].reverse().map((clue, index, clues) => (
+                  <div
+                    key={`${clue.team}-${clue.createdAt}`}
+                    ref={index === clues.length - 1 ? latestClueRef : null}
+                    dir="rtl"
+                    className={`flex shrink-0 items-center gap-2 rounded-2xl border px-3 py-1 text-[#F8FAFC] shadow-lg backdrop-blur-sm ${clueChipClass(clue.team)}`}
+                  >
+                    <span className="rounded-full bg-black/20 px-2 py-0.5 text-xs font-black">{clue.count}</span>
+                    <span className="text-sm font-black">{clue.text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {shouldShowClueInput ? (
         <div className="mx-2 shrink-0">
           <div
@@ -365,35 +394,6 @@ export function BoardScreen() {
                   placeholder={`تلميح فريق ${teamLabel(currentTeam)}`}
                   className="h-full min-w-0 bg-transparent px-3 text-sm font-bold text-[#F8FAFC] outline-none placeholder:text-[#F8FAFC]/45"
                 />
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {shouldShowClueStrip ? (
-        <div className="mx-2 shrink-0">
-          <div
-            className={`mx-auto w-full max-w-[44rem] transition-all duration-300 ease-out ${
-              isClueBarVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-            }`}
-          >
-            <div
-              dir="rtl"
-              className="overflow-x-auto overscroll-x-contain rounded-2xl px-0.5 py-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-            >
-              <div className="flex min-w-full justify-start gap-2">
-                {[...visibleClues].reverse().map((clue, index, clues) => (
-                  <div
-                    key={`${clue.team}-${clue.createdAt}`}
-                    ref={index === clues.length - 1 ? latestClueRef : null}
-                    dir="rtl"
-                    className={`flex shrink-0 items-center gap-2 rounded-2xl border px-3 py-1 text-[#F8FAFC] shadow-lg backdrop-blur-sm ${clueChipClass(clue.team)}`}
-                  >
-                    <span className="rounded-full bg-black/20 px-2 py-0.5 text-xs font-black">{clue.count}</span>
-                    <span className="text-sm font-black">{clue.text}</span>
-                  </div>
-                ))}
               </div>
             </div>
           </div>
