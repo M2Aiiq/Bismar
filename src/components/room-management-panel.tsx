@@ -77,7 +77,7 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
       <section className="mx-auto flex w-full max-w-3xl flex-col">
         <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#1E293B] shadow-2xl">
           <div className="bg-[#0F172A] px-5 pb-5 pt-3 text-center md:px-7">
-            <div className="flex items-center justify-start">
+            <div className="flex items-center justify-between gap-3">
               <button
                 type="button"
                 onClick={onClose}
@@ -86,8 +86,9 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
               >
                 ×
               </button>
+              <p className="text-sm font-bold tracking-[0.24em] text-[#F8FAFC]/60 md:text-base">رمز الدعوة</p>
+              <div className="h-10 w-10 shrink-0" aria-hidden="true" />
             </div>
-            <p className="mt-2 text-sm font-bold tracking-[0.24em] text-[#F8FAFC]/60 md:text-base">رمز الدعوة</p>
             <p className="mt-3 text-4xl font-black tracking-[0.35em] text-[#2563EB] md:text-5xl">{roomId}</p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
               <button
