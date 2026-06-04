@@ -130,7 +130,7 @@ function sanitizeLossCardCount(value: unknown): RoomSettings["lossCardCount"] {
 }
 
 function sanitizeWordCategory(value: unknown): WordCategory {
-  return value === "General" ? value : "General";
+  return value === "Cities" || value === "General" ? value : "General";
 }
 
 function sanitizeRoundTimerSeconds(value: unknown) {

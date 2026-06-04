@@ -24,7 +24,7 @@
             ".validate": "newData.val() === 1 || newData.val() === 2 || newData.val() === 3 || newData.val() === 4"
           },
           "wordCategory": {
-            ".validate": "newData.isString() && newData.val() === 'General'"
+            ".validate": "newData.isString() && (newData.val() === 'General' || newData.val() === 'Cities')"
           }
         },
         "currentTurn": {
