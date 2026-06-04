@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { GameBoard } from "./game-board";
+import { RoomManagementPanel } from "./room-management-panel";
 import { useGameRoom } from "../context/game-room-context";
 import { countHiddenCards } from "../lib/game";
 import { getActiveTeams, isActiveTeam, teamLabel, type ActiveTeam } from "../lib/teams";
@@ -152,6 +153,7 @@ export function BoardScreen() {
   const [clueDraft, setClueDraft] = useState("");
   const [clueCount, setClueCount] = useState("1");
   const [isLargeFont, setIsLargeFont] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
 
   useEffect(() => {
@@ -161,6 +163,19 @@ export function BoardScreen() {
 
     return () => window.clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    if (!isSettingsOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isSettingsOpen]);
 
   if (!room || !player) {
     return null;
@@ -250,7 +265,14 @@ export function BoardScreen() {
         </div>
       </div>
 
-      <div className="flex h-[5vh] min-h-[34px] items-center justify-center px-3 pb-1">
+      <div className="flex h-[5vh] min-h-[34px] items-center justify-center gap-2 px-3 pb-1">
+        <button
+          type="button"
+          onClick={() => setIsSettingsOpen(true)}
+          className="h-7 rounded-full border border-white/25 bg-black/10 px-4 text-xs font-bold text-slate-200 transition active:scale-95"
+        >
+          إعدادات
+        </button>
         <button
           type="button"
           onClick={() => setIsLargeFont((currentValue) => !currentValue)}
@@ -264,6 +286,14 @@ export function BoardScreen() {
           خط
         </button>
       </div>
+
+      {isSettingsOpen ? (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-[#0F172A]/88 px-4 py-4 backdrop-blur-sm">
+          <div className="mx-auto min-h-full w-full max-w-6xl">
+            <RoomManagementPanel mode="modal" onClose={() => setIsSettingsOpen(false)} />
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

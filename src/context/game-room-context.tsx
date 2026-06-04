@@ -414,7 +414,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
           const currentRoom = normalizeRoom(currentValue);
 
-          if (!currentRoom || currentRoom.gameState !== "Lobby") {
+          if (!currentRoom || currentRoom.gameState === "GameOver") {
             return currentValue;
           }
 
@@ -456,7 +456,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
           const currentRoom = normalizeRoom(currentValue);
 
-          if (!currentRoom || currentRoom.gameState !== "Lobby") {
+          if (!currentRoom || currentRoom.gameState === "GameOver") {
             return currentValue;
           }
 
@@ -503,8 +503,9 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
 
         await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
           const currentRoom = normalizeRoom(currentValue);
+          const wasPlaying = currentRoom?.gameState === "Playing";
 
-          if (!currentRoom || currentRoom.gameState !== "Lobby") {
+          if (!currentRoom || currentRoom.gameState === "GameOver") {
             return currentValue;
           }
 
@@ -517,6 +518,21 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           const nextSettings = sanitizeSettingsUpdate(currentRoom.settings, settings);
           const nextPlayers = applyTeamCountToPlayers(currentRoom.players, nextSettings.teamCount);
           const activeTeams = getActiveTeams(nextSettings.teamCount);
+
+          if (wasPlaying) {
+            const { board, currentTurn } = createBoardState(nextSettings);
+
+            return {
+              ...currentRoom,
+              players: nextPlayers,
+              settings: nextSettings,
+              board,
+              currentTurn,
+              turnEndsAt: null,
+              winner: null,
+              gameState: "Lobby",
+            };
+          }
 
           return {
             ...currentRoom,
