@@ -14,9 +14,9 @@ const CLUE_COUNT_OPTIONS = Array.from({ length: 9 }, (_, index) => String(index 
 interface TeamPanelProps {
   team: ActiveTeam;
   players: Player[];
+  currentPlayer: Player;
   remainingCards: number;
   isCurrentTurn: boolean;
-  canJoinTeam: boolean;
   isBusy: boolean;
   onJoinAsOperative: (team: ActiveTeam) => void;
   onJoinAsSpymaster: (team: ActiveTeam) => void;
@@ -78,9 +78,9 @@ function clueChipClass(team: ActiveTeam) {
 function TeamPanel({
   team,
   players,
+  currentPlayer,
   remainingCards,
   isCurrentTurn,
-  canJoinTeam,
   isBusy,
   onJoinAsOperative,
   onJoinAsSpymaster,
@@ -94,6 +94,8 @@ function TeamPanel({
   });
   const spymaster = orderedPlayers.find((currentPlayer) => currentPlayer.role === "Spymaster") ?? null;
   const operatives = orderedPlayers.filter((currentPlayer) => currentPlayer.role === "Operative");
+  const canShowJoinAsOperative = currentPlayer.role !== "Operative" || currentPlayer.team !== team;
+  const canShowJoinAsSpymaster = currentPlayer.role !== "Spymaster" || currentPlayer.team !== team;
 
   return (
     <div
@@ -107,18 +109,8 @@ function TeamPanel({
 
       <div className="relative z-10 flex w-full flex-col items-end text-right">
         <div className="-mx-2 -mt-1 w-[calc(100%+1rem)] bg-black/20 px-2 pb-2 pt-1 text-right">
-          <div className="flex items-start justify-between gap-2">
-            {canJoinTeam ? (
-              <button
-                type="button"
-                onClick={() => onJoinAsOperative(team)}
-                disabled={isBusy}
-                className="shrink-0 rounded-full border border-white/20 bg-white/10 px-2 py-1 text-[10px] font-bold text-[#F8FAFC] transition active:scale-95 disabled:opacity-60"
-              >
-                انضم للفريق
-              </button>
-            ) : null}
-            {!spymaster && canJoinTeam ? (
+          <div className="flex min-h-[24px] items-start justify-end">
+            {!spymaster && canShowJoinAsSpymaster ? (
               <button
                 type="button"
                 onClick={() => onJoinAsSpymaster(team)}
@@ -135,6 +127,16 @@ function TeamPanel({
         </div>
         <div className="h-px w-full bg-white/40" />
         <div className="mt-1 flex w-full flex-col items-end gap-1 overflow-hidden text-right text-xs font-bold text-[#F8FAFC]/95">
+          {canShowJoinAsOperative ? (
+            <button
+              type="button"
+              onClick={() => onJoinAsOperative(team)}
+              disabled={isBusy}
+              className="mb-1 self-end rounded-full border border-white/20 bg-white/10 px-2 py-1 text-[10px] font-bold text-[#F8FAFC] transition active:scale-95 disabled:opacity-60"
+            >
+              انضم للفريق
+            </button>
+          ) : null}
           {operatives.map((currentPlayer) => (
             <span key={currentPlayer.id} className="max-w-full self-end text-right">
               {currentPlayer.name}
@@ -264,9 +266,9 @@ export function BoardScreen() {
               key={team}
               team={team}
               players={room.players.filter((entry) => entry.team === team)}
+              currentPlayer={player}
               remainingCards={countHiddenCards(room.board, team)}
               isCurrentTurn={team === currentTeam}
-              canJoinTeam={!playerHasActiveTeam}
               isBusy={isBusy}
               onJoinAsOperative={(nextTeam) => joinTeamAs(nextTeam, "Operative")}
               onJoinAsSpymaster={(nextTeam) => joinTeamAs(nextTeam, "Spymaster")}
