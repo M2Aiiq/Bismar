@@ -115,7 +115,7 @@ function TeamPanel({
                 type="button"
                 onClick={() => onJoinAsSpymaster(team)}
                 disabled={isBusy}
-                className="shrink-0 rounded-full border border-white/20 bg-white/15 px-1.5 py-0.5 text-[9px] font-bold text-[#F8FAFC] transition active:scale-95 disabled:opacity-60"
+                className="shrink-0 rounded-full border border-white/20 bg-white/15 px-1.5 py-px text-[9px] font-bold text-[#F8FAFC] transition active:scale-95 disabled:opacity-60"
               >
                 كن القائد
               </button>
@@ -126,7 +126,7 @@ function TeamPanel({
           ) : null}
         </div>
         <div className="h-px w-full bg-white/40" />
-        <div className="mt-1 flex w-full flex-col items-end gap-1 overflow-hidden text-right text-xs font-bold text-[#F8FAFC]/95">
+        <div className="mt-1 flex w-full flex-col items-start gap-1 overflow-hidden text-left text-xs font-bold text-[#F8FAFC]/95">
           {canShowJoinAsOperative ? (
             <button
               type="button"
@@ -138,7 +138,7 @@ function TeamPanel({
             </button>
           ) : null}
           {operatives.map((currentPlayer) => (
-            <span key={currentPlayer.id} className="max-w-full self-end text-right">
+            <span key={currentPlayer.id} className="max-w-full self-start text-left">
               {currentPlayer.name}
             </span>
           ))}
