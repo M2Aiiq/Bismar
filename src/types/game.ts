@@ -28,12 +28,20 @@ export interface Card {
   isRevealed: boolean;
 }
 
+export interface Clue {
+  team: Exclude<Team, "Unassigned">;
+  text: string;
+  count: number;
+  createdAt: number;
+}
+
 export interface Room {
   roomId: string;
   players: Player[];
   gameState: GameState;
   settings: RoomSettings;
   board: Card[];
+  clues: Clue[];
   currentTurn: Exclude<Team, "Unassigned">;
   turnEndsAt: number | null;
   winner: Winner;

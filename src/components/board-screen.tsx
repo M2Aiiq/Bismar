@@ -62,6 +62,19 @@ function timerBarClass(progress: number) {
   return "bg-[#F8FAFC]";
 }
 
+function clueChipClass(team: ActiveTeam) {
+  switch (team) {
+    case "Red":
+      return "border-[#FCA5A5]/35 bg-[#7F1D1D]/65";
+    case "Blue":
+      return "border-[#93C5FD]/35 bg-[#1E3A8A]/65";
+    case "Green":
+      return "border-[#86EFAC]/35 bg-[#064E3B]/65";
+    case "Gold":
+      return "border-[#FDE68A]/35 bg-[#854D0E]/65 text-[#FEF3C7]";
+  }
+}
+
 function TeamPanel({
   team,
   remainingCards,
@@ -104,7 +117,7 @@ function TeamPanel({
 }
 
 export function BoardScreen() {
-  const { room, player, isBusy, chooseTeam, revealCard } = useGameRoom();
+  const { room, player, isBusy, chooseTeam, sendClue, revealCard } = useGameRoom();
   const [clueDraft, setClueDraft] = useState("");
   const [clueCount, setClueCount] = useState("1");
   const [isLargeFont, setIsLargeFont] = useState(false);
@@ -179,7 +192,8 @@ export function BoardScreen() {
   const playerHasActiveTeam = isActiveTeam(player.team);
   const usesMultiRowTeamGrid = activeTeams.length > 2;
   const shouldUseExpandedDenseFont = isLargeFont && room.board.length >= 36 && activeTeams.length >= 3;
-  const shouldShowClueBar = player.role === "Spymaster";
+  const shouldShowClueInput = player.role === "Spymaster";
+  const shouldShowClueStrip = player.role === "Operative" && room.clues.length > 0;
   const teamSlots: Array<ActiveTeam | null> = activeTeams.length === 3 ? [...activeTeams, null] : activeTeams;
   const teamGridHeightClass = usesMultiRowTeamGrid ? "h-[25vh]" : "h-[22vh]";
   const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[62vh]" : "h-[65vh]";
@@ -194,6 +208,7 @@ export function BoardScreen() {
       return;
     }
 
+    void sendClue(clueDraft, Number(clueCount));
     setClueDraft("");
     setClueCount("1");
   };
@@ -232,7 +247,7 @@ export function BoardScreen() {
         </div>
       </div>
 
-      {shouldShowClueBar ? (
+      {shouldShowClueInput ? (
         <div className="mx-2 shrink-0">
           <div
             className={`mx-auto w-full max-w-[44rem] transition-all duration-300 ease-out ${
@@ -270,6 +285,31 @@ export function BoardScreen() {
                   className="h-full min-w-0 bg-transparent px-3 text-sm font-bold text-[#F8FAFC] outline-none placeholder:text-[#F8FAFC]/45"
                 />
               </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {shouldShowClueStrip ? (
+        <div className="mx-2 shrink-0">
+          <div
+            className={`mx-auto w-full max-w-[44rem] transition-all duration-300 ease-out ${
+              isClueBarVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+            }`}
+          >
+            <div className="flex gap-2 overflow-x-auto overscroll-x-contain rounded-2xl px-0.5 py-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              {room.clues.map((clue) => (
+                <div
+                  key={`${clue.team}-${clue.createdAt}`}
+                  className={`flex shrink-0 items-center gap-2 rounded-2xl border px-3 py-2 text-[#F8FAFC] shadow-lg backdrop-blur-sm ${clueChipClass(clue.team)}`}
+                >
+                  <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] font-black">
+                    {teamLabel(clue.team)}
+                  </span>
+                  <span className="text-sm font-black">{clue.text}</span>
+                  <span className="rounded-full bg-black/20 px-2 py-1 text-xs font-black">{clue.count}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

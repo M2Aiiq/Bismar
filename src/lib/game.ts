@@ -1,6 +1,6 @@
 import { getWordsByCategory } from "./words";
 import { getActiveTeams, type ActiveTeam } from "./teams";
-import type { Card, CardType, Player, Room, RoomSettings, TeamCount, WordCategory } from "../types/game";
+import type { Card, CardType, Clue, Player, Room, RoomSettings, TeamCount, WordCategory } from "../types/game";
 
 const DEFAULT_SETTINGS: RoomSettings = {
   teamCount: 2,
@@ -111,6 +111,7 @@ export function createInitialRoom(roomId: string, host: Player): Room {
     gameState: "Lobby",
     settings,
     board,
+    clues: [],
     currentTurn,
     turnEndsAt: null,
     winner: null,
@@ -153,6 +154,43 @@ function sanitizeTurnEndsAt(value: unknown) {
   return Math.max(0, Math.round(value));
 }
 
+function sanitizeClues(value: unknown): Clue[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((entry) => {
+      if (!entry || typeof entry !== "object") {
+        return null;
+      }
+
+      const clue = entry as Partial<Clue>;
+
+      if (
+        (clue.team !== "Red" && clue.team !== "Blue" && clue.team !== "Green" && clue.team !== "Gold") ||
+        typeof clue.text !== "string" ||
+        !clue.text.trim() ||
+        typeof clue.count !== "number" ||
+        Number.isNaN(clue.count) ||
+        typeof clue.createdAt !== "number" ||
+        Number.isNaN(clue.createdAt)
+      ) {
+        return null;
+      }
+
+      return {
+        team: clue.team,
+        text: clue.text.trim().slice(0, 24),
+        count: Math.min(9, Math.max(1, Math.round(clue.count))),
+        createdAt: Math.max(0, Math.round(clue.createdAt)),
+      } satisfies Clue;
+    })
+    .filter((clue): clue is Clue => clue !== null)
+    .sort((left, right) => right.createdAt - left.createdAt)
+    .slice(0, 24);
+}
+
 export function normalizeRoom(value: unknown): Room | null {
   if (!value || typeof value !== "object") {
     return null;
@@ -183,6 +221,7 @@ export function normalizeRoom(value: unknown): Room | null {
   return {
     ...room,
     settings: normalizedSettings,
+    clues: sanitizeClues(room.clues),
     currentTurn: normalizedTurn,
     turnEndsAt: sanitizeTurnEndsAt(room.turnEndsAt),
     winner: normalizedWinner,

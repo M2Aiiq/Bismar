@@ -49,6 +49,7 @@ interface GameRoomContextValue {
   chooseRole: (role: Role) => Promise<void>;
   updateRoomSettings: (settings: Partial<RoomSettings>) => Promise<void>;
   startGame: () => Promise<void>;
+  sendClue: (text: string, count: number) => Promise<void>;
   revealCard: (cardId: number) => Promise<void>;
   resetGame: () => Promise<void>;
 }
@@ -538,6 +539,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
                 players: nextPlayers,
                 settings: nextSettings,
                 board,
+                clues: [],
                 currentTurn,
                 turnEndsAt: getNextTurnEndsAt(nextSettings.roundTimerSeconds),
                 winner: null,
@@ -559,6 +561,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             ...currentRoom,
             players: nextPlayers,
             settings: nextSettings,
+            clues: currentRoom.clues ?? [],
             currentTurn: activeTeams.includes(currentRoom.currentTurn) ? currentRoom.currentTurn : activeTeams[0],
             turnEndsAt: null,
             winner: currentRoom.winner && activeTeams.includes(currentRoom.winner) ? currentRoom.winner : null,
@@ -597,6 +600,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           return {
             ...currentRoom,
             board,
+            clues: [],
             currentTurn,
             turnEndsAt: getNextTurnEndsAt(currentRoom.settings.roundTimerSeconds),
             winner: null,
@@ -605,6 +609,63 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         });
       }, "تعذر بدء الجولة."),
     [player, room, roomId, runAction],
+  );
+
+  const sendClue = useCallback(
+    async (text: string, count: number) =>
+      runAction(async () => {
+        if (!roomId) {
+          return;
+        }
+
+        const trimmedText = text.trim().slice(0, 24);
+        const sanitizedCount = Math.min(9, Math.max(1, Math.round(count)));
+
+        if (!trimmedText) {
+          throw new Error("اكتب التلميح أولاً.");
+        }
+
+        const database = getRealtimeDatabase();
+
+        if (!database) {
+          return;
+        }
+
+        await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
+          const currentRoom = normalizeRoom(currentValue);
+
+          if (!currentRoom || currentRoom.gameState !== "Playing") {
+            return currentValue;
+          }
+
+          const actor = currentRoom.players.find((currentPlayer) => currentPlayer.id === playerId);
+
+          if (
+            !actor ||
+            actor.role !== "Spymaster" ||
+            actor.team === "Unassigned" ||
+            actor.team !== currentRoom.currentTurn
+          ) {
+            return currentValue;
+          }
+
+          const nextClues = [
+            {
+              team: actor.team,
+              text: trimmedText,
+              count: sanitizedCount,
+              createdAt: Date.now(),
+            },
+            ...(currentRoom.clues ?? []),
+          ].slice(0, 24);
+
+          return {
+            ...currentRoom,
+            clues: nextClues,
+          };
+        });
+      }, "تعذر إرسال التلميح."),
+    [playerId, roomId, runAction],
   );
 
   const revealCard = useCallback(
@@ -680,6 +741,10 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           return {
             ...currentRoom,
             board: nextBoard,
+            clues:
+              nextTurn === currentRoom.currentTurn
+                ? currentRoom.clues
+                : currentRoom.clues.filter((clue) => clue.team !== currentRoom.currentTurn),
             currentTurn: nextTurn,
             turnEndsAt:
               nextTurn === currentRoom.currentTurn
@@ -716,6 +781,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           return {
             ...currentRoom,
             board,
+            clues: [],
             currentTurn,
             turnEndsAt: null,
             winner: null,
@@ -745,6 +811,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       chooseRole,
       updateRoomSettings,
       startGame,
+      sendClue,
       revealCard,
       resetGame,
     }),
@@ -765,6 +832,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       room,
       roomId,
       startGame,
+      sendClue,
       updateRoomSettings,
     ],
   );
