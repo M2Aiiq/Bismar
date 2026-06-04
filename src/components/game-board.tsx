@@ -14,6 +14,10 @@ function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
+function singleWordTextClass(sizeClass: string) {
+  return `inline-flex max-w-full flex-none items-center justify-center self-center whitespace-nowrap text-center ${sizeClass}`;
+}
+
 function cardTextClass(cardText: string, fontScale: GameBoardProps["fontScale"], denseBoard: boolean) {
   const normalizedTextLength = Array.from(cardText.replace(/\s+/g, "")).length;
   const isSingleWord = !/\s/.test(cardText.trim());
@@ -22,26 +26,26 @@ function cardTextClass(cardText: string, fontScale: GameBoardProps["fontScale"],
     if (fontScale === "comfortable") {
       if (denseBoard) {
         if (normalizedTextLength <= 6) {
-          return "block w-full max-w-full whitespace-nowrap px-0.5 text-center text-[10px] font-black leading-none sm:px-1 sm:text-[11px]";
+          return singleWordTextClass("px-0.5 text-[10px] font-black leading-none sm:px-1 sm:text-[11px]");
         }
 
         if (normalizedTextLength <= 8) {
-          return "block w-full max-w-full whitespace-nowrap px-0.5 text-center text-[9px] font-black leading-none tracking-[-0.02em] sm:px-1 sm:text-[10px]";
+          return singleWordTextClass("px-0.5 text-[9px] font-black leading-none tracking-[-0.02em] sm:px-1 sm:text-[10px]");
         }
 
-        return "block w-full max-w-full whitespace-nowrap px-0.5 text-center text-[8px] font-black leading-none tracking-[-0.03em] sm:px-1 sm:text-[9px]";
+        return singleWordTextClass("px-0.5 text-[8px] font-black leading-none tracking-[-0.03em] sm:px-1 sm:text-[9px]");
       }
 
-      return "block w-full max-w-full whitespace-nowrap px-1.5 text-center text-sm font-black leading-tight sm:text-base";
+      return singleWordTextClass("px-1.5 text-sm font-black leading-tight sm:text-base");
     }
 
     if (denseBoard) {
       return normalizedTextLength <= 8
-        ? "block w-full max-w-full whitespace-nowrap px-0.5 text-center text-[9px] font-black leading-none sm:px-1 sm:text-[10px]"
-        : "block w-full max-w-full whitespace-nowrap px-0.5 text-center text-[8px] font-black leading-none tracking-[-0.02em] sm:px-1 sm:text-[9px]";
+        ? singleWordTextClass("px-0.5 text-[9px] font-black leading-none sm:px-1 sm:text-[10px]")
+        : singleWordTextClass("px-0.5 text-[8px] font-black leading-none tracking-[-0.02em] sm:px-1 sm:text-[9px]");
     }
 
-    return "block w-full max-w-full whitespace-nowrap px-1 text-center text-[11px] font-black leading-tight sm:text-sm";
+    return singleWordTextClass("px-1 text-[11px] font-black leading-tight sm:text-sm");
   }
 
   return fontScale === "comfortable"
@@ -130,7 +134,7 @@ export function GameBoard({
             onClick={() => onReveal?.(card.id)}
             dir="rtl"
             className={cx(
-              "h-full min-h-0 select-none border text-center transition-all duration-150",
+              "h-full min-h-0 select-none overflow-hidden border text-center transition-all duration-150",
               denseBoard ? "flex items-center justify-center rounded-xl p-1.5" : "flex items-center justify-center rounded-[1.15rem] p-2",
               compact
                 ? ""
