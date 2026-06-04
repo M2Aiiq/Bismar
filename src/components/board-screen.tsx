@@ -77,6 +77,7 @@ function clueChipClass(team: ActiveTeam) {
 
 function TeamPanel({
   team,
+  players,
   remainingCards,
   isCurrentTurn,
   isPlayerTeam,
@@ -84,6 +85,14 @@ function TeamPanel({
   isBusy,
   onJoinTeam,
 }: TeamPanelProps) {
+  const orderedPlayers = [...players].sort((left, right) => {
+    if (left.role === right.role) {
+      return left.name.localeCompare(right.name, "ar");
+    }
+
+    return left.role === "Spymaster" ? -1 : 1;
+  });
+
   return (
     <div
       className={`relative flex min-h-0 flex-col justify-between overflow-hidden border px-2 pb-2 pt-1 text-[#F8FAFC] ${teamPanelClass(team, isCurrentTurn)}`}
@@ -111,7 +120,22 @@ function TeamPanel({
         ) : null}
       </div>
 
-      <div className="flex flex-1" />
+      <div className="relative z-10 mt-1 flex min-h-0 flex-1 flex-col justify-end">
+        <div className="flex flex-wrap justify-end gap-1.5">
+          {orderedPlayers.map((currentPlayer) => (
+            <span
+              key={currentPlayer.id}
+              className={`rounded-full px-2 py-1 text-[10px] font-bold ${
+                currentPlayer.role === "Spymaster"
+                  ? "bg-black/30 text-[#F8FAFC]"
+                  : "bg-white/14 text-[#F8FAFC]/95"
+              }`}
+            >
+              {currentPlayer.name}
+            </span>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
