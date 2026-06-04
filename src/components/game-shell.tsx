@@ -3,7 +3,6 @@
 import { Suspense } from "react";
 
 import { BoardScreen } from "./board-screen";
-import { GameOverScreen } from "./game-over-screen";
 import { HomeScreen } from "./home-screen";
 import { useGameRoom } from "../context/game-room-context";
 
@@ -48,7 +47,7 @@ export function GameShell() {
         ) : null}
         {room?.gameState === "Lobby" && player ? <BoardScreen /> : null}
         {room?.gameState === "Playing" && player ? <BoardScreen /> : null}
-        {room?.gameState === "GameOver" && player ? <GameOverScreen /> : null}
+        {room?.gameState === "GameOver" && player ? <BoardScreen /> : null}
       </div>
     </main>
   );

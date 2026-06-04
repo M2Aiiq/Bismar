@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { GameBoard } from "./game-board";
+import { GameOverScreen } from "./game-over-screen";
 import { RoomManagementPanel } from "./room-management-panel";
 import { useGameRoom } from "../context/game-room-context";
 import { countHiddenCards } from "../lib/game";
@@ -447,9 +448,11 @@ export function BoardScreen() {
     return null;
   }
 
-  const showTruth = player.role === "Spymaster";
-  const canReveal = player.role === "Operative" && player.team === room.currentTurn && room.turnPhase === "Guess";
-  const canEndTurn = player.role === "Operative" && player.team === room.currentTurn && room.turnPhase === "Guess";
+  const showTruth = player.role === "Spymaster" || room.gameState === "GameOver";
+  const canReveal =
+    room.gameState === "Playing" && player.role === "Operative" && player.team === room.currentTurn && room.turnPhase === "Guess";
+  const canEndTurn =
+    room.gameState === "Playing" && player.role === "Operative" && player.team === room.currentTurn && room.turnPhase === "Guess";
   const activeTeams = getActiveTeams(room.settings.teamCount);
   const currentTeam = room.currentTurn;
   const usesMultiRowTeamGrid = activeTeams.length > 2;
@@ -626,6 +629,7 @@ export function BoardScreen() {
               showTruth={showTruth}
               canReveal={canReveal && !isBusy}
               onReveal={(cardId: number) => revealCard(cardId)}
+              revealAll={room.gameState === "GameOver"}
               compact
               fontScale={boardFontScale}
             />
@@ -675,6 +679,7 @@ export function BoardScreen() {
           isVisible={isTurnBannerVisible}
         />
       ) : null}
+      {room.gameState === "GameOver" ? <GameOverScreen /> : null}
     </section>
   );
 }
