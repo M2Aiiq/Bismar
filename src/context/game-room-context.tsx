@@ -27,6 +27,10 @@ type PlayerTeam = ActiveTeam;
 // Temporary bypass requested by the user to preview the next screen before restoring team readiness rules.
 const BYPASS_LOBBY_READY_CHECK = true;
 
+function getNextTurnEndsAt(roundTimerSeconds: number) {
+  return Date.now() + roundTimerSeconds * 1000;
+}
+
 interface GameRoomContextValue {
   room: Room | null;
   player: Player | null;
@@ -519,6 +523,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             players: nextPlayers,
             settings: nextSettings,
             currentTurn: activeTeams.includes(currentRoom.currentTurn) ? currentRoom.currentTurn : activeTeams[0],
+            turnEndsAt: null,
             winner: currentRoom.winner && activeTeams.includes(currentRoom.winner) ? currentRoom.winner : null,
           };
         });
@@ -556,6 +561,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             ...currentRoom,
             board,
             currentTurn,
+            turnEndsAt: getNextTurnEndsAt(currentRoom.settings.roundTimerSeconds),
             winner: null,
             gameState: "Playing",
           };
@@ -590,16 +596,18 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             return currentValue;
           }
 
+          const originalCard = currentRoom.board.find((card) => card.id === cardId);
+
+          if (!originalCard || originalCard.isRevealed) {
+            return currentValue;
+          }
+
           const nextBoard = currentRoom.board.map((card) =>
             card.id === cardId ? { ...card, isRevealed: true } : card,
           );
           const selectedCard = nextBoard.find((card) => card.id === cardId);
 
-          if (!selectedCard || selectedCard.isRevealed === false) {
-            return currentValue;
-          }
-
-          if (currentRoom.board.find((card) => card.id === cardId)?.isRevealed) {
+          if (!selectedCard) {
             return currentValue;
           }
 
@@ -610,6 +618,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
               ...currentRoom,
               board: nextBoard,
               winner: nextTeam(currentRoom.currentTurn, activeTeams),
+              turnEndsAt: null,
               gameState: "GameOver",
             };
           }
@@ -621,6 +630,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
               ...currentRoom,
               board: nextBoard,
               winner: winningTeam,
+              turnEndsAt: null,
               gameState: "GameOver",
             };
           }
@@ -634,6 +644,10 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             ...currentRoom,
             board: nextBoard,
             currentTurn: nextTurn,
+            turnEndsAt:
+              nextTurn === currentRoom.currentTurn
+                ? currentRoom.turnEndsAt ?? getNextTurnEndsAt(currentRoom.settings.roundTimerSeconds)
+                : getNextTurnEndsAt(currentRoom.settings.roundTimerSeconds),
           };
         });
       }, "تعذر كشف الكارت."),
@@ -666,6 +680,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             ...currentRoom,
             board,
             currentTurn,
+            turnEndsAt: null,
             winner: null,
             gameState: "Lobby",
           };

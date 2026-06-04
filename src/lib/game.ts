@@ -111,6 +111,7 @@ export function createInitialRoom(roomId: string, host: Player): Room {
     settings,
     board,
     currentTurn,
+    turnEndsAt: null,
     winner: null,
   };
 }
@@ -133,6 +134,18 @@ function sanitizeRoundTimerSeconds(value: unknown) {
   }
 
   return Math.min(600, Math.max(15, Math.round(value)));
+}
+
+function sanitizeTurnEndsAt(value: unknown) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return null;
+  }
+
+  return Math.max(0, Math.round(value));
 }
 
 export function normalizeRoom(value: unknown): Room | null {
@@ -165,6 +178,7 @@ export function normalizeRoom(value: unknown): Room | null {
     ...room,
     settings: normalizedSettings,
     currentTurn: normalizedTurn,
+    turnEndsAt: sanitizeTurnEndsAt(room.turnEndsAt),
     winner: normalizedWinner,
   };
 }

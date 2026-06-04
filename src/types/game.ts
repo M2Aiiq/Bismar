@@ -33,5 +33,6 @@ export interface Room {
   settings: RoomSettings;
   board: Card[];
   currentTurn: Exclude<Team, "Unassigned">;
+  turnEndsAt: number | null;
   winner: Winner;
 }

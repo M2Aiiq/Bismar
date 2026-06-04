@@ -27,6 +27,9 @@
         "currentTurn": {
           ".validate": "!newData.exists() || newData.val() === 'Red' || newData.val() === 'Blue' || newData.val() === 'Green' || newData.val() === 'Gold'"
         },
+        "turnEndsAt": {
+          ".validate": "!newData.exists() || newData.isNumber()"
+        },
         "winner": {
           ".validate": "!newData.exists() || newData.val() === 'Red' || newData.val() === 'Blue' || newData.val() === 'Green' || newData.val() === 'Gold'"
         },
