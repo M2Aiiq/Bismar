@@ -105,7 +105,7 @@ function shutterPlateClass(card: Card, denseBoard: boolean, compact: boolean, is
     "relative z-20 flex h-full w-full items-center justify-center overflow-hidden border border-slate-300/60 bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] text-[#0F172A] shadow-md transition-transform duration-300 ease-in-out",
     denseBoard ? "rounded-xl p-1.5" : "rounded-[1.15rem] p-2",
     compact ? "" : "aspect-square p-2 text-sm md:text-base",
-    !isCovered && "translate-y-[82%] opacity-90",
+    !isCovered && "translate-y-[50%] opacity-90",
   );
 }
 
