@@ -237,7 +237,7 @@ export function BoardScreen() {
   const shouldShowClueInput =
     player.role === "Spymaster" && player.team === room.currentTurn && room.turnPhase === "Clue";
   const shouldShowClueStrip =
-    player.role === "Operative" &&
+    (player.role === "Operative" || player.role === "Spymaster") &&
     player.team === room.currentTurn &&
     room.turnPhase === "Guess" &&
     currentTurnClues.length > 0;
