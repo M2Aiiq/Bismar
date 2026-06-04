@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { GameBoard } from "./game-board";
 import { useGameRoom } from "../context/game-room-context";
@@ -52,6 +52,18 @@ function boardScreenBackgroundClass(team: ActiveTeam) {
     case "Gold":
       return "bg-[linear-gradient(180deg,_#EAB308_0%,_#CA8A04_38%,_#854D0E_100%)]";
   }
+}
+
+function timerBarClass(progress: number) {
+  if (progress <= 0.2) {
+    return "bg-[#DC2626]";
+  }
+
+  if (progress <= 0.45) {
+    return "bg-[#F97316]";
+  }
+
+  return "bg-[#F8FAFC]";
 }
 
 function TeamPanel({
@@ -139,6 +151,7 @@ export function BoardScreen() {
   const { room, player, isBusy, chooseTeam, revealCard } = useGameRoom();
   const [clueDraft, setClueDraft] = useState("");
   const [clueCount, setClueCount] = useState("1");
+  const [remainingMs, setRemainingMs] = useState(0);
 
   if (!room || !player) {
     return null;
@@ -155,6 +168,14 @@ export function BoardScreen() {
   const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[69vh]" : "h-[72vh]";
   const tickerText = `الدور الآن: فريق ${teamLabel(currentTeam)} | أنت: ${player.role === "Spymaster" ? "قائد" : "محقق"} | المؤقت: ${room.settings.roundTimerSeconds}ث`;
   const boardWidthClass = room.board.length > 25 ? "max-w-lg" : "max-w-md";
+  const roundDurationMs = room.settings.roundTimerSeconds * 1000;
+  const timerProgress = useMemo(() => {
+    if (roundDurationMs <= 0) {
+      return 0;
+    }
+
+    return Math.min(1, Math.max(0, remainingMs / roundDurationMs));
+  }, [remainingMs, roundDurationMs]);
 
   const handleClueSend = () => {
     if (!clueDraft.trim()) {
@@ -164,6 +185,18 @@ export function BoardScreen() {
     setClueDraft("");
     setClueCount("1");
   };
+
+  useEffect(() => {
+    const endAt = Date.now() + roundDurationMs;
+
+    setRemainingMs(roundDurationMs);
+
+    const intervalId = window.setInterval(() => {
+      setRemainingMs(Math.max(0, endAt - Date.now()));
+    }, 150);
+
+    return () => window.clearInterval(intervalId);
+  }, [currentTeam, roundDurationMs]);
 
   return (
     <section
@@ -193,6 +226,13 @@ export function BoardScreen() {
             <div key={`team-slot-${index}`} aria-hidden="true" className="border border-transparent opacity-0" />
           ),
         )}
+      </div>
+
+      <div className="h-2.5 w-full overflow-hidden bg-black/25">
+        <div
+          className={`h-full transition-[width,background-color] duration-200 ${timerBarClass(timerProgress)}`}
+          style={{ width: `${timerProgress * 100}%` }}
+        />
       </div>
 
       <div className="mx-2 mt-2 h-[4vh] min-h-[28px] rounded-full bg-black/20 px-3 text-xs text-slate-300">
