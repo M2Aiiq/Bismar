@@ -16,10 +16,10 @@ interface TeamPanelProps {
   players: Player[];
   remainingCards: number;
   isCurrentTurn: boolean;
-  isPlayerTeam: boolean;
   canJoinTeam: boolean;
   isBusy: boolean;
-  onJoinTeam: (team: ActiveTeam) => void;
+  onJoinAsOperative: (team: ActiveTeam) => void;
+  onJoinAsSpymaster: (team: ActiveTeam) => void;
 }
 
 function teamPanelClass(team: ActiveTeam, isCurrentTurn: boolean) {
@@ -80,10 +80,10 @@ function TeamPanel({
   players,
   remainingCards,
   isCurrentTurn,
-  isPlayerTeam,
   canJoinTeam,
   isBusy,
-  onJoinTeam,
+  onJoinAsOperative,
+  onJoinAsSpymaster,
 }: TeamPanelProps) {
   const orderedPlayers = [...players].sort((left, right) => {
     if (left.role === right.role) {
@@ -106,29 +106,37 @@ function TeamPanel({
       </div>
 
       <div className="relative z-10 flex w-full flex-col items-end text-right">
-        <div
-          className={`-mx-2 -mt-1 w-[calc(100%+1rem)] px-2 pt-1 text-right ${spymaster ? "bg-black/20 pb-2" : ""}`}
-        >
-          <div className="flex items-start justify-end">
+        <div className="-mx-2 -mt-1 w-[calc(100%+1rem)] bg-black/20 px-2 pb-2 pt-1 text-right">
+          <div className="flex items-start justify-between gap-2">
             {canJoinTeam ? (
               <button
                 type="button"
-                onClick={() => onJoinTeam(team)}
+                onClick={() => onJoinAsOperative(team)}
                 disabled={isBusy}
                 className="shrink-0 rounded-full border border-white/20 bg-white/10 px-2 py-1 text-[10px] font-bold text-[#F8FAFC] transition active:scale-95 disabled:opacity-60"
               >
                 انضم للفريق
               </button>
             ) : null}
+            {!spymaster && canJoinTeam ? (
+              <button
+                type="button"
+                onClick={() => onJoinAsSpymaster(team)}
+                disabled={isBusy}
+                className="shrink-0 rounded-full border border-white/20 bg-white/15 px-2 py-1 text-[10px] font-black text-[#F8FAFC] transition active:scale-95 disabled:opacity-60"
+              >
+                كن القائد
+              </button>
+            ) : null}
           </div>
           {spymaster ? (
-            <div className="mt-2 overflow-hidden text-right text-xs font-black text-[#F8FAFC]">{spymaster.name}</div>
+            <div className="mt-2 overflow-hidden text-right text-[13px] font-black text-[#F8FAFC]">{spymaster.name}</div>
           ) : null}
         </div>
-        {spymaster && operatives.length ? <div className="h-px w-full bg-white/40" /> : null}
-        <div className="mt-1 flex w-full flex-col items-start gap-1 overflow-hidden text-left text-[11px] font-bold text-[#F8FAFC]/95">
+        <div className="h-px w-full bg-white/40" />
+        <div className="mt-1 flex w-full flex-col items-end gap-1 overflow-hidden text-right text-xs font-bold text-[#F8FAFC]/95">
           {operatives.map((currentPlayer) => (
-            <span key={currentPlayer.id} className="max-w-full self-start text-left">
+            <span key={currentPlayer.id} className="max-w-full self-end text-right">
               {currentPlayer.name}
             </span>
           ))}
@@ -139,7 +147,7 @@ function TeamPanel({
 }
 
 export function BoardScreen() {
-  const { room, player, isBusy, chooseTeam, sendClue, revealCard } = useGameRoom();
+  const { room, player, isBusy, joinTeamAs, sendClue, revealCard } = useGameRoom();
   const [clueDraft, setClueDraft] = useState("");
   const [clueCount, setClueCount] = useState("1");
   const [isLargeFont, setIsLargeFont] = useState(false);
@@ -258,10 +266,10 @@ export function BoardScreen() {
               players={room.players.filter((entry) => entry.team === team)}
               remainingCards={countHiddenCards(room.board, team)}
               isCurrentTurn={team === currentTeam}
-              isPlayerTeam={player.team === team}
               canJoinTeam={!playerHasActiveTeam}
               isBusy={isBusy}
-              onJoinTeam={(nextTeam) => chooseTeam(nextTeam)}
+              onJoinAsOperative={(nextTeam) => joinTeamAs(nextTeam, "Operative")}
+              onJoinAsSpymaster={(nextTeam) => joinTeamAs(nextTeam, "Spymaster")}
             />
           ) : (
             <div key={`team-slot-${index}`} aria-hidden="true" className="border border-transparent opacity-0" />

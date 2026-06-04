@@ -47,6 +47,7 @@ interface GameRoomContextValue {
   leaveRoom: () => Promise<void>;
   chooseTeam: (team: Team) => Promise<void>;
   chooseRole: (role: Role) => Promise<void>;
+  joinTeamAs: (team: ActiveTeam, role: Role) => Promise<void>;
   updateRoomSettings: (settings: Partial<RoomSettings>) => Promise<void>;
   startGame: () => Promise<void>;
   sendClue: (text: string, count: number) => Promise<void>;
@@ -494,6 +495,61 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
     [playerId, roomId, runAction],
   );
 
+  const joinTeamAs = useCallback(
+    async (team: ActiveTeam, role: Role) =>
+      runAction(async () => {
+        if (!roomId) {
+          return;
+        }
+
+        const database = getRealtimeDatabase();
+
+        if (!database) {
+          return;
+        }
+
+        await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
+          const currentRoom = normalizeRoom(currentValue);
+
+          if (!currentRoom || currentRoom.gameState === "GameOver") {
+            return currentValue;
+          }
+
+          const currentPlayer = currentRoom.players.find((entry) => entry.id === playerId);
+
+          if (!currentPlayer) {
+            return currentValue;
+          }
+
+          const activeTeams = getActiveTeams(currentRoom.settings.teamCount);
+
+          if (!activeTeams.includes(team)) {
+            return currentValue;
+          }
+
+          let players = currentRoom.players;
+
+          if (role === "Spymaster") {
+            players = players.map((entry) =>
+              entry.id !== currentPlayer.id && entry.team === team && entry.role === "Spymaster"
+                ? { ...entry, role: "Operative" }
+                : entry,
+            );
+          }
+
+          return {
+            ...currentRoom,
+            players: upsertPlayer(players, {
+              ...currentPlayer,
+              team,
+              role,
+            }),
+          };
+        });
+      }, "تعذر الانضمام إلى الفريق."),
+    [playerId, roomId, runAction],
+  );
+
   const updateRoomSettings = useCallback(
     async (settings: Partial<RoomSettings>) =>
       runAction(async () => {
@@ -809,6 +865,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       leaveRoom,
       chooseTeam,
       chooseRole,
+      joinTeamAs,
       updateRoomSettings,
       startGame,
       sendClue,
@@ -823,6 +880,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       isBusy,
       isReady,
       joinRoom,
+      joinTeamAs,
       leaveRoom,
       player,
       playerName,
