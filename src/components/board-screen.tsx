@@ -109,32 +109,34 @@ function TeamPanel({
 
       <div className="relative z-10 flex w-full flex-col items-end text-right">
         <div className="-mx-2 -mt-1 w-[calc(100%+1rem)] bg-black/20 px-2 pb-2 pt-1 text-right">
-          <div className="flex min-h-[24px] items-start justify-end">
-            {!spymaster && canShowJoinAsSpymaster ? (
+          <div className="flex items-start justify-end">
+            {canShowJoinAsOperative ? (
               <button
                 type="button"
-                onClick={() => onJoinAsSpymaster(team)}
+                onClick={() => onJoinAsOperative(team)}
                 disabled={isBusy}
-                className="shrink-0 rounded-full border border-white/20 bg-white/15 px-2 py-1 text-[10px] font-black text-[#F8FAFC] transition active:scale-95 disabled:opacity-60"
+                className="shrink-0 rounded-full border border-white/20 bg-white/10 px-2 py-1 text-[10px] font-bold text-[#F8FAFC] transition active:scale-95 disabled:opacity-60"
               >
-                كن القائد
+                انضم للفريق
               </button>
             ) : null}
           </div>
           {spymaster ? (
-            <div className="mt-2 overflow-hidden text-right text-[13px] font-black text-[#F8FAFC]">{spymaster.name}</div>
+            <div className={`${canShowJoinAsOperative ? "mt-2" : ""} overflow-hidden text-right text-[13px] font-black text-[#F8FAFC]`}>
+              {spymaster.name}
+            </div>
           ) : null}
         </div>
         <div className="h-px w-full bg-white/40" />
         <div className="mt-1 flex w-full flex-col items-end gap-1 overflow-hidden text-right text-xs font-bold text-[#F8FAFC]/95">
-          {canShowJoinAsOperative ? (
+          {!spymaster && canShowJoinAsSpymaster ? (
             <button
               type="button"
-              onClick={() => onJoinAsOperative(team)}
+              onClick={() => onJoinAsSpymaster(team)}
               disabled={isBusy}
               className="mb-1 self-end rounded-full border border-white/20 bg-white/10 px-2 py-1 text-[10px] font-bold text-[#F8FAFC] transition active:scale-95 disabled:opacity-60"
             >
-              انضم للفريق
+              كن القائد
             </button>
           ) : null}
           {operatives.map((currentPlayer) => (
