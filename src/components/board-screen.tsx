@@ -111,9 +111,10 @@ export function BoardScreen() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isClueBarVisible, setIsClueBarVisible] = useState(false);
   const [isClueInputFocused, setIsClueInputFocused] = useState(false);
-  const [focusedClueTop, setFocusedClueTop] = useState<number | null>(null);
+  const [clueBarBottomPx, setClueBarBottomPx] = useState(12);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const actionButtonsRef = useRef<HTMLDivElement | null>(null);
+  const clueBarRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -173,28 +174,40 @@ export function BoardScreen() {
 
   useEffect(() => {
     if (!isClueInputFocused) {
-      setFocusedClueTop(null);
+      setClueBarBottomPx(12);
       return;
     }
 
-    const updateFocusedCluePosition = () => {
+    const updateClueBarPosition = () => {
       const actionButtonsElement = actionButtonsRef.current;
+      const clueBarElement = clueBarRef.current;
+      const viewport = window.visualViewport;
+      const viewportHeight = viewport?.height ?? window.innerHeight;
+      const viewportOffsetTop = viewport?.offsetTop ?? 0;
+      const keyboardInset = Math.max(0, window.innerHeight - viewportHeight - viewportOffsetTop);
+      const clueBarHeight = clueBarElement?.getBoundingClientRect().height ?? 48;
 
       if (!actionButtonsElement) {
+        setClueBarBottomPx(keyboardInset + 12);
         return;
       }
 
       const { bottom } = actionButtonsElement.getBoundingClientRect();
-      setFocusedClueTop(bottom + 12);
+      const maxBottomBelowActions = Math.max(12, window.innerHeight - (bottom + 12) - clueBarHeight);
+      setClueBarBottomPx(Math.min(keyboardInset + 12, maxBottomBelowActions));
     };
 
-    updateFocusedCluePosition();
-    window.addEventListener("resize", updateFocusedCluePosition);
+    updateClueBarPosition();
+    window.addEventListener("resize", updateClueBarPosition);
+    window.visualViewport?.addEventListener("resize", updateClueBarPosition);
+    window.visualViewport?.addEventListener("scroll", updateClueBarPosition);
 
     return () => {
-      window.removeEventListener("resize", updateFocusedCluePosition);
+      window.removeEventListener("resize", updateClueBarPosition);
+      window.visualViewport?.removeEventListener("resize", updateClueBarPosition);
+      window.visualViewport?.removeEventListener("scroll", updateClueBarPosition);
     };
-  }, [isClueInputFocused, room?.board.length, room?.settings.teamCount]);
+  }, [isClueInputFocused]);
 
   if (!room || !player) {
     return null;
@@ -307,14 +320,11 @@ export function BoardScreen() {
 
       {shouldShowClueBar ? (
         <div
+          ref={clueBarRef}
           className={`fixed inset-x-3 bottom-3 z-20 transition-all duration-300 ease-out ${
             isClueBarVisible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
           }`}
-          style={
-            isClueInputFocused && focusedClueTop !== null
-              ? { top: `${focusedClueTop}px`, bottom: "auto" }
-              : undefined
-          }
+          style={{ bottom: `${clueBarBottomPx}px` }}
         >
           <div className="mx-auto w-full max-w-[44rem] overflow-hidden rounded-2xl border border-white/20 bg-black/25 shadow-lg backdrop-blur-sm">
             <div className="grid h-12 grid-cols-[40px_46px_minmax(0,1fr)] items-center">
