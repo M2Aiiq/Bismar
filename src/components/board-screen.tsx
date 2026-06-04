@@ -92,6 +92,8 @@ function TeamPanel({
 
     return left.role === "Spymaster" ? -1 : 1;
   });
+  const spymaster = orderedPlayers.find((currentPlayer) => currentPlayer.role === "Spymaster") ?? null;
+  const operatives = orderedPlayers.filter((currentPlayer) => currentPlayer.role === "Operative");
 
   return (
     <div
@@ -121,15 +123,17 @@ function TeamPanel({
       </div>
 
       <div className="relative z-10 mt-auto pt-2">
-        <div className="flex gap-1.5 overflow-x-auto overscroll-x-contain pb-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-          {orderedPlayers.map((currentPlayer) => (
+        <div className="flex flex-col items-end gap-1 overflow-hidden text-right">
+          {spymaster ? (
+            <span className="max-w-full rounded-full bg-black/30 px-2 py-1 text-[10px] font-bold text-[#F8FAFC]">
+              {spymaster.name}
+            </span>
+          ) : null}
+          {spymaster && operatives.length ? <div className="h-px w-full bg-white/40" /> : null}
+          {operatives.map((currentPlayer) => (
             <span
               key={currentPlayer.id}
-              className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold ${
-                currentPlayer.role === "Spymaster"
-                  ? "bg-black/30 text-[#F8FAFC]"
-                  : "bg-white/14 text-[#F8FAFC]/95"
-              }`}
+              className="max-w-full rounded-full bg-white/14 px-2 py-1 text-[10px] font-bold text-[#F8FAFC]/95"
             >
               {currentPlayer.name}
             </span>
