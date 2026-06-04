@@ -14,10 +14,39 @@ function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
-function baseCardTextClass(fontScale: GameBoardProps["fontScale"]) {
+function cardTextClass(cardText: string, fontScale: GameBoardProps["fontScale"], denseBoard: boolean) {
+  const normalizedTextLength = Array.from(cardText.replace(/\s+/g, "")).length;
+  const isSingleWord = !/\s/.test(cardText.trim());
+
+  if (isSingleWord) {
+    if (fontScale === "comfortable") {
+      if (denseBoard) {
+        if (normalizedTextLength <= 6) {
+          return "block w-full max-w-full whitespace-nowrap px-0.5 text-center text-[10px] font-black leading-none sm:px-1 sm:text-[11px]";
+        }
+
+        if (normalizedTextLength <= 8) {
+          return "block w-full max-w-full whitespace-nowrap px-0.5 text-center text-[9px] font-black leading-none tracking-[-0.02em] sm:px-1 sm:text-[10px]";
+        }
+
+        return "block w-full max-w-full whitespace-nowrap px-0.5 text-center text-[8px] font-black leading-none tracking-[-0.03em] sm:px-1 sm:text-[9px]";
+      }
+
+      return "block w-full max-w-full whitespace-nowrap px-1.5 text-center text-sm font-black leading-tight sm:text-base";
+    }
+
+    if (denseBoard) {
+      return normalizedTextLength <= 8
+        ? "block w-full max-w-full whitespace-nowrap px-0.5 text-center text-[9px] font-black leading-none sm:px-1 sm:text-[10px]"
+        : "block w-full max-w-full whitespace-nowrap px-0.5 text-center text-[8px] font-black leading-none tracking-[-0.02em] sm:px-1 sm:text-[9px]";
+    }
+
+    return "block w-full max-w-full whitespace-nowrap px-1 text-center text-[11px] font-black leading-tight sm:text-sm";
+  }
+
   return fontScale === "comfortable"
-    ? "block w-full max-w-full px-1.5 text-center text-xs font-black leading-[1.12] whitespace-normal break-words [overflow-wrap:anywhere] sm:text-sm md:text-base"
-    : "block w-full max-w-full px-0.5 text-center text-[10px] font-black leading-[1.08] whitespace-normal break-words [overflow-wrap:anywhere] sm:px-1 sm:text-[11px]";
+    ? "block w-full max-w-full whitespace-normal break-normal px-1 text-center text-[9px] font-black leading-[1.08] [text-wrap:balance] sm:px-1.5 sm:text-[10px]"
+    : "block w-full max-w-full whitespace-normal break-normal px-0.5 text-center text-[8px] font-black leading-[1.05] [text-wrap:balance] sm:px-1 sm:text-[9px]";
 }
 
 function resolveCardTone(card: Card, shouldShowTruth: boolean) {
@@ -75,7 +104,6 @@ export function GameBoard({
   const rowCount = Math.max(1, Math.ceil(board.length / columnCount));
   const denseBoard = board.length >= 36;
   const compactBoardAspectRatio = (columnCount * (denseBoard ? 1.36 : 1.3)) / rowCount;
-  const textClass = baseCardTextClass(fontScale);
 
   return (
     <div
@@ -92,6 +120,7 @@ export function GameBoard({
     >
       {board.map((card) => {
         const shouldShowTruth = revealAll || showTruth || card.isRevealed;
+        const textClass = cardTextClass(card.text, fontScale, denseBoard);
 
         return (
           <button

@@ -174,7 +174,7 @@ export function BoardScreen() {
   const usesMultiRowTeamGrid = activeTeams.length > 2;
   const teamSlots: Array<ActiveTeam | null> = activeTeams.length === 3 ? [...activeTeams, null] : activeTeams;
   const teamGridHeightClass = usesMultiRowTeamGrid ? "h-[25vh]" : "h-[22vh]";
-  const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[69vh]" : "h-[72vh]";
+  const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[64vh]" : "h-[67vh]";
   const tickerText = `الدور الآن: فريق ${teamLabel(currentTeam)} | أنت: ${player.role === "Spymaster" ? "قائد" : "محقق"} | المؤقت: ${room.settings.roundTimerSeconds}ث`;
   const boardWidthClass = room.board.length > 25 ? "max-w-[44rem]" : "max-w-md";
   const boardFontScale = isLargeFont ? "comfortable" : "compact";
@@ -230,24 +230,9 @@ export function BoardScreen() {
         </div>
       </div>
 
-      <div className="mx-2 mt-2 h-[4vh] min-h-[28px] rounded-full bg-black/20 px-2 text-xs text-slate-300">
-        <div className="grid h-full grid-cols-[auto_minmax(0,1fr)] items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setIsLargeFont((currentValue) => !currentValue)}
-            aria-pressed={isLargeFont}
-            className={`h-6 rounded-full border px-3 text-[11px] font-bold transition active:scale-95 ${
-              isLargeFont
-                ? "border-white/55 bg-white/20 text-[#F8FAFC]"
-                : "border-white/25 bg-black/10 text-slate-200"
-            }`}
-          >
-            خط
-          </button>
-
-          <div className="flex min-w-0 items-center justify-center overflow-hidden">
-            <p className="truncate">{tickerText}</p>
-          </div>
+      <div className="mx-2 mt-2 h-[4vh] min-h-[28px] rounded-full bg-black/20 px-3 text-xs text-slate-300">
+        <div className="flex h-full min-w-0 items-center justify-center overflow-hidden">
+          <p className="truncate">{tickerText}</p>
         </div>
       </div>
 
@@ -262,6 +247,21 @@ export function BoardScreen() {
             fontScale={boardFontScale}
           />
         </div>
+      </div>
+
+      <div className="flex h-[5vh] min-h-[34px] items-center justify-center px-3 pb-1">
+        <button
+          type="button"
+          onClick={() => setIsLargeFont((currentValue) => !currentValue)}
+          aria-pressed={isLargeFont}
+          className={`h-7 rounded-full border px-4 text-xs font-bold transition active:scale-95 ${
+            isLargeFont
+              ? "border-white/55 bg-white/20 text-[#F8FAFC]"
+              : "border-white/25 bg-black/10 text-slate-200"
+          }`}
+        >
+          خط
+        </button>
       </div>
     </section>
   );
