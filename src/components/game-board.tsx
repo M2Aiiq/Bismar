@@ -16,8 +16,8 @@ function cx(...classes: Array<string | false | null | undefined>) {
 
 function baseCardTextClass(fontScale: GameBoardProps["fontScale"]) {
   return fontScale === "comfortable"
-    ? "block w-full truncate px-1 text-xs sm:text-sm md:text-base font-black leading-tight"
-    : "block w-full truncate px-1 text-[11px] sm:text-sm font-black leading-tight";
+    ? "block w-full max-w-full px-1.5 text-center text-xs font-black leading-[1.12] whitespace-normal break-words [overflow-wrap:anywhere] sm:text-sm md:text-base"
+    : "block w-full max-w-full px-0.5 text-center text-[10px] font-black leading-[1.08] whitespace-normal break-words [overflow-wrap:anywhere] sm:px-1 sm:text-[11px]";
 }
 
 function resolveCardTone(card: Card, shouldShowTruth: boolean) {
@@ -73,12 +73,13 @@ export function GameBoard({
 }: GameBoardProps) {
   const columnCount = Math.max(1, Math.round(Math.sqrt(board.length)));
   const rowCount = Math.max(1, Math.ceil(board.length / columnCount));
-  const compactBoardAspectRatio = (columnCount * 1.28) / rowCount;
+  const denseBoard = board.length >= 36;
+  const compactBoardAspectRatio = (columnCount * (denseBoard ? 1.36 : 1.3)) / rowCount;
   const textClass = baseCardTextClass(fontScale);
 
   return (
     <div
-      className={cx("grid", compact ? "w-full max-h-full gap-1.5" : "gap-2 md:gap-3")}
+      className={cx("grid", compact ? (denseBoard ? "w-full max-h-full gap-1" : "w-full max-h-full gap-1.5") : "gap-2 md:gap-3")}
       style={{
         gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
         ...(compact
@@ -100,8 +101,8 @@ export function GameBoard({
             onClick={() => onReveal?.(card.id)}
             dir="rtl"
             className={cx(
-              "h-full min-h-0 select-none border p-2 text-center transition-all duration-150",
-              "flex items-center justify-center rounded-2xl",
+              "h-full min-h-0 select-none border text-center transition-all duration-150",
+              denseBoard ? "flex items-center justify-center rounded-xl p-1.5" : "flex items-center justify-center rounded-[1.15rem] p-2",
               compact
                 ? ""
                 : "aspect-square p-2 text-sm md:text-base",

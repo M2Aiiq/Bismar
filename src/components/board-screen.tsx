@@ -175,7 +175,7 @@ export function BoardScreen() {
   const teamGridHeightClass = usesMultiRowTeamGrid ? "h-[25vh]" : "h-[22vh]";
   const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[69vh]" : "h-[72vh]";
   const tickerText = `الدور الآن: فريق ${teamLabel(currentTeam)} | أنت: ${player.role === "Spymaster" ? "قائد" : "محقق"} | المؤقت: ${room.settings.roundTimerSeconds}ث`;
-  const boardWidthClass = room.board.length > 25 ? "max-w-lg" : "max-w-md";
+  const boardWidthClass = room.board.length > 25 ? "max-w-[44rem]" : "max-w-md";
   const roundDurationMs = room.settings.roundTimerSeconds * 1000;
   const remainingMs = room.turnEndsAt ? Math.max(0, room.turnEndsAt - nowMs) : 0;
   const timerProgress = roundDurationMs <= 0 ? 0 : Math.min(1, Math.max(0, remainingMs / roundDurationMs));
@@ -234,7 +234,7 @@ export function BoardScreen() {
         </div>
       </div>
 
-      <div className={`mt-1 flex min-h-0 items-start overflow-hidden px-2 ${boardSectionHeightClass}`}>
+      <div className={`mt-1 flex min-h-0 items-start overflow-hidden px-1.5 sm:px-2 ${boardSectionHeightClass}`}>
         <div className={`mx-auto flex h-full w-full ${boardWidthClass} items-start justify-center overflow-hidden`}>
           <GameBoard
             board={room.board}
