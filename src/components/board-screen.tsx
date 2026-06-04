@@ -265,7 +265,8 @@ function TeamPanel({
 }
 
 export function BoardScreen() {
-  const { room, player, isBusy, joinTeamAs, sendClue, expireTurnTimer, endGuessTurn, revealCard } = useGameRoom();
+  const { room, player, isBusy, joinTeamAs, sendClue, expireTurnTimer, endGuessTurn, revealCard, resetGame } =
+    useGameRoom();
   const [clueDraft, setClueDraft] = useState("");
   const [clueCount, setClueCount] = useState("1");
   const [isLargeFont, setIsLargeFont] = useState(false);
@@ -453,6 +454,7 @@ export function BoardScreen() {
     room.gameState === "Playing" && player.role === "Operative" && player.team === room.currentTurn && room.turnPhase === "Guess";
   const canEndTurn =
     room.gameState === "Playing" && player.role === "Operative" && player.team === room.currentTurn && room.turnPhase === "Guess";
+  const canStartNewGame = room.gameState === "GameOver" && player.isHost;
   const activeTeams = getActiveTeams(room.settings.teamCount);
   const currentTeam = room.currentTurn;
   const usesMultiRowTeamGrid = activeTeams.length > 2;
@@ -656,6 +658,19 @@ export function BoardScreen() {
               خط
             </button>
           </div>
+
+          {canStartNewGame ? (
+            <div className="mt-3 flex w-full shrink-0 justify-center">
+              <button
+                type="button"
+                onClick={() => void resetGame()}
+                disabled={isBusy}
+                className="animate-pulse rounded-full border border-[#60A5FA]/70 bg-[#2563EB]/18 px-4 py-2 text-sm font-black text-[#DBEAFE] shadow-[0_0_18px_rgba(37,99,235,0.35)] transition active:scale-95 disabled:opacity-50"
+              >
+                لعبة جديدة
+              </button>
+            </div>
+          ) : null}
 
         </div>
       </div>

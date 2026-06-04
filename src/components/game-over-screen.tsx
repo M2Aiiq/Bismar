@@ -7,22 +7,22 @@ import { teamLabel } from "../lib/teams";
 
 export function GameOverScreen() {
   const { room, player, isBusy, resetGame } = useGameRoom();
-  const [isAnalyzingBoard, setIsAnalyzingBoard] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
     if (!room) {
-      setIsAnalyzingBoard(false);
+      setIsDismissed(false);
       return;
     }
 
-    setIsAnalyzingBoard(false);
+    setIsDismissed(false);
   }, [room?.roomId, room?.winner]);
 
   if (!room || !player) {
     return null;
   }
 
-  if (isAnalyzingBoard) {
+  if (isDismissed) {
     return null;
   }
 
@@ -55,10 +55,10 @@ export function GameOverScreen() {
           </button>
           <button
             type="button"
-            onClick={() => setIsAnalyzingBoard(true)}
+            onClick={() => setIsDismissed(true)}
             className="rounded-xl border border-slate-800 bg-[#0F172A] px-4 py-3.5 text-sm text-slate-400 transition-colors hover:text-white disabled:opacity-50"
           >
-            تحليل اللوحة
+            متابعة
           </button>
         </div>
       </div>
