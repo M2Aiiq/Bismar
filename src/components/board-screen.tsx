@@ -110,6 +110,8 @@ export function BoardScreen() {
   const [isLargeFont, setIsLargeFont] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isClueBarVisible, setIsClueBarVisible] = useState(false);
+  const [isClueInputFocused, setIsClueInputFocused] = useState(false);
+  const [clueBarBottomOffset, setClueBarBottomOffset] = useState(12);
   const [nowMs, setNowMs] = useState(() => Date.now());
 
   useEffect(() => {
@@ -167,6 +169,35 @@ export function BoardScreen() {
 
     return () => window.clearTimeout(timeoutId);
   }, [room?.currentTurn]);
+
+  useEffect(() => {
+    if (!isClueInputFocused) {
+      setClueBarBottomOffset(12);
+      return;
+    }
+
+    const viewport = window.visualViewport;
+
+    if (!viewport) {
+      return;
+    }
+
+    const syncClueBarPosition = () => {
+      const keyboardInset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+      setClueBarBottomOffset(12 + keyboardInset);
+      window.scrollTo(0, 0);
+    };
+
+    syncClueBarPosition();
+    viewport.addEventListener("resize", syncClueBarPosition);
+    viewport.addEventListener("scroll", syncClueBarPosition);
+
+    return () => {
+      viewport.removeEventListener("resize", syncClueBarPosition);
+      viewport.removeEventListener("scroll", syncClueBarPosition);
+      setClueBarBottomOffset(12);
+    };
+  }, [isClueInputFocused]);
 
   if (!room || !player) {
     return null;
@@ -282,6 +313,7 @@ export function BoardScreen() {
           className={`fixed inset-x-3 bottom-3 z-20 transition-all duration-300 ease-out ${
             isClueBarVisible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
           }`}
+          style={{ bottom: `${clueBarBottomOffset}px` }}
         >
           <div className="mx-auto w-full max-w-[44rem] overflow-hidden rounded-2xl border border-white/20 bg-black/25 shadow-lg backdrop-blur-sm">
             <div className="grid h-12 grid-cols-[40px_46px_minmax(0,1fr)] items-center">
@@ -310,6 +342,11 @@ export function BoardScreen() {
                 dir="rtl"
                 value={clueDraft}
                 onChange={(event) => setClueDraft(event.target.value)}
+                onFocus={() => {
+                  setIsClueInputFocused(true);
+                  window.scrollTo(0, 0);
+                }}
+                onBlur={() => setIsClueInputFocused(false)}
                 placeholder={`تلميح فريق ${teamLabel(currentTeam)}`}
                 className="h-full min-w-0 bg-transparent px-4 text-sm font-bold text-[#F8FAFC] outline-none placeholder:text-[#F8FAFC]/45"
               />
