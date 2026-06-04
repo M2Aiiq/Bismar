@@ -253,38 +253,40 @@ export function BoardScreen() {
       </div>
 
       <div className={`mt-1 flex min-h-0 items-start overflow-hidden px-1.5 sm:px-2 ${boardSectionHeightClass}`}>
-        <div className={`mx-auto flex h-full w-full ${boardWidthClass} items-start justify-center overflow-hidden`}>
-          <GameBoard
-            board={room.board}
-            showTruth={showTruth}
-            canReveal={canReveal && !isBusy}
-            onReveal={(cardId: number) => revealCard(cardId)}
-            compact
-            fontScale={boardFontScale}
-          />
-        </div>
-      </div>
+        <div className={`mx-auto flex h-full w-full flex-col ${boardWidthClass} items-center justify-start overflow-hidden`}>
+          <div className="flex min-h-0 w-full items-start justify-center overflow-hidden">
+            <GameBoard
+              board={room.board}
+              showTruth={showTruth}
+              canReveal={canReveal && !isBusy}
+              onReveal={(cardId: number) => revealCard(cardId)}
+              compact
+              fontScale={boardFontScale}
+            />
+          </div>
 
-      <div className="flex h-[5vh] min-h-[34px] items-center justify-center gap-2 px-3 pb-1">
-        <button
-          type="button"
-          onClick={() => setIsSettingsOpen(true)}
-          className="h-7 rounded-full border border-white/25 bg-black/10 px-4 text-xs font-bold text-slate-200 transition active:scale-95"
-        >
-          إعدادات
-        </button>
-        <button
-          type="button"
-          onClick={() => setIsLargeFont((currentValue) => !currentValue)}
-          aria-pressed={isLargeFont}
-          className={`h-7 rounded-full border px-4 text-xs font-bold transition active:scale-95 ${
-            isLargeFont
-              ? "border-white/55 bg-white/20 text-[#F8FAFC]"
-              : "border-white/25 bg-black/10 text-slate-200"
-          }`}
-        >
-          خط
-        </button>
+          <div className="mt-2 flex w-full shrink-0 items-center justify-center gap-2 pb-1">
+            <button
+              type="button"
+              onClick={() => setIsSettingsOpen(true)}
+              className="h-7 rounded-full border border-white/25 bg-black/10 px-4 text-xs font-bold text-slate-200 transition active:scale-95"
+            >
+              إعدادات
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsLargeFont((currentValue) => !currentValue)}
+              aria-pressed={isLargeFont}
+              className={`h-7 rounded-full border px-4 text-xs font-bold transition active:scale-95 ${
+                isLargeFont
+                  ? "border-white/55 bg-white/20 text-[#F8FAFC]"
+                  : "border-white/25 bg-black/10 text-slate-200"
+              }`}
+            >
+              خط
+            </button>
+          </div>
+        </div>
       </div>
 
       {isSettingsOpen ? (
