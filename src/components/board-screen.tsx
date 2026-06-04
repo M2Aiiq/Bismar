@@ -186,10 +186,13 @@ export function BoardScreen() {
     }
 
     const previousOverflow = document.body.style.overflow;
+    const previousTouchAction = document.body.style.touchAction;
     document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "auto";
 
     return () => {
       document.body.style.overflow = previousOverflow;
+      document.body.style.touchAction = previousTouchAction;
     };
   }, [isSettingsOpen]);
 
@@ -380,7 +383,7 @@ export function BoardScreen() {
       {isSettingsOpen ? (
         <div className="fixed inset-0 z-50 overflow-hidden bg-[#0F172A]/88 backdrop-blur-sm">
           <div className="flex h-full w-full items-start justify-center px-4 py-4">
-            <div className="w-full max-w-6xl overflow-y-auto overscroll-contain">
+            <div className="max-h-full w-full max-w-6xl overflow-y-auto overscroll-contain touch-pan-y">
               <RoomManagementPanel
                 mode="modal"
                 onClose={room.gameState === "Lobby" ? undefined : () => setIsSettingsOpen(false)}
