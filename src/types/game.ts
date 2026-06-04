@@ -3,12 +3,14 @@ export type Role = "Spymaster" | "Operative";
 export type CardType = "Red" | "Blue" | "Green" | "Gold" | "Neutral" | "Control";
 export type GameState = "Lobby" | "Playing" | "GameOver";
 export type TeamCount = 2 | 3 | 4;
+export type WordCategory = "General";
 export type Winner = Exclude<Team, "Unassigned"> | null;
 
 export interface RoomSettings {
   teamCount: TeamCount;
   roundTimerSeconds: number;
   lossCardCount: 1 | 2 | 3 | 4;
+  wordCategory: WordCategory;
 }
 
 export interface Player {

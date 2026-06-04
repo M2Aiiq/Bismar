@@ -3,12 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { useGameRoom } from "../context/game-room-context";
+import { WORD_CATEGORY_LABELS } from "../lib/words";
 import { getActiveTeams, isActiveTeam, teamBadgeClass, teamCardClass, teamLabel } from "../lib/teams";
-import type { Role, TeamCount } from "../types/game";
+import type { Role, TeamCount, WordCategory } from "../types/game";
 
 const ROLE_OPTIONS: Role[] = ["Spymaster", "Operative"];
 const TEAM_COUNT_OPTIONS: TeamCount[] = [2, 3, 4];
 const LOSS_CARD_OPTIONS = [1, 2, 3, 4] as const;
+const WORD_CATEGORY_OPTIONS: WordCategory[] = ["General"];
 
 interface RoomManagementPanelProps {
   mode?: "lobby" | "modal";
@@ -143,6 +145,27 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
 
             <div>
               <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-bold text-[#F8FAFC]">نوع الكلمات</p>
+                <span className="text-xs font-bold text-[#F8FAFC]/60">القائمة المستخدمة</span>
+              </div>
+              <div className="mt-3">
+                <select
+                  value={room.settings.wordCategory}
+                  onChange={(event) => void updateRoomSettings({ wordCategory: event.target.value as WordCategory })}
+                  disabled={isBusy || !player.isHost}
+                  className="h-12 w-full rounded-2xl border border-white/15 bg-[#0F172A] px-4 text-base font-bold text-[#F8FAFC] outline-none transition focus:border-[#2563EB] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {WORD_CATEGORY_OPTIONS.map((category) => (
+                    <option key={category} value={category} className="bg-[#0F172A] text-[#F8FAFC]">
+                      {WORD_CATEGORY_LABELS[category]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-bold text-[#F8FAFC]">مؤقت الجولة</p>
                 <span className="text-xs font-bold text-[#F8FAFC]/60">بالثواني</span>
               </div>
@@ -252,6 +275,27 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                       {count} فرق
                     </button>
                   ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-bold text-[#F8FAFC]">نوع الكلمات</p>
+                  <span className="text-xs font-bold text-[#F8FAFC]/60">القائمة المستخدمة</span>
+                </div>
+                <div className="mt-3">
+                  <select
+                    value={room.settings.wordCategory}
+                    onChange={(event) => void updateRoomSettings({ wordCategory: event.target.value as WordCategory })}
+                    disabled={isBusy || !player.isHost}
+                    className="h-12 w-full rounded-2xl border border-white/15 bg-[#0F172A] px-4 text-base font-bold text-[#F8FAFC] outline-none transition focus:border-[#2563EB] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {WORD_CATEGORY_OPTIONS.map((category) => (
+                      <option key={category} value={category} className="bg-[#0F172A] text-[#F8FAFC]">
+                        {WORD_CATEGORY_LABELS[category]}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

@@ -21,7 +21,7 @@ import {
 } from "../lib/game";
 import { getRealtimeDatabase, isFirebaseConfigured } from "../lib/firebase";
 import { getActiveTeams, isActiveTeam, nextTeam, type ActiveTeam } from "../lib/teams";
-import type { Player, Role, Room, RoomSettings, Team, TeamCount } from "../types/game";
+import type { Player, Role, Room, RoomSettings, Team, TeamCount, WordCategory } from "../types/game";
 
 type PlayerTeam = ActiveTeam;
 // Temporary bypass requested by the user to preview the next screen before restoring team readiness rules.
@@ -160,6 +160,10 @@ function sanitizeLossCardCount(value: unknown): RoomSettings["lossCardCount"] {
   return value === 2 || value === 3 || value === 4 ? value : 1;
 }
 
+function sanitizeWordCategory(value: unknown): WordCategory {
+  return value === "General" ? value : "General";
+}
+
 function sanitizeSettingsUpdate(
   currentSettings: RoomSettings,
   partialSettings: Partial<RoomSettings>,
@@ -170,6 +174,7 @@ function sanitizeSettingsUpdate(
       partialSettings.roundTimerSeconds ?? currentSettings.roundTimerSeconds,
     ),
     lossCardCount: sanitizeLossCardCount(partialSettings.lossCardCount ?? currentSettings.lossCardCount),
+    wordCategory: sanitizeWordCategory(partialSettings.wordCategory ?? currentSettings.wordCategory),
   };
 }
 
@@ -522,7 +527,8 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           if (wasPlaying) {
             const requiresBoardReset =
               nextSettings.teamCount !== currentRoom.settings.teamCount ||
-              nextSettings.lossCardCount !== currentRoom.settings.lossCardCount;
+              nextSettings.lossCardCount !== currentRoom.settings.lossCardCount ||
+              nextSettings.wordCategory !== currentRoom.settings.wordCategory;
 
             if (requiresBoardReset) {
               const { board, currentTurn } = createBoardState(nextSettings);

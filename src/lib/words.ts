@@ -1,4 +1,11 @@
-export const IRAQI_WORDS = [
+import type { WordCategory } from "../types/game";
+
+export const WORD_CATEGORY_LABELS: Record<WordCategory, string> = {
+  General: "عامة",
+};
+
+export const IRAQI_WORDS_BY_CATEGORY: Record<WordCategory, string[]> = {
+  General: [
   "بصرة",
   "موصل",
   "عمارة",
@@ -69,4 +76,9 @@ export const IRAQI_WORDS = [
   "شماغ",
   "سكلة",
   "جرغد",
-];
+  ],
+};
+
+export function getWordsByCategory(category: WordCategory) {
+  return IRAQI_WORDS_BY_CATEGORY[category];
+}

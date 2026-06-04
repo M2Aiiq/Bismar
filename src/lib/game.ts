@@ -1,11 +1,12 @@
-import { IRAQI_WORDS } from "./words";
+import { getWordsByCategory } from "./words";
 import { getActiveTeams, type ActiveTeam } from "./teams";
-import type { Card, CardType, Player, Room, RoomSettings, TeamCount } from "../types/game";
+import type { Card, CardType, Player, Room, RoomSettings, TeamCount, WordCategory } from "../types/game";
 
 const DEFAULT_SETTINGS: RoomSettings = {
   teamCount: 2,
   roundTimerSeconds: 60,
   lossCardCount: 1,
+  wordCategory: "General",
 };
 
 export function createRoomId(length = 5) {
@@ -74,7 +75,7 @@ export function createBoardState(settings: RoomSettings = DEFAULT_SETTINGS) {
   const activeTeams = getActiveTeams(settings.teamCount);
   const boardSize = getBoardSize(settings.teamCount);
   const currentTurn = activeTeams[Math.floor(Math.random() * activeTeams.length)];
-  const words = shuffleList(IRAQI_WORDS).slice(0, boardSize);
+  const words = shuffleList(getWordsByCategory(settings.wordCategory)).slice(0, boardSize);
   const types = createCardTypes(activeTeams, currentTurn, settings.lossCardCount, boardSize);
 
   const board: Card[] = words.map((text, index) => ({
@@ -128,6 +129,10 @@ function sanitizeLossCardCount(value: unknown): RoomSettings["lossCardCount"] {
   return value === 2 || value === 3 || value === 4 ? value : 1;
 }
 
+function sanitizeWordCategory(value: unknown): WordCategory {
+  return value === "General" ? value : "General";
+}
+
 function sanitizeRoundTimerSeconds(value: unknown) {
   if (typeof value !== "number" || Number.isNaN(value)) {
     return 60;
@@ -165,6 +170,7 @@ export function normalizeRoom(value: unknown): Room | null {
     teamCount,
     roundTimerSeconds: sanitizeRoundTimerSeconds(settings.roundTimerSeconds),
     lossCardCount: sanitizeLossCardCount(settings.lossCardCount),
+    wordCategory: sanitizeWordCategory(settings.wordCategory),
   };
   const activeTeams = getActiveTeams(teamCount);
   const fallbackTurn = activeTeams[0];
