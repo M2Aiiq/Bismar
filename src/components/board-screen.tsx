@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { GameBoard } from "./game-board";
 import { RoomManagementPanel } from "./room-management-panel";
@@ -110,7 +110,10 @@ export function BoardScreen() {
   const [isLargeFont, setIsLargeFont] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isClueBarVisible, setIsClueBarVisible] = useState(false);
+  const [isClueInputFocused, setIsClueInputFocused] = useState(false);
+  const [focusedClueTop, setFocusedClueTop] = useState<number | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const actionButtonsRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -167,6 +170,31 @@ export function BoardScreen() {
 
     return () => window.clearTimeout(timeoutId);
   }, [room?.currentTurn]);
+
+  useEffect(() => {
+    if (!isClueInputFocused) {
+      setFocusedClueTop(null);
+      return;
+    }
+
+    const updateFocusedCluePosition = () => {
+      const actionButtonsElement = actionButtonsRef.current;
+
+      if (!actionButtonsElement) {
+        return;
+      }
+
+      const { bottom } = actionButtonsElement.getBoundingClientRect();
+      setFocusedClueTop(bottom + 12);
+    };
+
+    updateFocusedCluePosition();
+    window.addEventListener("resize", updateFocusedCluePosition);
+
+    return () => {
+      window.removeEventListener("resize", updateFocusedCluePosition);
+    };
+  }, [isClueInputFocused, room?.board.length, room?.settings.teamCount]);
 
   if (!room || !player) {
     return null;
@@ -252,7 +280,7 @@ export function BoardScreen() {
             />
           </div>
 
-          <div className="mt-2 flex w-full shrink-0 items-center justify-center gap-2">
+          <div ref={actionButtonsRef} className="mt-2 flex w-full shrink-0 items-center justify-center gap-2">
             <button
               type="button"
               onClick={() => setIsSettingsOpen(true)}
@@ -282,6 +310,11 @@ export function BoardScreen() {
           className={`fixed inset-x-3 bottom-3 z-20 transition-all duration-300 ease-out ${
             isClueBarVisible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
           }`}
+          style={
+            isClueInputFocused && focusedClueTop !== null
+              ? { top: `${focusedClueTop}px`, bottom: "auto" }
+              : undefined
+          }
         >
           <div className="mx-auto w-full max-w-[44rem] overflow-hidden rounded-2xl border border-white/20 bg-black/25 shadow-lg backdrop-blur-sm">
             <div className="grid h-12 grid-cols-[40px_46px_minmax(0,1fr)] items-center">
@@ -310,6 +343,8 @@ export function BoardScreen() {
                 dir="rtl"
                 value={clueDraft}
                 onChange={(event) => setClueDraft(event.target.value)}
+                onFocus={() => setIsClueInputFocused(true)}
+                onBlur={() => setIsClueInputFocused(false)}
                 placeholder={`تلميح فريق ${teamLabel(currentTeam)}`}
                 className="h-full min-w-0 bg-transparent px-4 text-sm font-bold text-[#F8FAFC] outline-none placeholder:text-[#F8FAFC]/45"
               />
