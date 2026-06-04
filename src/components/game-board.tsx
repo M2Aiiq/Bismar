@@ -187,7 +187,7 @@ export function GameBoard({
                   ? resolveTruthPreviewTone(card)
                   : "border-[#D6D0C5] bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] text-[#0F172A] shadow-[inset_0_2.5px_0px_rgba(255,255,255,0.8),_0_4px_6px_-1px_rgba(0,0,0,0.15)] hover:border-[#C7BFB1]",
               isPendingReveal &&
-                "scale-[1.02] border-white shadow-[0_0_0_2px_rgba(255,255,255,0.96),0_0_24px_rgba(255,255,255,0.78),inset_0_0_22px_rgba(255,255,255,0.28)]",
+                "z-10 scale-[1.03] border-white ring-2 ring-white/95 ring-offset-2 ring-offset-transparent shadow-[0_0_26px_rgba(255,255,255,0.88),0_0_48px_rgba(255,255,255,0.34)]",
               !card.isRevealed && canReveal && onReveal && "cursor-pointer active:scale-95",
               (!canReveal || card.isRevealed) && "cursor-default",
             )}
@@ -196,11 +196,7 @@ export function GameBoard({
               <>
                 <span
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-[2px] rounded-[inherit] border-2 border-white/95 shadow-[0_0_18px_rgba(255,255,255,0.72)]"
-                />
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 bg-white/12 opacity-100 animate-pulse"
+                  className="pointer-events-none absolute inset-0 bg-white/10 opacity-100 animate-pulse"
                 />
               </>
             ) : null}
