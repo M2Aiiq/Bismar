@@ -520,18 +520,32 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           const activeTeams = getActiveTeams(nextSettings.teamCount);
 
           if (wasPlaying) {
-            const liveSettings =
-              nextSettings.teamCount === currentRoom.settings.teamCount
-                ? nextSettings
-                : { ...nextSettings, teamCount: currentRoom.settings.teamCount };
+            const requiresBoardReset =
+              nextSettings.teamCount !== currentRoom.settings.teamCount ||
+              nextSettings.lossCardCount !== currentRoom.settings.lossCardCount;
+
+            if (requiresBoardReset) {
+              const { board, currentTurn } = createBoardState(nextSettings);
+
+              return {
+                ...currentRoom,
+                players: nextPlayers,
+                settings: nextSettings,
+                board,
+                currentTurn,
+                turnEndsAt: getNextTurnEndsAt(nextSettings.roundTimerSeconds),
+                winner: null,
+                gameState: "Playing",
+              };
+            }
 
             return {
               ...currentRoom,
-              settings: liveSettings,
+              settings: nextSettings,
               turnEndsAt:
-                liveSettings.roundTimerSeconds !== currentRoom.settings.roundTimerSeconds
-                  ? getNextTurnEndsAt(liveSettings.roundTimerSeconds)
-                  : currentRoom.turnEndsAt ?? getNextTurnEndsAt(liveSettings.roundTimerSeconds),
+                nextSettings.roundTimerSeconds !== currentRoom.settings.roundTimerSeconds
+                  ? getNextTurnEndsAt(nextSettings.roundTimerSeconds)
+                  : currentRoom.turnEndsAt ?? getNextTurnEndsAt(nextSettings.roundTimerSeconds),
             };
           }
 

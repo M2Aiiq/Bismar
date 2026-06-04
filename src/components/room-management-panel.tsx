@@ -50,7 +50,7 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
   const roundTimerValue = roundTimerDraft ?? String(room.settings.roundTimerSeconds);
   const isModal = mode === "modal";
   const setupControlsDisabled = isBusy || room.gameState !== "Lobby";
-  const teamCountControlsDisabled = isBusy || !player.isHost || room.gameState !== "Lobby";
+  const teamCountControlsDisabled = isBusy || !player.isHost;
 
   useEffect(() => {
     if (roundTimerDraft === null || !roundTimerDraft.trim()) {
@@ -73,181 +73,114 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
   if (isModal) {
     return (
       <section className="mx-auto flex w-full max-w-3xl flex-col">
-        <div className="relative rounded-[2rem] border border-white/10 bg-[#1E293B] p-5 shadow-2xl md:p-7">
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="إغلاق الإعدادات"
-            className="absolute left-4 top-4 flex h-10 w-10 items-center justify-center rounded-2xl border border-white/15 bg-[#0F172A] text-xl font-black text-[#F8FAFC] transition hover:bg-[#17233a]"
-          >
-            ×
-          </button>
-
-          <div className="pr-0 md:pr-6">
-            <h2 className="text-2xl font-black text-[#F8FAFC]">الإعدادات</h2>
-            <p className="mt-1 text-sm text-[#F8FAFC]/65">أي تغيير يتم تطبيقه مباشرة بدون أزرار حفظ.</p>
+        <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#1E293B] shadow-2xl">
+          <div className="bg-[#0F172A] px-5 pb-5 pt-4 text-center md:px-7">
+            <div className="flex items-center justify-start">
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="إغلاق الإعدادات"
+                className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/15 bg-[#152033] text-xl font-black text-[#F8FAFC] transition hover:bg-[#17233a]"
+              >
+                ×
+              </button>
+            </div>
+            <p className="mt-3 text-xs font-bold tracking-[0.28em] text-[#F8FAFC]/55">رمز الدعوة</p>
+            <p className="mt-3 text-4xl font-black tracking-[0.35em] text-[#2563EB] md:text-5xl">{roomId}</p>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => void copyValue(roomId, "code")}
+                className="rounded-2xl border border-white/15 px-4 py-2 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#2563EB]/15"
+              >
+                {copiedValue === "code" ? "تم نسخ الرمز" : "نسخ الرمز"}
+              </button>
+              <button
+                type="button"
+                onClick={() => void copyValue(inviteLink, "link")}
+                disabled={!inviteLink}
+                className="rounded-2xl border border-white/15 px-4 py-2 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#2563EB]/15 disabled:cursor-not-allowed disabled:text-[#F8FAFC]/40"
+              >
+                {copiedValue === "link" ? "تم نسخ الرابط" : "نسخ الرابط"}
+              </button>
+              <button
+                type="button"
+                onClick={() => void leaveRoom()}
+                disabled={isBusy}
+                className="rounded-2xl border border-[#DC2626]/50 px-4 py-2 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#DC2626]/15 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                مغادرة الغرفة
+              </button>
+            </div>
           </div>
 
-          <div className="mt-6 grid gap-6">
-            <div className="rounded-3xl bg-[#0F172A] p-5 text-center">
-              <p className="text-xs font-bold tracking-[0.28em] text-[#F8FAFC]/55">رمز الدعوة</p>
-              <p className="mt-3 text-4xl font-black tracking-[0.35em] text-[#2563EB] md:text-5xl">{roomId}</p>
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => void copyValue(roomId, "code")}
-                  className="rounded-2xl border border-white/15 px-4 py-2 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#2563EB]/15"
-                >
-                  {copiedValue === "code" ? "تم نسخ الرمز" : "نسخ الرمز"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void copyValue(inviteLink, "link")}
-                  disabled={!inviteLink}
-                  className="rounded-2xl border border-white/15 px-4 py-2 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#2563EB]/15 disabled:cursor-not-allowed disabled:text-[#F8FAFC]/40"
-                >
-                  {copiedValue === "link" ? "تم نسخ الرابط" : "نسخ الرابط"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void leaveRoom()}
-                  disabled={isBusy}
-                  className="rounded-2xl border border-[#DC2626]/50 px-4 py-2 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#DC2626]/15 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  مغادرة الغرفة
-                </button>
+          <div className="grid gap-5 p-5 md:p-7">
+            <div>
+              <div className="flex items-center justify-between gap-4">
+                <p className="text-sm font-bold text-[#F8FAFC]">عدد الفرق</p>
+                <span className="rounded-full bg-[#0F172A] px-3 py-1 text-xs font-bold text-[#F8FAFC]/80">
+                  {player.isHost ? "أنت المضيف" : "للقراءة فقط"}
+                </span>
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {TEAM_COUNT_OPTIONS.map((count) => (
+                  <button
+                    key={count}
+                    type="button"
+                    onClick={() => void updateRoomSettings({ teamCount: count })}
+                    disabled={teamCountControlsDisabled}
+                    className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${
+                      room.settings.teamCount === count
+                        ? "bg-[#2563EB] text-[#F8FAFC]"
+                        : "border border-white/15 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-[#111d34]"
+                    } disabled:cursor-not-allowed disabled:opacity-60`}
+                  >
+                    {count} فرق
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className="grid gap-5">
-              <div>
-                <div className="flex items-center justify-between gap-4">
-                  <p className="text-sm font-bold text-[#F8FAFC]">عدد الفرق</p>
-                  <span className="rounded-full bg-[#0F172A] px-3 py-1 text-xs font-bold text-[#F8FAFC]/80">
-                    {player.isHost ? "أنت المضيف" : "للقراءة فقط"}
-                  </span>
-                </div>
-                <div className="mt-3 grid grid-cols-3 gap-2">
-                  {TEAM_COUNT_OPTIONS.map((count) => (
-                    <button
-                      key={count}
-                      type="button"
-                      onClick={() => void updateRoomSettings({ teamCount: count })}
-                      disabled={teamCountControlsDisabled}
-                      className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${
-                        room.settings.teamCount === count
-                          ? "bg-[#2563EB] text-[#F8FAFC]"
-                          : "border border-white/15 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-[#111d34]"
-                      } disabled:cursor-not-allowed disabled:opacity-60`}
-                    >
-                      {count} فرق
-                    </button>
-                  ))}
-                </div>
-                {room.gameState !== "Lobby" ? (
-                  <p className="mt-2 text-xs leading-6 text-[#F8FAFC]/58">
-                    تغيير عدد الفرق متاح من اللوبي فقط حتى لا تتبدل شبكة المباراة الحالية.
-                  </p>
-                ) : null}
+            <div>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-bold text-[#F8FAFC]">مؤقت الجولة</p>
+                <span className="text-xs font-bold text-[#F8FAFC]/60">بالثواني</span>
               </div>
+              <input
+                type="number"
+                min={15}
+                max={600}
+                step={5}
+                value={roundTimerValue}
+                onChange={(event) => setRoundTimerDraft(event.target.value.replace(/\D/g, "").slice(0, 3))}
+                onBlur={() => {
+                  if (!roundTimerDraft?.trim()) {
+                    setRoundTimerDraft(null);
+                  }
+                }}
+                disabled={isBusy || !player.isHost}
+                className="mt-3 h-12 w-full rounded-2xl border border-white/15 bg-[#0F172A] px-4 text-base font-bold text-[#F8FAFC] outline-none transition focus:border-[#2563EB] disabled:cursor-not-allowed disabled:opacity-60"
+              />
+            </div>
 
-              <div>
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-bold text-[#F8FAFC]">مؤقت الجولة</p>
-                  <span className="text-xs font-bold text-[#F8FAFC]/60">بالثواني</span>
-                </div>
-                <input
-                  type="number"
-                  min={15}
-                  max={600}
-                  step={5}
-                  value={roundTimerValue}
-                  onChange={(event) => setRoundTimerDraft(event.target.value.replace(/\D/g, "").slice(0, 3))}
-                  onBlur={() => {
-                    if (!roundTimerDraft?.trim()) {
-                      setRoundTimerDraft(null);
-                    }
-                  }}
-                  disabled={isBusy || !player.isHost}
-                  className="mt-3 h-12 w-full rounded-2xl border border-white/15 bg-[#0F172A] px-4 text-base font-bold text-[#F8FAFC] outline-none transition focus:border-[#2563EB] disabled:cursor-not-allowed disabled:opacity-60"
-                />
-              </div>
-
-              <div>
-                <p className="text-sm font-bold text-[#F8FAFC]">عدد كلمات الخسارة</p>
-                <div className="mt-3 grid grid-cols-4 gap-2">
-                  {LOSS_CARD_OPTIONS.map((count) => (
-                    <button
-                      key={count}
-                      type="button"
-                      onClick={() => void updateRoomSettings({ lossCardCount: count })}
-                      disabled={isBusy || !player.isHost}
-                      className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${
-                        room.settings.lossCardCount === count
-                          ? "bg-[#DC2626] text-[#F8FAFC]"
-                          : "border border-white/15 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-[#221523]"
-                      } disabled:cursor-not-allowed disabled:opacity-60`}
-                    >
-                      {count}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="border-t border-white/10 pt-1">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold text-[#F8FAFC]">إعدادك</p>
-                  <span className="rounded-full bg-[#0F172A] px-3 py-1 text-xs font-bold text-[#F8FAFC]/80">
-                    {roleLabel(player.role)}
-                  </span>
-                </div>
-
-                <div className="mt-4">
-                  <p className="text-sm font-bold text-[#F8FAFC]">اختر فريقك</p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {activeTeams.map((team) => (
-                      <button
-                        key={team}
-                        type="button"
-                        onClick={() => void chooseTeam(team)}
-                        disabled={setupControlsDisabled}
-                        className={`rounded-2xl px-4 py-2.5 text-sm font-bold transition ${teamBadgeClass(
-                          team,
-                          player.team === team,
-                        )} disabled:cursor-not-allowed disabled:opacity-60`}
-                      >
-                        {teamLabel(team)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-5">
-                  <p className="text-sm font-bold text-[#F8FAFC]">اختر دورك</p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {ROLE_OPTIONS.map((role) => (
-                      <button
-                        key={role}
-                        type="button"
-                        onClick={() => void chooseRole(role)}
-                        disabled={setupControlsDisabled}
-                        className={`rounded-2xl px-4 py-2.5 text-sm font-bold transition ${
-                          player.role === role
-                            ? "bg-[#2563EB] text-[#F8FAFC]"
-                            : "border border-white/15 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-[#1E293B]"
-                        } disabled:cursor-not-allowed disabled:opacity-60`}
-                      >
-                        {roleLabel(role)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {room.gameState !== "Lobby" ? (
-                  <p className="mt-4 text-sm leading-7 text-[#F8FAFC]/65">
-                    تغيير الفريق أو الدور متاح من اللوبي فقط، أما إعدادات الغرفة فيتم تطبيقها مباشرة.
-                  </p>
-                ) : null}
+            <div>
+              <p className="text-sm font-bold text-[#F8FAFC]">عدد كلمات الخسارة</p>
+              <div className="mt-3 grid grid-cols-4 gap-2">
+                {LOSS_CARD_OPTIONS.map((count) => (
+                  <button
+                    key={count}
+                    type="button"
+                    onClick={() => void updateRoomSettings({ lossCardCount: count })}
+                    disabled={isBusy || !player.isHost}
+                    className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${
+                      room.settings.lossCardCount === count
+                        ? "bg-[#DC2626] text-[#F8FAFC]"
+                        : "border border-white/15 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-[#221523]"
+                    } disabled:cursor-not-allowed disabled:opacity-60`}
+                  >
+                    {count}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
