@@ -103,10 +103,9 @@ function clueModalBadgeClass(team: ActiveTeam) {
 
 interface ClueNotificationModalProps {
   clue: Clue;
-  onDismiss: () => void;
 }
 
-function ClueNotificationModal({ clue, onDismiss }: ClueNotificationModalProps) {
+function ClueNotificationModal({ clue }: ClueNotificationModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-md" dir="rtl">
       <div
@@ -117,18 +116,14 @@ function ClueNotificationModal({ clue, onDismiss }: ClueNotificationModalProps) 
         </span>
         <div className="text-center text-4xl font-black tracking-wide text-white drop-shadow-md">{clue.text}</div>
         <span className="mb-1 mt-5 block text-center text-xs text-slate-400">عدد المحاولات المصرحة</span>
-        <div
-          className={`mx-auto flex h-10 w-10 items-center justify-center rounded-full font-mono text-lg font-black text-white shadow-md ${clueModalBadgeClass(clue.team)}`}
-        >
-          {clue.count}
+        <div className="relative mx-auto mt-1 flex h-14 w-14 items-center justify-center">
+          <div className={`absolute inset-0 rounded-full opacity-40 blur-md ${clueModalBadgeClass(clue.team)}`} />
+          <div
+            className={`relative flex h-10 w-10 items-center justify-center rounded-full font-mono text-lg font-black text-white shadow-md ${clueModalBadgeClass(clue.team)}`}
+          >
+            {clue.count}
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={onDismiss}
-          className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-800 bg-[#0F172A] py-3 text-sm font-bold text-slate-200 transition-all active:scale-95 hover:bg-[#0F172A]/80"
-        >
-          استلام الشيفرة وبدء التحقيق
-        </button>
       </div>
     </div>
   );
@@ -314,6 +309,18 @@ export function BoardScreen() {
     latestSeenClueKeyRef.current = latestClueKey;
     setIncomingClue(latestClue);
   }, [room]);
+
+  useEffect(() => {
+    if (!incomingClue) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setIncomingClue(null);
+    }, 3000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [incomingClue]);
 
   useEffect(() => {
     if (!isClueBarVisible || visibleClues.length === 0) {
@@ -539,7 +546,7 @@ export function BoardScreen() {
           </div>
         </div>
       ) : null}
-      {incomingClue ? <ClueNotificationModal clue={incomingClue} onDismiss={() => setIncomingClue(null)} /> : null}
+      {incomingClue ? <ClueNotificationModal clue={incomingClue} /> : null}
     </section>
   );
 }
