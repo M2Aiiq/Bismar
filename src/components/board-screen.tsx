@@ -115,7 +115,7 @@ function TeamPanel({
                 type="button"
                 onClick={() => onJoinAsSpymaster(team)}
                 disabled={isBusy}
-                className="shrink-0 rounded-full border border-white/20 bg-white/15 px-2 py-1 text-[10px] font-bold text-[#F8FAFC] transition active:scale-95 disabled:opacity-60"
+                className="shrink-0 rounded-full border border-white/20 bg-white/15 px-1.5 py-0.5 text-[9px] font-bold text-[#F8FAFC] transition active:scale-95 disabled:opacity-60"
               >
                 كن القائد
               </button>
