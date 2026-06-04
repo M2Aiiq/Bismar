@@ -1,6 +1,6 @@
 import { getWordsByCategory } from "./words";
 import { getActiveTeams, type ActiveTeam } from "./teams";
-import type { Card, CardType, Clue, Player, Room, RoomSettings, TeamCount, WordCategory } from "../types/game";
+import type { Card, CardType, Clue, Player, Room, RoomSettings, TeamCount, TurnPhase, WordCategory } from "../types/game";
 
 const DEFAULT_SETTINGS: RoomSettings = {
   teamCount: 2,
@@ -113,6 +113,7 @@ export function createInitialRoom(roomId: string, host: Player): Room {
     board,
     clues: [],
     currentTurn,
+    turnPhase: "Clue",
     turnEndsAt: null,
     winner: null,
   };
@@ -152,6 +153,10 @@ function sanitizeTurnEndsAt(value: unknown) {
   }
 
   return Math.max(0, Math.round(value));
+}
+
+function sanitizeTurnPhase(value: unknown): TurnPhase {
+  return value === "Guess" ? "Guess" : "Clue";
 }
 
 function sanitizeClues(value: unknown): Clue[] {
@@ -223,6 +228,7 @@ export function normalizeRoom(value: unknown): Room | null {
     settings: normalizedSettings,
     clues: sanitizeClues(room.clues),
     currentTurn: normalizedTurn,
+    turnPhase: sanitizeTurnPhase((room as Partial<Room>).turnPhase),
     turnEndsAt: sanitizeTurnEndsAt(room.turnEndsAt),
     winner: normalizedWinner,
   };

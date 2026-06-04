@@ -21,7 +21,7 @@ import {
 } from "../lib/game";
 import { getRealtimeDatabase, isFirebaseConfigured } from "../lib/firebase";
 import { getActiveTeams, isActiveTeam, nextTeam, type ActiveTeam } from "../lib/teams";
-import type { Player, Role, Room, RoomSettings, Team, TeamCount, WordCategory } from "../types/game";
+import type { Player, Role, Room, RoomSettings, Team, TeamCount, TurnPhase, WordCategory } from "../types/game";
 
 type PlayerTeam = ActiveTeam;
 // Temporary bypass requested by the user to preview the next screen before restoring team readiness rules.
@@ -29,6 +29,15 @@ const BYPASS_LOBBY_READY_CHECK = true;
 
 function getNextTurnEndsAt(roundTimerSeconds: number) {
   return Date.now() + roundTimerSeconds * 1000;
+}
+
+function getNextCluePhaseState(currentRoom: Room, nextTurn: ActiveTeam, clues = currentRoom.clues) {
+  return {
+    clues,
+    currentTurn: nextTurn,
+    turnPhase: "Clue" as TurnPhase,
+    turnEndsAt: getNextTurnEndsAt(currentRoom.settings.roundTimerSeconds),
+  };
 }
 
 interface GameRoomContextValue {
@@ -51,6 +60,7 @@ interface GameRoomContextValue {
   updateRoomSettings: (settings: Partial<RoomSettings>) => Promise<void>;
   startGame: () => Promise<void>;
   sendClue: (text: string, count: number) => Promise<void>;
+  expireTurnTimer: () => Promise<void>;
   revealCard: (cardId: number) => Promise<void>;
   resetGame: () => Promise<void>;
 }
@@ -597,6 +607,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
                 board,
                 clues: [],
                 currentTurn,
+                turnPhase: "Clue",
                 turnEndsAt: getNextTurnEndsAt(nextSettings.roundTimerSeconds),
                 winner: null,
                 gameState: "Playing",
@@ -606,6 +617,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             return {
               ...currentRoom,
               settings: nextSettings,
+              turnPhase: currentRoom.turnPhase,
               turnEndsAt:
                 nextSettings.roundTimerSeconds !== currentRoom.settings.roundTimerSeconds
                   ? getNextTurnEndsAt(nextSettings.roundTimerSeconds)
@@ -619,6 +631,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             settings: nextSettings,
             clues: currentRoom.clues ?? [],
             currentTurn: activeTeams.includes(currentRoom.currentTurn) ? currentRoom.currentTurn : activeTeams[0],
+            turnPhase: "Clue",
             turnEndsAt: null,
             winner: currentRoom.winner && activeTeams.includes(currentRoom.winner) ? currentRoom.winner : null,
           };
@@ -658,6 +671,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             board,
             clues: [],
             currentTurn,
+            turnPhase: "Clue",
             turnEndsAt: getNextTurnEndsAt(currentRoom.settings.roundTimerSeconds),
             winner: null,
             gameState: "Playing",
@@ -690,7 +704,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
           const currentRoom = normalizeRoom(currentValue);
 
-          if (!currentRoom || currentRoom.gameState !== "Playing") {
+          if (!currentRoom || currentRoom.gameState !== "Playing" || currentRoom.turnPhase !== "Clue") {
             return currentValue;
           }
 
@@ -718,10 +732,52 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           return {
             ...currentRoom,
             clues: nextClues,
+            turnPhase: "Guess",
+            turnEndsAt: getNextTurnEndsAt(currentRoom.settings.roundTimerSeconds),
           };
         });
       }, "تعذر إرسال التلميح."),
     [playerId, roomId, runAction],
+  );
+
+  const expireTurnTimer = useCallback(
+    async () =>
+      runAction(async () => {
+        if (!roomId) {
+          return;
+        }
+
+        const database = getRealtimeDatabase();
+
+        if (!database) {
+          return;
+        }
+
+        await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
+          const currentRoom = normalizeRoom(currentValue);
+
+          if (!currentRoom || currentRoom.gameState !== "Playing" || !currentRoom.turnEndsAt) {
+            return currentValue;
+          }
+
+          if (currentRoom.turnEndsAt > Date.now()) {
+            return currentValue;
+          }
+
+          const activeTeams = getActiveTeams(currentRoom.settings.teamCount);
+          const nextTurn = nextTeam(currentRoom.currentTurn, activeTeams);
+          const nextClues =
+            currentRoom.turnPhase === "Guess"
+              ? currentRoom.clues.filter((clue) => clue.team !== currentRoom.currentTurn)
+              : currentRoom.clues;
+
+          return {
+            ...currentRoom,
+            ...getNextCluePhaseState(currentRoom, nextTurn, nextClues),
+          };
+        });
+      }, "تعذر إنهاء الدور بعد انتهاء الوقت."),
+    [roomId, runAction],
   );
 
   const revealCard = useCallback(
@@ -740,7 +796,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
           const currentRoom = normalizeRoom(currentValue);
 
-          if (!currentRoom || currentRoom.gameState !== "Playing") {
+          if (!currentRoom || currentRoom.gameState !== "Playing" || currentRoom.turnPhase !== "Guess") {
             return currentValue;
           }
 
@@ -772,6 +828,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
               ...currentRoom,
               board: nextBoard,
               winner: nextTeam(currentRoom.currentTurn, activeTeams),
+              turnPhase: "Clue",
               turnEndsAt: null,
               gameState: "GameOver",
             };
@@ -784,6 +841,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
               ...currentRoom,
               board: nextBoard,
               winner: winningTeam,
+              turnPhase: "Clue",
               turnEndsAt: null,
               gameState: "GameOver",
             };
@@ -794,18 +852,23 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
               ? currentRoom.currentTurn
               : nextTeam(currentRoom.currentTurn, activeTeams);
 
+          if (nextTurn === currentRoom.currentTurn) {
+            return {
+              ...currentRoom,
+              board: nextBoard,
+              turnPhase: "Guess",
+              turnEndsAt: currentRoom.turnEndsAt ?? getNextTurnEndsAt(currentRoom.settings.roundTimerSeconds),
+            };
+          }
+
           return {
             ...currentRoom,
             board: nextBoard,
-            clues:
-              nextTurn === currentRoom.currentTurn
-                ? currentRoom.clues
-                : currentRoom.clues.filter((clue) => clue.team !== currentRoom.currentTurn),
-            currentTurn: nextTurn,
-            turnEndsAt:
-              nextTurn === currentRoom.currentTurn
-                ? currentRoom.turnEndsAt ?? getNextTurnEndsAt(currentRoom.settings.roundTimerSeconds)
-                : getNextTurnEndsAt(currentRoom.settings.roundTimerSeconds),
+            ...getNextCluePhaseState(
+              currentRoom,
+              nextTurn,
+              currentRoom.clues.filter((clue) => clue.team !== currentRoom.currentTurn),
+            ),
           };
         });
       }, "تعذر كشف الكارت."),
@@ -839,6 +902,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             board,
             clues: [],
             currentTurn,
+            turnPhase: "Clue",
             turnEndsAt: null,
             winner: null,
             gameState: "Lobby",
@@ -869,6 +933,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       updateRoomSettings,
       startGame,
       sendClue,
+      expireTurnTimer,
       revealCard,
       resetGame,
     }),
@@ -891,6 +956,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       roomId,
       startGame,
       sendClue,
+      expireTurnTimer,
       updateRoomSettings,
     ],
   );

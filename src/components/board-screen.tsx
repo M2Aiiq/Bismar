@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { GameBoard } from "./game-board";
 import { RoomManagementPanel } from "./room-management-panel";
@@ -149,13 +149,14 @@ function TeamPanel({
 }
 
 export function BoardScreen() {
-  const { room, player, isBusy, joinTeamAs, sendClue, revealCard } = useGameRoom();
+  const { room, player, isBusy, joinTeamAs, sendClue, expireTurnTimer, revealCard } = useGameRoom();
   const [clueDraft, setClueDraft] = useState("");
   const [clueCount, setClueCount] = useState("1");
   const [isLargeFont, setIsLargeFont] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isClueBarVisible, setIsClueBarVisible] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const handledExpiredTurnRef = useRef<string | null>(null);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -220,21 +221,26 @@ export function BoardScreen() {
     }, 20);
 
     return () => window.clearTimeout(timeoutId);
-  }, [room?.currentTurn]);
+  }, [room?.currentTurn, room?.turnPhase]);
 
   if (!room || !player) {
     return null;
   }
 
   const showTruth = player.role === "Spymaster";
-  const canReveal = player.role === "Operative" && player.team === room.currentTurn;
+  const canReveal = player.role === "Operative" && player.team === room.currentTurn && room.turnPhase === "Guess";
   const activeTeams = getActiveTeams(room.settings.teamCount);
   const currentTeam = room.currentTurn;
-  const playerHasActiveTeam = isActiveTeam(player.team);
   const usesMultiRowTeamGrid = activeTeams.length > 2;
   const shouldUseExpandedDenseFont = isLargeFont && room.board.length >= 36 && activeTeams.length >= 3;
-  const shouldShowClueInput = player.role === "Spymaster";
-  const shouldShowClueStrip = player.role === "Operative" && room.clues.length > 0;
+  const currentTurnClues = room.clues.filter((clue) => clue.team === currentTeam);
+  const shouldShowClueInput =
+    player.role === "Spymaster" && player.team === room.currentTurn && room.turnPhase === "Clue";
+  const shouldShowClueStrip =
+    player.role === "Operative" &&
+    player.team === room.currentTurn &&
+    room.turnPhase === "Guess" &&
+    currentTurnClues.length > 0;
   const teamSlots: Array<ActiveTeam | null> = activeTeams.length === 3 ? [...activeTeams, null] : activeTeams;
   const teamGridHeightClass = usesMultiRowTeamGrid ? "h-[25vh]" : "h-[22vh]";
   const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[62vh]" : "h-[65vh]";
@@ -243,6 +249,27 @@ export function BoardScreen() {
   const roundDurationMs = room.settings.roundTimerSeconds * 1000;
   const remainingMs = room.turnEndsAt ? Math.max(0, room.turnEndsAt - nowMs) : 0;
   const timerProgress = roundDurationMs <= 0 ? 0 : Math.min(1, Math.max(0, remainingMs / roundDurationMs));
+
+  useEffect(() => {
+    if (room.gameState !== "Playing" || !room.turnEndsAt) {
+      handledExpiredTurnRef.current = null;
+      return;
+    }
+
+    const expiryKey = `${room.currentTurn}-${room.turnPhase}-${room.turnEndsAt}`;
+
+    if (remainingMs > 0) {
+      handledExpiredTurnRef.current = null;
+      return;
+    }
+
+    if (handledExpiredTurnRef.current === expiryKey) {
+      return;
+    }
+
+    handledExpiredTurnRef.current = expiryKey;
+    void expireTurnTimer();
+  }, [expireTurnTimer, remainingMs, room.currentTurn, room.gameState, room.turnEndsAt, room.turnPhase]);
 
   const handleClueSend = () => {
     if (!clueDraft.trim()) {
@@ -339,7 +366,7 @@ export function BoardScreen() {
             }`}
           >
             <div className="flex gap-2 overflow-x-auto overscroll-x-contain rounded-2xl px-0.5 py-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-              {room.clues.map((clue) => (
+              {currentTurnClues.map((clue) => (
                 <div
                   key={`${clue.team}-${clue.createdAt}`}
                   className={`flex shrink-0 items-center gap-2 rounded-2xl border px-3 py-1.5 text-[#F8FAFC] shadow-lg backdrop-blur-sm ${clueChipClass(clue.team)}`}

@@ -30,6 +30,9 @@
         "currentTurn": {
           ".validate": "!newData.exists() || newData.val() === 'Red' || newData.val() === 'Blue' || newData.val() === 'Green' || newData.val() === 'Gold'"
         },
+        "turnPhase": {
+          ".validate": "!newData.exists() || newData.val() === 'Clue' || newData.val() === 'Guess'"
+        },
         "turnEndsAt": {
           ".validate": "!newData.exists() || newData.isNumber()"
         },

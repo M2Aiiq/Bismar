@@ -2,6 +2,7 @@ export type Team = "Red" | "Blue" | "Green" | "Gold" | "Unassigned";
 export type Role = "Spymaster" | "Operative";
 export type CardType = "Red" | "Blue" | "Green" | "Gold" | "Neutral" | "Control";
 export type GameState = "Lobby" | "Playing" | "GameOver";
+export type TurnPhase = "Clue" | "Guess";
 export type TeamCount = 2 | 3 | 4;
 export type WordCategory = "General" | "Cities";
 export type Winner = Exclude<Team, "Unassigned"> | null;
@@ -43,6 +44,7 @@ export interface Room {
   board: Card[];
   clues: Clue[];
   currentTurn: Exclude<Team, "Unassigned">;
+  turnPhase: TurnPhase;
   turnEndsAt: number | null;
   winner: Winner;
 }
