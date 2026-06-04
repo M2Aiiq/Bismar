@@ -124,7 +124,7 @@ function TeamPanel({
           ) : null}
         </div>
         {spymaster && operatives.length ? <div className="h-px w-full bg-white/40" /> : null}
-        <div className="mt-1 flex flex-col items-end gap-1 overflow-hidden text-[11px] font-bold text-[#F8FAFC]/95">
+        <div className="mt-1 flex flex-col items-end gap-1 overflow-hidden text-right text-[11px] font-bold text-[#F8FAFC]/95">
           {operatives.map((currentPlayer) => (
             <span key={currentPlayer.id} className="max-w-full">
               {currentPlayer.name}
