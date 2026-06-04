@@ -94,20 +94,9 @@ function resolveIdentityLayerClass(cardType: Card["type"]) {
     case "Gold":
       return "bg-[#EAB308] text-[#0F172A] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2),inset_0_10px_20px_rgba(15,23,42,0.18)]";
     case "Neutral":
-      return "bg-gradient-to-b from-[#F8FAFC] to-[#CBD5E1] text-[#0F172A] shadow-[inset_0_0_0_2px_rgba(148,163,184,0.45),inset_0_10px_18px_rgba(148,163,184,0.2),0_0_0_1px_rgba(255,255,255,0.5)]";
+      return "bg-[#E5E7EB] text-[#0F172A] shadow-[inset_0_0_0_1px_rgba(15,23,42,0.08),inset_0_10px_20px_rgba(148,163,184,0.18)]";
     case "Control":
       return "bg-[#090D16] text-[#EF4444] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),inset_0_10px_20px_rgba(0,0,0,0.42)] [text-shadow:0_0_8px_rgba(239,68,68,0.28)]";
-  }
-}
-
-function revealedCardFrameClass(cardType: Card["type"]) {
-  switch (cardType) {
-    case "Neutral":
-      return "border-[#94A3B8] shadow-[0_0_0_1px_rgba(148,163,184,0.35)]";
-    case "Control":
-      return "border-[#111827] shadow-[0_0_0_1px_rgba(239,68,68,0.15)]";
-    default:
-      return "border-slate-900/15";
   }
 }
 
@@ -167,7 +156,7 @@ export function GameBoard({
                 ? ""
                 : "aspect-square p-2 text-sm md:text-base",
               usesShutterReveal
-                ? cx("bg-transparent", revealedCardFrameClass(card.type))
+                ? "border-slate-900/15 bg-transparent"
                 : usesTruthPreview
                   ? resolveTruthPreviewTone(card)
                   : "border-[#D6D0C5] bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] text-[#0F172A] shadow-[inset_0_2.5px_0px_rgba(255,255,255,0.8),_0_4px_6px_-1px_rgba(0,0,0,0.15)] hover:border-[#C7BFB1]",
