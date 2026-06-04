@@ -151,6 +151,7 @@ export function BoardScreen() {
   const { room, player, isBusy, chooseTeam, revealCard } = useGameRoom();
   const [clueDraft, setClueDraft] = useState("");
   const [clueCount, setClueCount] = useState("1");
+  const [isLargeFont, setIsLargeFont] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
 
   useEffect(() => {
@@ -176,6 +177,7 @@ export function BoardScreen() {
   const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[69vh]" : "h-[72vh]";
   const tickerText = `الدور الآن: فريق ${teamLabel(currentTeam)} | أنت: ${player.role === "Spymaster" ? "قائد" : "محقق"} | المؤقت: ${room.settings.roundTimerSeconds}ث`;
   const boardWidthClass = room.board.length > 25 ? "max-w-[44rem]" : "max-w-md";
+  const boardFontScale = isLargeFont ? "comfortable" : "compact";
   const roundDurationMs = room.settings.roundTimerSeconds * 1000;
   const remainingMs = room.turnEndsAt ? Math.max(0, room.turnEndsAt - nowMs) : 0;
   const timerProgress = roundDurationMs <= 0 ? 0 : Math.min(1, Math.max(0, remainingMs / roundDurationMs));
@@ -228,9 +230,24 @@ export function BoardScreen() {
         </div>
       </div>
 
-      <div className="mx-2 mt-2 h-[4vh] min-h-[28px] rounded-full bg-black/20 px-3 text-xs text-slate-300">
-        <div className="flex h-full items-center justify-center overflow-hidden">
-          <p className="truncate">{tickerText}</p>
+      <div className="mx-2 mt-2 h-[4vh] min-h-[28px] rounded-full bg-black/20 px-2 text-xs text-slate-300">
+        <div className="grid h-full grid-cols-[auto_minmax(0,1fr)] items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsLargeFont((currentValue) => !currentValue)}
+            aria-pressed={isLargeFont}
+            className={`h-6 rounded-full border px-3 text-[11px] font-bold transition active:scale-95 ${
+              isLargeFont
+                ? "border-white/55 bg-white/20 text-[#F8FAFC]"
+                : "border-white/25 bg-black/10 text-slate-200"
+            }`}
+          >
+            خط
+          </button>
+
+          <div className="flex min-w-0 items-center justify-center overflow-hidden">
+            <p className="truncate">{tickerText}</p>
+          </div>
         </div>
       </div>
 
@@ -242,7 +259,7 @@ export function BoardScreen() {
             canReveal={canReveal && !isBusy}
             onReveal={(cardId: number) => revealCard(cardId)}
             compact
-            fontScale="compact"
+            fontScale={boardFontScale}
           />
         </div>
       </div>
