@@ -120,12 +120,12 @@ function TeamPanel({
         ) : null}
       </div>
 
-      <div className="relative z-10 mt-1 flex min-h-0 flex-1 flex-col justify-end">
-        <div className="flex flex-wrap justify-end gap-1.5">
+      <div className="relative z-10 mt-auto pt-2">
+        <div className="flex gap-1.5 overflow-x-auto overscroll-x-contain pb-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {orderedPlayers.map((currentPlayer) => (
             <span
               key={currentPlayer.id}
-              className={`rounded-full px-2 py-1 text-[10px] font-bold ${
+              className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold ${
                 currentPlayer.role === "Spymaster"
                   ? "bg-black/30 text-[#F8FAFC]"
                   : "bg-white/14 text-[#F8FAFC]/95"
