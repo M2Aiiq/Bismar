@@ -157,7 +157,6 @@ export function BoardScreen() {
   const [isClueBarVisible, setIsClueBarVisible] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const handledExpiredTurnRef = useRef<string | null>(null);
-  const clueStripRef = useRef<HTMLDivElement | null>(null);
   const visibleClues = room?.clues ?? [];
 
   useEffect(() => {
@@ -225,18 +224,6 @@ export function BoardScreen() {
     return () => window.clearTimeout(timeoutId);
   }, [room?.currentTurn, room?.turnPhase]);
 
-  useEffect(() => {
-    const element = clueStripRef.current;
-
-    if (!element || visibleClues.length === 0) {
-      return;
-    }
-
-    window.requestAnimationFrame(() => {
-      element.scrollLeft = 0;
-    });
-  }, [visibleClues.length]);
-
   if (!room || !player) {
     return null;
   }
@@ -250,7 +237,6 @@ export function BoardScreen() {
   const shouldShowClueInput =
     player.role === "Spymaster" && player.team === room.currentTurn && room.turnPhase === "Clue";
   const shouldShowClueStrip = visibleClues.length > 0;
-  const orderedVisibleClues = [...visibleClues].reverse();
   const teamSlots: Array<ActiveTeam | null> = activeTeams.length === 3 ? [...activeTeams, null] : activeTeams;
   const teamGridHeightClass = usesMultiRowTeamGrid ? "h-[25vh]" : "h-[22vh]";
   const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[62vh]" : "h-[65vh]";
@@ -376,12 +362,11 @@ export function BoardScreen() {
             }`}
           >
             <div
-              ref={clueStripRef}
-              dir="ltr"
+              dir="rtl"
               className="overflow-x-auto overscroll-x-contain rounded-2xl px-0.5 py-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             >
               <div className="flex min-w-full justify-start gap-2">
-                {orderedVisibleClues.map((clue) => (
+                {[...visibleClues].reverse().map((clue) => (
                   <div
                     key={`${clue.team}-${clue.createdAt}`}
                     dir="rtl"
