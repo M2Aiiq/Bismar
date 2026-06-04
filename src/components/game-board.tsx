@@ -7,7 +7,7 @@ interface GameBoardProps {
   revealAll?: boolean;
   onReveal?: (cardId: number) => void;
   compact?: boolean;
-  fontScale?: "compact" | "comfortable";
+  fontScale?: "compact" | "comfortable" | "expanded";
 }
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -21,19 +21,26 @@ function singleWordTextClass(sizeClass: string) {
 function cardTextClass(cardText: string, fontScale: GameBoardProps["fontScale"], denseBoard: boolean) {
   const normalizedTextLength = Array.from(cardText.replace(/\s+/g, "")).length;
   const isSingleWord = !/\s/.test(cardText.trim());
+  const boostedDenseFont = fontScale === "expanded";
 
   if (isSingleWord) {
-    if (fontScale === "comfortable") {
+    if (fontScale === "comfortable" || boostedDenseFont) {
       if (denseBoard) {
         if (normalizedTextLength <= 6) {
-          return singleWordTextClass("px-0.5 text-[10px] font-black leading-none sm:px-1 sm:text-[11px]");
+          return boostedDenseFont
+            ? singleWordTextClass("px-0.5 text-[11px] font-black leading-none sm:px-1 sm:text-[12px]")
+            : singleWordTextClass("px-0.5 text-[10px] font-black leading-none sm:px-1 sm:text-[11px]");
         }
 
         if (normalizedTextLength <= 8) {
-          return singleWordTextClass("px-0.5 text-[9px] font-black leading-none tracking-[-0.02em] sm:px-1 sm:text-[10px]");
+          return boostedDenseFont
+            ? singleWordTextClass("px-0.5 text-[10px] font-black leading-none tracking-[-0.01em] sm:px-1 sm:text-[11px]")
+            : singleWordTextClass("px-0.5 text-[9px] font-black leading-none tracking-[-0.02em] sm:px-1 sm:text-[10px]");
         }
 
-        return singleWordTextClass("px-0.5 text-[8px] font-black leading-none tracking-[-0.03em] sm:px-1 sm:text-[9px]");
+        return boostedDenseFont
+          ? singleWordTextClass("px-0.5 text-[9px] font-black leading-none tracking-[-0.02em] sm:px-1 sm:text-[10px]")
+          : singleWordTextClass("px-0.5 text-[8px] font-black leading-none tracking-[-0.03em] sm:px-1 sm:text-[9px]");
       }
 
       return singleWordTextClass("px-1.5 text-sm font-black leading-tight sm:text-base");
@@ -48,9 +55,13 @@ function cardTextClass(cardText: string, fontScale: GameBoardProps["fontScale"],
     return singleWordTextClass("px-1 text-[11px] font-black leading-tight sm:text-sm");
   }
 
-  return fontScale === "comfortable"
-    ? "block w-full max-w-full whitespace-normal break-normal px-1 text-center text-[9px] font-black leading-[1.08] [text-wrap:balance] sm:px-1.5 sm:text-[10px]"
-    : "block w-full max-w-full whitespace-normal break-normal px-0.5 text-center text-[8px] font-black leading-[1.05] [text-wrap:balance] sm:px-1 sm:text-[9px]";
+  if (fontScale === "comfortable" || boostedDenseFont) {
+    return boostedDenseFont && denseBoard
+      ? "block w-full max-w-full whitespace-normal break-normal px-1 text-center text-[10px] font-black leading-[1.1] [text-wrap:balance] sm:px-1.5 sm:text-[11px]"
+      : "block w-full max-w-full whitespace-normal break-normal px-1 text-center text-[9px] font-black leading-[1.08] [text-wrap:balance] sm:px-1.5 sm:text-[10px]";
+  }
+
+  return "block w-full max-w-full whitespace-normal break-normal px-0.5 text-center text-[8px] font-black leading-[1.05] [text-wrap:balance] sm:px-1 sm:text-[9px]";
 }
 
 function resolveCardTone(card: Card, shouldShowTruth: boolean) {
