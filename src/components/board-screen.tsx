@@ -366,7 +366,7 @@ export function BoardScreen() {
               className="overflow-x-auto overscroll-x-contain rounded-2xl px-0.5 py-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             >
               <div className="flex min-w-full justify-start gap-2">
-                {[...visibleClues].reverse().map((clue) => (
+                {visibleClues.map((clue) => (
                   <div
                     key={`${clue.team}-${clue.createdAt}`}
                     dir="rtl"
