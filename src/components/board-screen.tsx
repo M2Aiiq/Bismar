@@ -121,6 +121,18 @@ export function BoardScreen() {
   }, []);
 
   useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    const previousTouchAction = document.body.style.touchAction;
+    document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.touchAction = previousTouchAction;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!isSettingsOpen) {
       return;
     }
@@ -157,6 +169,7 @@ export function BoardScreen() {
   const shouldShowClueBar = true;
   const teamSlots: Array<ActiveTeam | null> = activeTeams.length === 3 ? [...activeTeams, null] : activeTeams;
   const teamGridHeightClass = usesMultiRowTeamGrid ? "h-[25vh]" : "h-[22vh]";
+  const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[64vh]" : "h-[67vh]";
   const tickerText = `الدور الآن: فريق ${teamLabel(currentTeam)} | أنت: ${player.role === "Spymaster" ? "قائد" : "محقق"} | المؤقت: ${room.settings.roundTimerSeconds}ث`;
   const boardWidthClass = room.board.length > 25 ? "max-w-[44rem]" : "max-w-md";
   const boardFontScale = shouldUseExpandedDenseFont ? "expanded" : isLargeFont ? "comfortable" : "compact";
@@ -213,9 +226,9 @@ export function BoardScreen() {
         </div>
       </div>
 
-      <div className="mt-1 flex flex-1 min-h-0 items-start overflow-hidden px-1.5 pb-1 sm:px-2">
-        <div className={`mx-auto flex h-full min-h-0 w-full flex-col ${boardWidthClass} items-center justify-start overflow-visible`}>
-          <div className="flex min-h-0 flex-1 w-full items-start justify-center overflow-visible pb-1">
+      <div className={`mt-1 flex min-h-0 items-start overflow-hidden px-1.5 sm:px-2 ${boardSectionHeightClass}`}>
+        <div className={`mx-auto flex h-full w-full flex-col ${boardWidthClass} items-center justify-start overflow-visible`}>
+          <div className="flex min-h-0 w-full items-start justify-center overflow-visible pb-1">
             <GameBoard
               board={room.board}
               showTruth={showTruth}
