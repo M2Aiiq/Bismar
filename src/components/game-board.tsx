@@ -145,7 +145,7 @@ export function GameBoard({
       onReveal(cardId);
       setPendingRevealCardId(null);
       revealTimeoutRef.current = null;
-    }, 420);
+    }, 700);
   };
 
   return (
