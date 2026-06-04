@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from "react";
+
 import type { Card } from "../types/game";
 
 interface GameBoardProps {
@@ -122,6 +124,29 @@ export function GameBoard({
   const rowCount = Math.max(1, Math.ceil(board.length / columnCount));
   const denseBoard = board.length >= 36;
   const compactBoardAspectRatio = (columnCount * (denseBoard ? 1.36 : 1.3)) / rowCount;
+  const [pendingRevealCardId, setPendingRevealCardId] = useState<number | null>(null);
+  const revealTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (revealTimeoutRef.current !== null) {
+        window.clearTimeout(revealTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleReveal = (cardId: number) => {
+    if (!onReveal || !canReveal || pendingRevealCardId !== null) {
+      return;
+    }
+
+    setPendingRevealCardId(cardId);
+    revealTimeoutRef.current = window.setTimeout(() => {
+      onReveal(cardId);
+      setPendingRevealCardId(null);
+      revealTimeoutRef.current = null;
+    }, 260);
+  };
 
   return (
     <div
@@ -141,13 +166,14 @@ export function GameBoard({
         const textClass = cardTextClass(card.text, fontScale, denseBoard);
         const usesShutterReveal = card.isRevealed;
         const usesTruthPreview = shouldShowTruth && !card.isRevealed;
+        const isPendingReveal = pendingRevealCardId === card.id;
 
         return (
           <button
             key={card.id}
             type="button"
-            disabled={!onReveal || !canReveal || card.isRevealed}
-            onClick={() => onReveal?.(card.id)}
+            disabled={!onReveal || !canReveal || card.isRevealed || pendingRevealCardId !== null}
+            onClick={() => handleReveal(card.id)}
             dir="rtl"
             className={cx(
               "relative h-full min-h-0 select-none overflow-hidden border text-center transition-all duration-150",
@@ -160,10 +186,13 @@ export function GameBoard({
                 : usesTruthPreview
                   ? resolveTruthPreviewTone(card)
                   : "border-[#D6D0C5] bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] text-[#0F172A] shadow-[inset_0_2.5px_0px_rgba(255,255,255,0.8),_0_4px_6px_-1px_rgba(0,0,0,0.15)] hover:border-[#C7BFB1]",
+              isPendingReveal &&
+                "border-white shadow-[0_0_0_1px_rgba(255,255,255,0.92),0_0_18px_rgba(255,255,255,0.65),inset_0_0_18px_rgba(255,255,255,0.22)] animate-pulse",
               !card.isRevealed && canReveal && onReveal && "cursor-pointer active:scale-95",
               (!canReveal || card.isRevealed) && "cursor-default",
             )}
           >
+            {isPendingReveal ? <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-inherit ring-2 ring-white/80" /> : null}
             {usesShutterReveal ? (
               <>
                 <div className={cx("absolute inset-0 z-10 flex items-center justify-center overflow-hidden", resolveIdentityLayerClass(card.type))}>
