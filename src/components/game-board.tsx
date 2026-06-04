@@ -145,7 +145,7 @@ export function GameBoard({
       onReveal(cardId);
       setPendingRevealCardId(null);
       revealTimeoutRef.current = null;
-    }, 260);
+    }, 420);
   };
 
   return (
@@ -187,12 +187,23 @@ export function GameBoard({
                   ? resolveTruthPreviewTone(card)
                   : "border-[#D6D0C5] bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] text-[#0F172A] shadow-[inset_0_2.5px_0px_rgba(255,255,255,0.8),_0_4px_6px_-1px_rgba(0,0,0,0.15)] hover:border-[#C7BFB1]",
               isPendingReveal &&
-                "border-white shadow-[0_0_0_1px_rgba(255,255,255,0.92),0_0_18px_rgba(255,255,255,0.65),inset_0_0_18px_rgba(255,255,255,0.22)] animate-pulse",
+                "scale-[1.02] border-white shadow-[0_0_0_2px_rgba(255,255,255,0.96),0_0_24px_rgba(255,255,255,0.78),inset_0_0_22px_rgba(255,255,255,0.28)]",
               !card.isRevealed && canReveal && onReveal && "cursor-pointer active:scale-95",
               (!canReveal || card.isRevealed) && "cursor-default",
             )}
           >
-            {isPendingReveal ? <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-inherit ring-2 ring-white/80" /> : null}
+            {isPendingReveal ? (
+              <>
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-[2px] rounded-[inherit] border-2 border-white/95 shadow-[0_0_18px_rgba(255,255,255,0.72)]"
+                />
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 bg-white/12 opacity-100 animate-pulse"
+                />
+              </>
+            ) : null}
             {usesShutterReveal ? (
               <>
                 <div className={cx("absolute inset-0 z-10 flex items-center justify-center overflow-hidden", resolveIdentityLayerClass(card.type))}>
