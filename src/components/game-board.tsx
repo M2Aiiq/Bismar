@@ -86,26 +86,26 @@ function resolveTruthPreviewTone(card: Card) {
 function resolveIdentityLayerClass(cardType: Card["type"]) {
   switch (cardType) {
     case "Red":
-      return "bg-[#DC2626] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14),inset_0_10px_20px_rgba(15,23,42,0.2)]";
+      return "bg-[#DC2626] text-[#F8FAFC] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14),inset_0_10px_20px_rgba(15,23,42,0.2)] [text-shadow:0_1px_2px_rgba(15,23,42,0.35)]";
     case "Blue":
-      return "bg-[#2563EB] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14),inset_0_10px_20px_rgba(15,23,42,0.2)]";
+      return "bg-[#2563EB] text-[#F8FAFC] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14),inset_0_10px_20px_rgba(15,23,42,0.2)] [text-shadow:0_1px_2px_rgba(15,23,42,0.35)]";
     case "Green":
-      return "bg-[#10B981] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14),inset_0_10px_20px_rgba(15,23,42,0.2)]";
+      return "bg-[#10B981] text-[#F8FAFC] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14),inset_0_10px_20px_rgba(15,23,42,0.2)] [text-shadow:0_1px_2px_rgba(15,23,42,0.35)]";
     case "Gold":
-      return "bg-[#EAB308] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2),inset_0_10px_20px_rgba(15,23,42,0.18)]";
+      return "bg-[#EAB308] text-[#0F172A] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2),inset_0_10px_20px_rgba(15,23,42,0.18)]";
     case "Neutral":
-      return "bg-[#E5E7EB] shadow-[inset_0_0_0_1px_rgba(15,23,42,0.08),inset_0_10px_20px_rgba(148,163,184,0.18)]";
+      return "bg-[#E5E7EB] text-[#0F172A] shadow-[inset_0_0_0_1px_rgba(15,23,42,0.08),inset_0_10px_20px_rgba(148,163,184,0.18)]";
     case "Control":
-      return "bg-[#090D16] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),inset_0_10px_20px_rgba(0,0,0,0.42)]";
+      return "bg-[#090D16] text-[#EF4444] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),inset_0_10px_20px_rgba(0,0,0,0.42)] [text-shadow:0_0_8px_rgba(239,68,68,0.28)]";
   }
 }
 
-function shutterPlateClass(card: Card, denseBoard: boolean, compact: boolean, isCovered: boolean) {
+function shutterPlateClass(denseBoard: boolean, compact: boolean, isCovered: boolean) {
   return cx(
-    "relative z-20 flex h-full w-full items-center justify-center overflow-hidden border border-slate-300/60 bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] text-[#0F172A] shadow-md transition-transform duration-300 ease-in-out",
+    "relative z-20 h-full w-full border border-slate-300/60 bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] shadow-md transition-transform duration-300 ease-in-out",
     denseBoard ? "rounded-xl p-1.5" : "rounded-[1.15rem] p-2",
     compact ? "" : "aspect-square p-2 text-sm md:text-base",
-    !isCovered && "translate-y-[50%] opacity-90",
+    !isCovered && "translate-y-[82%] opacity-90",
   );
 }
 
@@ -166,12 +166,18 @@ export function GameBoard({
           >
             {usesShutterReveal ? (
               <>
-                <div className={cx("absolute inset-0 z-10", resolveIdentityLayerClass(card.type))} />
-                <div className={shutterPlateClass(card, denseBoard, compact, false)}>
-                  <span className={cx(textClass, "whitespace-nowrap truncate px-1", card.type === "Control" && "tracking-widest")}>
+                <div className={cx("absolute inset-0 z-10 flex items-center justify-center overflow-hidden", resolveIdentityLayerClass(card.type))}>
+                  <span
+                    className={cx(
+                      textClass,
+                      "relative z-10 whitespace-nowrap truncate px-1",
+                      card.type === "Control" && "tracking-widest",
+                    )}
+                  >
                     {card.text}
                   </span>
                 </div>
+                <div aria-hidden="true" className={shutterPlateClass(denseBoard, compact, false)} />
               </>
             ) : (
               <span className={cx(textClass, card.type === "Control" && shouldShowTruth && "tracking-widest")}>{card.text}</span>
