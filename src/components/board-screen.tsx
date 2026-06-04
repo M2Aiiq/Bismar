@@ -157,6 +157,8 @@ export function BoardScreen() {
   const [isClueBarVisible, setIsClueBarVisible] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const handledExpiredTurnRef = useRef<string | null>(null);
+  const clueStripRef = useRef<HTMLDivElement | null>(null);
+  const visibleClues = room?.clues ?? [];
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -223,6 +225,18 @@ export function BoardScreen() {
     return () => window.clearTimeout(timeoutId);
   }, [room?.currentTurn, room?.turnPhase]);
 
+  useEffect(() => {
+    const element = clueStripRef.current;
+
+    if (!element || visibleClues.length === 0) {
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      element.scrollLeft = 0;
+    });
+  }, [visibleClues.length]);
+
   if (!room || !player) {
     return null;
   }
@@ -233,7 +247,6 @@ export function BoardScreen() {
   const currentTeam = room.currentTurn;
   const usesMultiRowTeamGrid = activeTeams.length > 2;
   const shouldUseExpandedDenseFont = isLargeFont && room.board.length >= 36 && activeTeams.length >= 3;
-  const visibleClues = room.clues;
   const shouldShowClueInput =
     player.role === "Spymaster" && player.team === room.currentTurn && room.turnPhase === "Clue";
   const shouldShowClueStrip = visibleClues.length > 0;
@@ -362,8 +375,9 @@ export function BoardScreen() {
             }`}
           >
             <div
+              ref={clueStripRef}
               dir="ltr"
-              className="flex gap-2 overflow-x-auto overscroll-x-contain rounded-2xl px-0.5 py-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              className="flex justify-start gap-2 overflow-x-auto overscroll-x-contain rounded-2xl px-0.5 py-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             >
               {visibleClues.map((clue) => (
                 <div
