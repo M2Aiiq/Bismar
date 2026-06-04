@@ -97,7 +97,7 @@ function TeamPanel({
 
   return (
     <div
-      className={`relative flex min-h-0 flex-col justify-between overflow-hidden border px-2 pb-2 pt-1 text-[#F8FAFC] ${teamPanelClass(team, isCurrentTurn)}`}
+      className={`relative flex min-h-0 flex-col justify-start overflow-hidden border px-2 pb-2 pt-1 text-[#F8FAFC] ${teamPanelClass(team, isCurrentTurn)}`}
     >
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
         <span className="select-none text-[5.5rem] font-black leading-none text-white/16">
