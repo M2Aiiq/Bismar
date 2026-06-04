@@ -279,6 +279,7 @@ export function BoardScreen() {
   const handledExpiredTurnRef = useRef<string | null>(null);
   const latestClueRef = useRef<HTMLDivElement | null>(null);
   const latestSeenClueKeyRef = useRef<string | null>(null);
+  const hasInitializedClueModalRef = useRef(false);
   const latestTurnBannerKeyRef = useRef<string | null>(null);
   const visibleClues = room?.clues ?? [];
 
@@ -348,8 +349,9 @@ export function BoardScreen() {
   }, [room?.currentTurn, room?.turnPhase]);
 
   useEffect(() => {
-    if (!room) {
+    if (!room || !player) {
       latestSeenClueKeyRef.current = null;
+      hasInitializedClueModalRef.current = false;
       latestTurnBannerKeyRef.current = null;
       setIncomingClue(null);
       setTurnBannerState(null);
@@ -358,16 +360,24 @@ export function BoardScreen() {
     }
 
     const latestClue = room.clues[0] ?? null;
+    const latestClueKey = latestClue ? `${latestClue.team}-${latestClue.createdAt}` : null;
+
+    if (!hasInitializedClueModalRef.current) {
+      hasInitializedClueModalRef.current = true;
+      latestSeenClueKeyRef.current = latestClueKey;
+      return;
+    }
 
     if (!latestClue) {
       latestSeenClueKeyRef.current = null;
       return;
     }
 
-    const latestClueKey = `${latestClue.team}-${latestClue.createdAt}`;
-
     if (latestSeenClueKeyRef.current === null) {
       latestSeenClueKeyRef.current = latestClueKey;
+      if (!(player.role === "Spymaster" && player.team === latestClue.team)) {
+        setIncomingClue(latestClue);
+      }
       return;
     }
 
@@ -376,8 +386,12 @@ export function BoardScreen() {
     }
 
     latestSeenClueKeyRef.current = latestClueKey;
+    if (player.role === "Spymaster" && player.team === latestClue.team) {
+      return;
+    }
+
     setIncomingClue(latestClue);
-  }, [room]);
+  }, [player, room]);
 
   useEffect(() => {
     if (!room || room.gameState !== "Playing") {

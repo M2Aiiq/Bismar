@@ -51,7 +51,7 @@ export function GameOverScreen() {
             disabled={isBusy || !player.isHost}
             className="flex-1 rounded-xl bg-[#2563EB] py-3.5 text-sm font-bold text-white transition-transform active:scale-95 hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
           >
-            {player.isHost ? "بدء عملية جديدة" : "بانتظار المضيف"}
+            {player.isHost ? "اللعب مجدداً" : "بانتظار المضيف"}
           </button>
           <button
             type="button"
