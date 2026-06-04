@@ -313,9 +313,11 @@ export function BoardScreen() {
         </div>
       </div>
       {isSettingsOpen ? (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-[#0F172A]/88 px-4 py-4 backdrop-blur-sm">
-          <div className="mx-auto min-h-full w-full max-w-6xl">
-            <RoomManagementPanel mode="modal" onClose={() => setIsSettingsOpen(false)} />
+        <div className="fixed inset-0 z-50 overflow-hidden bg-[#0F172A]/88 backdrop-blur-sm">
+          <div className="flex h-full w-full items-start justify-center px-4 py-4">
+            <div className="w-full max-w-6xl overflow-y-auto overscroll-contain">
+              <RoomManagementPanel mode="modal" onClose={() => setIsSettingsOpen(false)} />
+            </div>
           </div>
         </div>
       ) : null}
