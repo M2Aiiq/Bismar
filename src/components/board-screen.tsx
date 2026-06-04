@@ -301,13 +301,10 @@ export function BoardScreen() {
               {room.clues.map((clue) => (
                 <div
                   key={`${clue.team}-${clue.createdAt}`}
-                  className={`flex shrink-0 items-center gap-2 rounded-2xl border px-3 py-2 text-[#F8FAFC] shadow-lg backdrop-blur-sm ${clueChipClass(clue.team)}`}
+                  className={`flex shrink-0 items-center gap-2 rounded-2xl border px-3 py-1.5 text-[#F8FAFC] shadow-lg backdrop-blur-sm ${clueChipClass(clue.team)}`}
                 >
-                  <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] font-black">
-                    {teamLabel(clue.team)}
-                  </span>
-                  <span className="text-sm font-black">{clue.text}</span>
                   <span className="rounded-full bg-black/20 px-2 py-1 text-xs font-black">{clue.count}</span>
+                  <span className="text-sm font-black">{clue.text}</span>
                 </div>
               ))}
             </div>
