@@ -157,6 +157,7 @@ export function BoardScreen() {
   const [isClueBarVisible, setIsClueBarVisible] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const handledExpiredTurnRef = useRef<string | null>(null);
+  const latestClueRef = useRef<HTMLDivElement | null>(null);
   const visibleClues = room?.clues ?? [];
 
   useEffect(() => {
@@ -223,6 +224,22 @@ export function BoardScreen() {
 
     return () => window.clearTimeout(timeoutId);
   }, [room?.currentTurn, room?.turnPhase]);
+
+  useEffect(() => {
+    if (!isClueBarVisible || visibleClues.length === 0) {
+      return;
+    }
+
+    const animationId = window.requestAnimationFrame(() => {
+      latestClueRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "nearest",
+      });
+    });
+
+    return () => window.cancelAnimationFrame(animationId);
+  }, [isClueBarVisible, visibleClues.length]);
 
   if (!room || !player) {
     return null;
@@ -366,9 +383,10 @@ export function BoardScreen() {
               className="overflow-x-auto overscroll-x-contain rounded-2xl px-0.5 py-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             >
               <div className="flex min-w-full justify-start gap-2">
-                {visibleClues.map((clue) => (
+                {[...visibleClues].reverse().map((clue, index, clues) => (
                   <div
                     key={`${clue.team}-${clue.createdAt}`}
+                    ref={index === clues.length - 1 ? latestClueRef : null}
                     dir="rtl"
                     className={`flex shrink-0 items-center gap-2 rounded-2xl border px-3 py-1 text-[#F8FAFC] shadow-lg backdrop-blur-sm ${clueChipClass(clue.team)}`}
                   >
