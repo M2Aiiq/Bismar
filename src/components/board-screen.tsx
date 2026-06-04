@@ -7,7 +7,7 @@ import { RoomManagementPanel } from "./room-management-panel";
 import { useGameRoom } from "../context/game-room-context";
 import { countHiddenCards } from "../lib/game";
 import { getActiveTeams, isActiveTeam, teamLabel, type ActiveTeam } from "../lib/teams";
-import type { Player } from "../types/game";
+import type { Clue, Player } from "../types/game";
 
 const CLUE_COUNT_OPTIONS = Array.from({ length: 9 }, (_, index) => String(index + 1));
 
@@ -73,6 +73,65 @@ function clueChipClass(team: ActiveTeam) {
     case "Gold":
       return "border-[#FDE68A]/35 bg-[#854D0E]/65 text-[#FEF3C7]";
   }
+}
+
+function clueModalFrameClass(team: ActiveTeam) {
+  switch (team) {
+    case "Red":
+      return "border-[#DC2626] shadow-[0_0_0_1px_rgba(220,38,38,0.3),0_0_32px_rgba(220,38,38,0.28)]";
+    case "Blue":
+      return "border-[#2563EB] shadow-[0_0_0_1px_rgba(37,99,235,0.3),0_0_32px_rgba(37,99,235,0.28)]";
+    case "Green":
+      return "border-[#059669] shadow-[0_0_0_1px_rgba(5,150,105,0.3),0_0_32px_rgba(5,150,105,0.28)]";
+    case "Gold":
+      return "border-[#EAB308] shadow-[0_0_0_1px_rgba(234,179,8,0.32),0_0_32px_rgba(234,179,8,0.24)]";
+  }
+}
+
+function clueModalBadgeClass(team: ActiveTeam) {
+  switch (team) {
+    case "Red":
+      return "bg-[#DC2626]";
+    case "Blue":
+      return "bg-[#2563EB]";
+    case "Green":
+      return "bg-[#059669]";
+    case "Gold":
+      return "bg-[#EAB308] text-[#0F172A]";
+  }
+}
+
+interface ClueNotificationModalProps {
+  clue: Clue;
+  onDismiss: () => void;
+}
+
+function ClueNotificationModal({ clue, onDismiss }: ClueNotificationModalProps) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-md" dir="rtl">
+      <div
+        className={`w-full max-w-sm rounded-2xl border bg-[#1E293B] p-5 text-[#F8FAFC] ${clueModalFrameClass(clue.team)}`}
+      >
+        <span className="mb-4 block w-full text-center text-[10px] uppercase tracking-[0.32em] text-slate-500">
+          [ إشارة مشفرة قادمة ]
+        </span>
+        <div className="text-center text-4xl font-black tracking-wide text-white drop-shadow-md">{clue.text}</div>
+        <span className="mb-1 mt-5 block text-center text-xs text-slate-400">عدد المحاولات المصرحة</span>
+        <div
+          className={`mx-auto flex h-10 w-10 items-center justify-center rounded-full font-mono text-lg font-black text-white shadow-md ${clueModalBadgeClass(clue.team)}`}
+        >
+          {clue.count}
+        </div>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-800 bg-[#0F172A] py-3 text-sm font-bold text-slate-200 transition-all active:scale-95 hover:bg-[#0F172A]/80"
+        >
+          استلام الشيفرة وبدء التحقيق
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function TeamPanel({
@@ -155,9 +214,11 @@ export function BoardScreen() {
   const [isLargeFont, setIsLargeFont] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isClueBarVisible, setIsClueBarVisible] = useState(false);
+  const [incomingClue, setIncomingClue] = useState<Clue | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const handledExpiredTurnRef = useRef<string | null>(null);
   const latestClueRef = useRef<HTMLDivElement | null>(null);
+  const latestSeenClueKeyRef = useRef<string | null>(null);
   const visibleClues = room?.clues ?? [];
 
   useEffect(() => {
@@ -224,6 +285,35 @@ export function BoardScreen() {
 
     return () => window.clearTimeout(timeoutId);
   }, [room?.currentTurn, room?.turnPhase]);
+
+  useEffect(() => {
+    if (!room) {
+      latestSeenClueKeyRef.current = null;
+      setIncomingClue(null);
+      return;
+    }
+
+    const latestClue = room.clues[0] ?? null;
+
+    if (!latestClue) {
+      latestSeenClueKeyRef.current = null;
+      return;
+    }
+
+    const latestClueKey = `${latestClue.team}-${latestClue.createdAt}`;
+
+    if (latestSeenClueKeyRef.current === null) {
+      latestSeenClueKeyRef.current = latestClueKey;
+      return;
+    }
+
+    if (latestSeenClueKeyRef.current === latestClueKey) {
+      return;
+    }
+
+    latestSeenClueKeyRef.current = latestClueKey;
+    setIncomingClue(latestClue);
+  }, [room]);
 
   useEffect(() => {
     if (!isClueBarVisible || visibleClues.length === 0) {
@@ -449,6 +539,7 @@ export function BoardScreen() {
           </div>
         </div>
       ) : null}
+      {incomingClue ? <ClueNotificationModal clue={incomingClue} onDismiss={() => setIncomingClue(null)} /> : null}
     </section>
   );
 }
