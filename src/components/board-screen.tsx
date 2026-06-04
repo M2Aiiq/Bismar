@@ -110,9 +110,6 @@ export function BoardScreen() {
   const [isLargeFont, setIsLargeFont] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isClueBarVisible, setIsClueBarVisible] = useState(false);
-  const [isClueInputFocused, setIsClueInputFocused] = useState(false);
-  const [lockedViewportHeight, setLockedViewportHeight] = useState(() => window.innerHeight);
-  const [clueBarBottomOffset, setClueBarBottomOffset] = useState(12);
   const [nowMs, setNowMs] = useState(() => Date.now());
 
   useEffect(() => {
@@ -171,39 +168,6 @@ export function BoardScreen() {
     return () => window.clearTimeout(timeoutId);
   }, [room?.currentTurn]);
 
-  useEffect(() => {
-    const viewport = window.visualViewport;
-
-    const updateViewportLayout = () => {
-      const viewportHeight = viewport ? viewport.height + viewport.offsetTop : window.innerHeight;
-      const keyboardInset = viewport ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop) : 0;
-
-      if (keyboardInset < 120) {
-        setLockedViewportHeight(viewportHeight);
-      }
-
-      setClueBarBottomOffset(isClueInputFocused ? keyboardInset + 12 : 12);
-    };
-
-    updateViewportLayout();
-
-    if (!viewport) {
-      window.addEventListener("resize", updateViewportLayout);
-
-      return () => {
-        window.removeEventListener("resize", updateViewportLayout);
-      };
-    }
-
-    viewport.addEventListener("resize", updateViewportLayout);
-    viewport.addEventListener("scroll", updateViewportLayout);
-
-    return () => {
-      viewport.removeEventListener("resize", updateViewportLayout);
-      viewport.removeEventListener("scroll", updateViewportLayout);
-    };
-  }, [isClueInputFocused]);
-
   if (!room || !player) {
     return null;
   }
@@ -213,21 +177,14 @@ export function BoardScreen() {
   const activeTeams = getActiveTeams(room.settings.teamCount);
   const currentTeam = room.currentTurn;
   const playerHasActiveTeam = isActiveTeam(player.team);
-  const isClueInputMode = isClueInputFocused;
   const usesMultiRowTeamGrid = activeTeams.length > 2;
   const shouldUseExpandedDenseFont = isLargeFont && room.board.length >= 36 && activeTeams.length >= 3;
   const shouldShowClueBar = true;
   const teamSlots: Array<ActiveTeam | null> = activeTeams.length === 3 ? [...activeTeams, null] : activeTeams;
-  const teamGridHeightClass = usesMultiRowTeamGrid ? "h-[25%]" : "h-[22%]";
-  const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[58%]" : "h-[61%]";
+  const teamGridHeightClass = usesMultiRowTeamGrid ? "h-[25vh]" : "h-[22vh]";
+  const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[58vh]" : "h-[61vh]";
   const tickerText = `الدور الآن: فريق ${teamLabel(currentTeam)} | أنت: ${player.role === "Spymaster" ? "قائد" : "محقق"} | المؤقت: ${room.settings.roundTimerSeconds}ث`;
-  const boardWidthClass = isClueInputMode
-    ? room.board.length > 25
-      ? "max-w-[20rem] sm:max-w-[22rem]"
-      : "max-w-[18.5rem] sm:max-w-[20rem]"
-    : room.board.length > 25
-      ? "max-w-[44rem]"
-      : "max-w-md";
+  const boardWidthClass = room.board.length > 25 ? "max-w-[44rem]" : "max-w-md";
   const boardFontScale = shouldUseExpandedDenseFont ? "expanded" : isLargeFont ? "comfortable" : "compact";
   const roundDurationMs = room.settings.roundTimerSeconds * 1000;
   const remainingMs = room.turnEndsAt ? Math.max(0, room.turnEndsAt - nowMs) : 0;
@@ -244,15 +201,10 @@ export function BoardScreen() {
 
   return (
     <section
-      className={`fixed inset-0 flex w-full flex-col overflow-hidden pb-[84px] text-[#F8FAFC] ${boardScreenBackgroundClass(currentTeam)}`}
-      style={{ height: `${lockedViewportHeight}px` }}
+      className={`flex h-full w-full max-h-screen flex-col overflow-hidden pb-[84px] text-[#F8FAFC] ${boardScreenBackgroundClass(currentTeam)}`}
       dir="rtl"
     >
-      <div
-        className={`grid min-h-0 grid-cols-2 gap-0 transition-all duration-200 ${
-          isClueInputMode ? "h-0 overflow-hidden opacity-0" : teamGridHeightClass
-        } ${usesMultiRowTeamGrid ? "grid-rows-2" : ""}`}
-      >
+      <div className={`grid min-h-0 grid-cols-2 gap-0 ${teamGridHeightClass} ${usesMultiRowTeamGrid ? "grid-rows-2" : ""}`}>
         {teamSlots.map((team, index) =>
           team ? (
             <TeamPanel
@@ -272,7 +224,7 @@ export function BoardScreen() {
         )}
       </div>
 
-      <div className={`w-full overflow-hidden bg-black/25 transition-all duration-200 ${isClueInputMode ? "h-0 opacity-0" : "h-1.5"}`}>
+      <div className="h-1.5 w-full overflow-hidden bg-black/25">
         <div className="flex h-full w-full justify-end">
           <div
             className={`h-full transition-[width,background-color] duration-200 ${timerBarClass(timerProgress)}`}
@@ -281,23 +233,15 @@ export function BoardScreen() {
         </div>
       </div>
 
-      <div
-        className={`mx-2 rounded-full bg-black/20 px-3 text-xs text-slate-300 transition-all duration-200 ${
-          isClueInputMode ? "mt-0 h-0 min-h-0 overflow-hidden opacity-0" : "mt-2 h-8 min-h-[28px]"
-        }`}
-      >
+      <div className="mx-2 mt-2 h-[4vh] min-h-[28px] rounded-full bg-black/20 px-3 text-xs text-slate-300">
         <div className="flex h-full min-w-0 items-center justify-center overflow-hidden">
           <p className="truncate">{tickerText}</p>
         </div>
       </div>
 
-      <div
-        className={`flex min-h-0 items-start overflow-hidden px-1.5 transition-all duration-200 sm:px-2 ${
-          isClueInputMode ? "mt-1 flex-1" : `mt-1 ${boardSectionHeightClass}`
-        }`}
-      >
+      <div className={`mt-1 flex min-h-0 items-start overflow-hidden px-1.5 sm:px-2 ${boardSectionHeightClass}`}>
         <div className={`mx-auto flex h-full w-full flex-col ${boardWidthClass} items-center justify-start overflow-visible`}>
-          <div className={`flex min-h-0 w-full items-start justify-center overflow-visible ${isClueInputMode ? "pb-0.5 pt-1" : "pb-1"}`}>
+          <div className="flex min-h-0 w-full items-start justify-center overflow-visible pb-1">
             <GameBoard
               board={room.board}
               showTruth={showTruth}
@@ -308,11 +252,7 @@ export function BoardScreen() {
             />
           </div>
 
-          <div
-            className={`flex w-full shrink-0 items-center justify-center gap-2 transition-all duration-200 ${
-              isClueInputMode ? "mt-0 h-0 overflow-hidden opacity-0" : "mt-2"
-            }`}
-          >
+          <div className="mt-2 flex w-full shrink-0 items-center justify-center gap-2">
             <button
               type="button"
               onClick={() => setIsSettingsOpen(true)}
@@ -342,7 +282,6 @@ export function BoardScreen() {
           className={`fixed inset-x-3 bottom-3 z-20 transition-all duration-300 ease-out ${
             isClueBarVisible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
           }`}
-          style={{ bottom: `${clueBarBottomOffset}px` }}
         >
           <div className="mx-auto w-full max-w-[44rem] overflow-hidden rounded-2xl border border-white/20 bg-black/25 shadow-lg backdrop-blur-sm">
             <div className="grid h-12 grid-cols-[40px_46px_minmax(0,1fr)] items-center">
@@ -371,11 +310,6 @@ export function BoardScreen() {
                 dir="rtl"
                 value={clueDraft}
                 onChange={(event) => setClueDraft(event.target.value)}
-                onFocus={() => {
-                  window.scrollTo(0, 0);
-                  setIsClueInputFocused(true);
-                }}
-                onBlur={() => setIsClueInputFocused(false)}
                 placeholder={`تلميح فريق ${teamLabel(currentTeam)}`}
                 className="h-full min-w-0 bg-transparent px-4 text-sm font-bold text-[#F8FAFC] outline-none placeholder:text-[#F8FAFC]/45"
               />
