@@ -109,8 +109,8 @@ function TeamPanel({
 
       <div className="relative z-10 flex w-full flex-col items-end text-right">
         <div className="-mx-2 -mt-1 w-[calc(100%+1rem)] bg-black/20 px-2 pb-2 pt-1 text-right">
-          <div className="flex min-h-[24px] items-start justify-start">
-            {!spymaster && canShowJoinAsSpymaster ? (
+          {!spymaster && canShowJoinAsSpymaster ? (
+            <div className="flex items-start justify-start">
               <button
                 type="button"
                 onClick={() => onJoinAsSpymaster(team)}
@@ -119,8 +119,8 @@ function TeamPanel({
               >
                 كن القائد
               </button>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
           {spymaster ? (
             <div className="mt-2 overflow-hidden text-right text-[13px] font-black text-[#F8FAFC]">{spymaster.name}</div>
           ) : null}
