@@ -361,13 +361,13 @@ export function BoardScreen() {
               isClueBarVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
             }`}
           >
-            <div className="flex gap-2 overflow-x-auto overscroll-x-contain rounded-2xl px-0.5 py-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex flex-row-reverse gap-2 overflow-x-auto overscroll-x-contain rounded-2xl px-0.5 py-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               {visibleClues.map((clue) => (
                 <div
                   key={`${clue.team}-${clue.createdAt}`}
-                  className={`flex shrink-0 items-center gap-2 rounded-2xl border px-3 py-1.5 text-[#F8FAFC] shadow-lg backdrop-blur-sm ${clueChipClass(clue.team)}`}
+                  className={`flex shrink-0 items-center gap-2 rounded-2xl border px-3 py-1 text-[#F8FAFC] shadow-lg backdrop-blur-sm ${clueChipClass(clue.team)}`}
                 >
-                  <span className="rounded-full bg-black/20 px-2 py-1 text-xs font-black">{clue.count}</span>
+                  <span className="rounded-full bg-black/20 px-2 py-0.5 text-xs font-black">{clue.count}</span>
                   <span className="text-sm font-black">{clue.text}</span>
                 </div>
               ))}
