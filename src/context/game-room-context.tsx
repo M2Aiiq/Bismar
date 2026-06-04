@@ -520,17 +520,18 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           const activeTeams = getActiveTeams(nextSettings.teamCount);
 
           if (wasPlaying) {
-            const { board, currentTurn } = createBoardState(nextSettings);
+            const liveSettings =
+              nextSettings.teamCount === currentRoom.settings.teamCount
+                ? nextSettings
+                : { ...nextSettings, teamCount: currentRoom.settings.teamCount };
 
             return {
               ...currentRoom,
-              players: nextPlayers,
-              settings: nextSettings,
-              board,
-              currentTurn,
-              turnEndsAt: null,
-              winner: null,
-              gameState: "Lobby",
+              settings: liveSettings,
+              turnEndsAt:
+                liveSettings.roundTimerSeconds !== currentRoom.settings.roundTimerSeconds
+                  ? getNextTurnEndsAt(liveSettings.roundTimerSeconds)
+                  : currentRoom.turnEndsAt ?? getNextTurnEndsAt(liveSettings.roundTimerSeconds),
             };
           }
 

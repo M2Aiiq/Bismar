@@ -50,6 +50,7 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
   const roundTimerValue = roundTimerDraft ?? String(room.settings.roundTimerSeconds);
   const isModal = mode === "modal";
   const setupControlsDisabled = isBusy || room.gameState !== "Lobby";
+  const teamCountControlsDisabled = isBusy || !player.isHost || room.gameState !== "Lobby";
 
   useEffect(() => {
     if (roundTimerDraft === null || !roundTimerDraft.trim()) {
@@ -132,7 +133,7 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                       key={count}
                       type="button"
                       onClick={() => void updateRoomSettings({ teamCount: count })}
-                      disabled={isBusy || !player.isHost}
+                      disabled={teamCountControlsDisabled}
                       className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${
                         room.settings.teamCount === count
                           ? "bg-[#2563EB] text-[#F8FAFC]"
@@ -143,6 +144,11 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                     </button>
                   ))}
                 </div>
+                {room.gameState !== "Lobby" ? (
+                  <p className="mt-2 text-xs leading-6 text-[#F8FAFC]/58">
+                    تغيير عدد الفرق متاح من اللوبي فقط حتى لا تتبدل شبكة المباراة الحالية.
+                  </p>
+                ) : null}
               </div>
 
               <div>
@@ -303,7 +309,7 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                       key={count}
                       type="button"
                       onClick={() => void updateRoomSettings({ teamCount: count })}
-                      disabled={isBusy || !player.isHost}
+                      disabled={teamCountControlsDisabled}
                       className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${
                         room.settings.teamCount === count
                           ? "bg-[#2563EB] text-[#F8FAFC]"
