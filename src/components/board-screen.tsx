@@ -105,32 +105,28 @@ function TeamPanel({
         </span>
       </div>
 
-      <div className="relative z-10 flex items-start justify-end">
-        {canJoinTeam ? (
-          <button
-            type="button"
-            onClick={() => onJoinTeam(team)}
-            disabled={isBusy}
-            className="shrink-0 rounded-full border border-white/20 bg-white/10 px-2 py-1 text-[10px] font-bold text-[#F8FAFC] transition active:scale-95 disabled:opacity-60"
-          >
-            انضم للفريق
-          </button>
-        ) : null}
-      </div>
-
-      <div className="relative z-10 mt-2">
-        <div className="flex flex-col items-start gap-1 overflow-hidden text-left">
+      <div className="relative z-10 flex flex-col items-start text-left">
+        <div className={`-mx-2 -mt-1 w-[calc(100%+1rem)] px-2 pt-1 ${spymaster ? "bg-black/20 pb-2" : ""}`}>
+          <div className="flex items-start justify-end">
+            {canJoinTeam ? (
+              <button
+                type="button"
+                onClick={() => onJoinTeam(team)}
+                disabled={isBusy}
+                className="shrink-0 rounded-full border border-white/20 bg-white/10 px-2 py-1 text-[10px] font-bold text-[#F8FAFC] transition active:scale-95 disabled:opacity-60"
+              >
+                انضم للفريق
+              </button>
+            ) : null}
+          </div>
           {spymaster ? (
-            <span className="max-w-full rounded-full bg-black/30 px-2 py-1 text-[10px] font-bold text-[#F8FAFC]">
-              {spymaster.name}
-            </span>
+            <div className="mt-2 overflow-hidden text-[10px] font-bold text-[#F8FAFC]">{spymaster.name}</div>
           ) : null}
-          {spymaster && operatives.length ? <div className="h-px w-full bg-white/40" /> : null}
+        </div>
+        {spymaster && operatives.length ? <div className="h-px w-full bg-white/40" /> : null}
+        <div className="mt-1 flex flex-col items-start gap-1 overflow-hidden text-[10px] font-bold text-[#F8FAFC]/95">
           {operatives.map((currentPlayer) => (
-            <span
-              key={currentPlayer.id}
-              className="max-w-full rounded-full bg-white/14 px-2 py-1 text-[10px] font-bold text-[#F8FAFC]/95"
-            >
+            <span key={currentPlayer.id} className="max-w-full">
               {currentPlayer.name}
             </span>
           ))}
