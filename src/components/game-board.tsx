@@ -94,7 +94,7 @@ function resolveIdentityLayerClass(cardType: Card["type"]) {
     case "Gold":
       return "bg-[#EAB308] text-[#0F172A] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2),inset_0_10px_20px_rgba(15,23,42,0.18)]";
     case "Neutral":
-      return "bg-[#E5E7EB] text-[#0F172A] shadow-[inset_0_0_0_1px_rgba(15,23,42,0.08),inset_0_10px_20px_rgba(148,163,184,0.18)]";
+      return "bg-[#FFFFFF] text-[#0F172A] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.95),inset_0_10px_22px_rgba(226,232,240,0.65),0_0_14px_rgba(255,255,255,0.22)]";
     case "Control":
       return "bg-[#090D16] text-[#EF4444] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),inset_0_10px_20px_rgba(0,0,0,0.42)] [text-shadow:0_0_8px_rgba(239,68,68,0.28)]";
   }
