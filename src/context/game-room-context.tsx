@@ -934,9 +934,9 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             clues: [],
             currentTurn,
             turnPhase: "Clue",
-            turnEndsAt: null,
+            turnEndsAt: getNextTurnEndsAt(currentRoom.settings.roundTimerSeconds),
             winner: null,
-            gameState: "Lobby",
+            gameState: "Playing",
           };
         });
       }, "تعذر تصفير الجولة."),

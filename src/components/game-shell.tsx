@@ -8,7 +8,7 @@ import { useGameRoom } from "../context/game-room-context";
 
 export function GameShell() {
   const { room, player, isReady, error, clearError } = useGameRoom();
-  const isGameScreen = !!room && !!player && room.gameState !== "GameOver";
+  const isGameScreen = !!room && !!player;
 
   return (
     <main
