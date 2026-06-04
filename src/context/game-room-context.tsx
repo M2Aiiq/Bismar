@@ -40,6 +40,32 @@ function getNextCluePhaseState(currentRoom: Room, nextTurn: ActiveTeam, clues = 
   };
 }
 
+function getAliveTeams(currentRoom: Room) {
+  const activeTeams = getActiveTeams(currentRoom.settings.teamCount);
+  return activeTeams.filter((team) => !currentRoom.eliminatedTeams.includes(team));
+}
+
+function getNextAliveTurn(currentTurn: ActiveTeam, currentRoom: Room) {
+  const aliveTeams = getAliveTeams(currentRoom);
+
+  if (aliveTeams.length === 0) {
+    return currentTurn;
+  }
+
+  return nextTeam(currentTurn, aliveTeams);
+}
+
+function getWinningTeam(currentRoom: Room, board: Room["board"]) {
+  const aliveTeams = getAliveTeams(currentRoom);
+  const clearedTeam = aliveTeams.find((team) => countHiddenCards(board, team) === 0);
+
+  if (clearedTeam) {
+    return clearedTeam;
+  }
+
+  return aliveTeams.length === 1 ? aliveTeams[0] : null;
+}
+
 interface GameRoomContextValue {
   room: Room | null;
   player: Player | null;
@@ -607,6 +633,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
                 settings: nextSettings,
                 board,
                 clues: [],
+                eliminatedTeams: [],
                 currentTurn,
                 turnPhase: "Clue",
                 turnEndsAt: getNextTurnEndsAt(nextSettings.roundTimerSeconds),
@@ -631,6 +658,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             players: nextPlayers,
             settings: nextSettings,
             clues: currentRoom.clues ?? [],
+            eliminatedTeams: currentRoom.eliminatedTeams.filter((team) => activeTeams.includes(team)),
             currentTurn: activeTeams.includes(currentRoom.currentTurn) ? currentRoom.currentTurn : activeTeams[0],
             turnPhase: "Clue",
             turnEndsAt: null,
@@ -671,6 +699,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             ...currentRoom,
             board,
             clues: [],
+            eliminatedTeams: [],
             currentTurn,
             turnPhase: "Clue",
             turnEndsAt: getNextTurnEndsAt(currentRoom.settings.roundTimerSeconds),
@@ -765,8 +794,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             return currentValue;
           }
 
-          const activeTeams = getActiveTeams(currentRoom.settings.teamCount);
-          const nextTurn = nextTeam(currentRoom.currentTurn, activeTeams);
+          const nextTurn = getNextAliveTurn(currentRoom.currentTurn, currentRoom);
 
           return {
             ...currentRoom,
@@ -803,8 +831,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             return currentValue;
           }
 
-          const activeTeams = getActiveTeams(currentRoom.settings.teamCount);
-          const nextTurn = nextTeam(currentRoom.currentTurn, activeTeams);
+          const nextTurn = getNextAliveTurn(currentRoom.currentTurn, currentRoom);
 
           return {
             ...currentRoom,
@@ -856,20 +883,48 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             return currentValue;
           }
 
-          const activeTeams = getActiveTeams(currentRoom.settings.teamCount);
-
           if (selectedCard.type === "Control") {
+            const activeTeams = getActiveTeams(currentRoom.settings.teamCount);
+
+            if (activeTeams.length <= 2) {
+              return {
+                ...currentRoom,
+                board: nextBoard,
+                winner: nextTeam(currentRoom.currentTurn, activeTeams),
+                turnPhase: "Clue",
+                turnEndsAt: null,
+                gameState: "GameOver",
+              };
+            }
+
+            const nextEliminatedTeams = currentRoom.eliminatedTeams.includes(currentRoom.currentTurn)
+              ? currentRoom.eliminatedTeams
+              : [...currentRoom.eliminatedTeams, currentRoom.currentTurn];
+            const aliveTeams = activeTeams.filter((team) => !nextEliminatedTeams.includes(team));
+
+            if (aliveTeams.length <= 1) {
+              return {
+                ...currentRoom,
+                board: nextBoard,
+                eliminatedTeams: nextEliminatedTeams,
+                winner: aliveTeams[0] ?? null,
+                turnPhase: "Clue",
+                turnEndsAt: null,
+                gameState: "GameOver",
+              };
+            }
+
+            const nextTurn = nextTeam(currentRoom.currentTurn, aliveTeams);
+
             return {
               ...currentRoom,
               board: nextBoard,
-              winner: nextTeam(currentRoom.currentTurn, activeTeams),
-              turnPhase: "Clue",
-              turnEndsAt: null,
-              gameState: "GameOver",
+              eliminatedTeams: nextEliminatedTeams,
+              ...getNextCluePhaseState(currentRoom, nextTurn, currentRoom.clues),
             };
           }
 
-          const winningTeam = activeTeams.find((team) => countHiddenCards(nextBoard, team) === 0);
+          const winningTeam = getWinningTeam(currentRoom, nextBoard);
 
           if (winningTeam) {
             return {
@@ -885,7 +940,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           const nextTurn: PlayerTeam =
             selectedCard.type === currentRoom.currentTurn
               ? currentRoom.currentTurn
-              : nextTeam(currentRoom.currentTurn, activeTeams);
+              : getNextAliveTurn(currentRoom.currentTurn, currentRoom);
 
           if (nextTurn === currentRoom.currentTurn) {
             return {
@@ -932,6 +987,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             ...currentRoom,
             board,
             clues: [],
+            eliminatedTeams: [],
             currentTurn,
             turnPhase: "Clue",
             turnEndsAt: getNextTurnEndsAt(currentRoom.settings.roundTimerSeconds),

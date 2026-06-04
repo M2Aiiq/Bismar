@@ -36,6 +36,11 @@
         "turnEndsAt": {
           ".validate": "!newData.exists() || newData.isNumber()"
         },
+        "eliminatedTeams": {
+          "$teamIndex": {
+            ".validate": "!newData.exists() || newData.val() === 'Red' || newData.val() === 'Blue' || newData.val() === 'Green' || newData.val() === 'Gold'"
+          }
+        },
         "winner": {
           ".validate": "!newData.exists() || newData.val() === 'Red' || newData.val() === 'Blue' || newData.val() === 'Green' || newData.val() === 'Gold'"
         },

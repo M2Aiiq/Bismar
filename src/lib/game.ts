@@ -112,6 +112,7 @@ export function createInitialRoom(roomId: string, host: Player): Room {
     settings,
     board,
     clues: [],
+    eliminatedTeams: [],
     currentTurn,
     turnPhase: "Clue",
     turnEndsAt: null,
@@ -157,6 +158,14 @@ function sanitizeTurnEndsAt(value: unknown) {
 
 function sanitizeTurnPhase(value: unknown): TurnPhase {
   return value === "Guess" ? "Guess" : "Clue";
+}
+
+function sanitizeEliminatedTeams(value: unknown, activeTeams: ActiveTeam[]) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((team): team is ActiveTeam => activeTeams.includes(team as ActiveTeam));
 }
 
 function sanitizeClues(value: unknown): Clue[] {
@@ -216,10 +225,14 @@ export function normalizeRoom(value: unknown): Room | null {
     wordCategory: sanitizeWordCategory(settings.wordCategory),
   };
   const activeTeams = getActiveTeams(teamCount);
+  const eliminatedTeams = sanitizeEliminatedTeams((room as Partial<Room>).eliminatedTeams, activeTeams);
+  const remainingTeams = activeTeams.filter((team) => !eliminatedTeams.includes(team));
   const fallbackTurn = activeTeams[0];
-  const normalizedTurn = activeTeams.includes(room.currentTurn as ActiveTeam)
+  const fallbackAliveTurn = remainingTeams[0] ?? fallbackTurn;
+  const normalizedTurn =
+    activeTeams.includes(room.currentTurn as ActiveTeam) && !eliminatedTeams.includes(room.currentTurn as ActiveTeam)
     ? (room.currentTurn as ActiveTeam)
-    : fallbackTurn;
+    : fallbackAliveTurn;
   const normalizedWinner =
     room.winner && activeTeams.includes(room.winner as ActiveTeam) ? (room.winner as ActiveTeam) : null;
 
@@ -227,6 +240,7 @@ export function normalizeRoom(value: unknown): Room | null {
     ...room,
     settings: normalizedSettings,
     clues: sanitizeClues(room.clues),
+    eliminatedTeams,
     currentTurn: normalizedTurn,
     turnPhase: sanitizeTurnPhase((room as Partial<Room>).turnPhase),
     turnEndsAt: sanitizeTurnEndsAt(room.turnEndsAt),

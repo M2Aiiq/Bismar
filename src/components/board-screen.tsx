@@ -18,23 +18,26 @@ interface TeamPanelProps {
   currentPlayer: Player;
   remainingCards: number;
   isCurrentTurn: boolean;
+  isEliminated: boolean;
   isBusy: boolean;
   onJoinAsOperative: (team: ActiveTeam) => void;
   onJoinAsSpymaster: (team: ActiveTeam) => void;
 }
 
-function teamPanelClass(team: ActiveTeam, isCurrentTurn: boolean) {
-  const currentTurnAccent = isCurrentTurn ? "ring-2 ring-inset ring-white/35 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]" : "";
+function teamPanelClass(team: ActiveTeam, isCurrentTurn: boolean, isEliminated: boolean) {
+  const currentTurnAccent =
+    isCurrentTurn && !isEliminated ? "ring-2 ring-inset ring-white/35 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]" : "";
+  const eliminatedAccent = isEliminated ? "opacity-65 saturate-50" : "";
 
   switch (team) {
     case "Red":
-      return `border-[#DC2626] bg-[#DC2626] ${currentTurnAccent}`;
+      return `border-[#DC2626] bg-[#DC2626] ${currentTurnAccent} ${eliminatedAccent}`;
     case "Blue":
-      return `border-[#2563EB] bg-[#2563EB] ${currentTurnAccent}`;
+      return `border-[#2563EB] bg-[#2563EB] ${currentTurnAccent} ${eliminatedAccent}`;
     case "Green":
-      return `border-[#059669] bg-[#059669] ${currentTurnAccent}`;
+      return `border-[#059669] bg-[#059669] ${currentTurnAccent} ${eliminatedAccent}`;
     case "Gold":
-      return `border-[#EAB308] bg-[#EAB308] text-[#0F172A] ${currentTurnAccent}`;
+      return `border-[#EAB308] bg-[#EAB308] text-[#0F172A] ${currentTurnAccent} ${eliminatedAccent}`;
   }
 }
 
@@ -151,7 +154,7 @@ function TurnTransitionBanner({ team, phase, isVisible }: TurnTransitionBannerPr
       dir="rtl"
     >
       <div className="flex flex-col items-center justify-center px-4 text-center">
-        <span className="mb-1 text-[10px] uppercase tracking-[0.28em] text-slate-400">[ خاص وقتك]</span>
+        <span className="mb-1 text-[10px] uppercase tracking-[0.28em] text-slate-400">[ خلص وقتك]</span>
         <div className="text-xl font-black text-white md:text-2xl">انتقال الدور</div>
         <div
           className={`mt-2 rounded-full border border-current/20 bg-[#0F172A]/70 px-4 py-1 text-sm font-black ${turnBannerTeamTextClass(team)}`}
@@ -197,6 +200,7 @@ function TeamPanel({
   currentPlayer,
   remainingCards,
   isCurrentTurn,
+  isEliminated,
   isBusy,
   onJoinAsOperative,
   onJoinAsSpymaster,
@@ -210,17 +214,19 @@ function TeamPanel({
   });
   const spymaster = orderedPlayers.find((currentPlayer) => currentPlayer.role === "Spymaster") ?? null;
   const operatives = orderedPlayers.filter((currentPlayer) => currentPlayer.role === "Operative");
-  const canShowJoinAsOperative = currentPlayer.role !== "Operative" || currentPlayer.team !== team;
-  const canShowJoinAsSpymaster = currentPlayer.role !== "Spymaster" || currentPlayer.team !== team;
+  const canShowJoinAsOperative = !isEliminated && (currentPlayer.role !== "Operative" || currentPlayer.team !== team);
+  const canShowJoinAsSpymaster = !isEliminated && (currentPlayer.role !== "Spymaster" || currentPlayer.team !== team);
 
   return (
     <div
-      className={`relative flex min-h-0 flex-col justify-start overflow-hidden border px-2 pb-2 pt-1 text-[#F8FAFC] ${teamPanelClass(team, isCurrentTurn)}`}
+      className={`relative flex min-h-0 flex-col justify-start overflow-hidden border px-2 pb-2 pt-1 text-[#F8FAFC] ${teamPanelClass(team, isCurrentTurn, isEliminated)}`}
     >
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <span className="select-none text-[5.5rem] font-black leading-none text-white/16">
-          {remainingCards}
-        </span>
+        {isEliminated ? (
+          <img src="/dead.png" alt="" className="h-16 w-16 select-none object-contain opacity-80" />
+        ) : (
+          <span className="select-none text-[5.5rem] font-black leading-none text-white/16">{remainingCards}</span>
+        )}
       </div>
 
       <div className="relative z-10 flex w-full flex-col items-end text-right">
@@ -415,21 +421,25 @@ export function BoardScreen() {
     latestTurnBannerKeyRef.current = nextBannerKey;
     setTurnBannerState({ team: room.currentTurn, phase: "Clue" });
     setIsTurnBannerVisible(true);
+  }, [room?.currentTurn, room?.gameState]);
+
+  useEffect(() => {
+    if (!turnBannerState) {
+      return;
+    }
 
     const fadeTimeoutId = window.setTimeout(() => {
       setIsTurnBannerVisible(false);
     }, 1100);
     const clearTimeoutId = window.setTimeout(() => {
-      setTurnBannerState((currentValue) =>
-        currentValue && currentValue.team === room.currentTurn ? null : currentValue,
-      );
+      setTurnBannerState(null);
     }, 1500);
 
     return () => {
       window.clearTimeout(fadeTimeoutId);
       window.clearTimeout(clearTimeoutId);
     };
-  }, [room]);
+  }, [turnBannerState]);
 
   useEffect(() => {
     if (!incomingClue) {
@@ -531,6 +541,7 @@ export function BoardScreen() {
               currentPlayer={player}
               remainingCards={countHiddenCards(room.board, team)}
               isCurrentTurn={team === currentTeam}
+              isEliminated={room.eliminatedTeams.includes(team)}
               isBusy={isBusy}
               onJoinAsOperative={(nextTeam) => joinTeamAs(nextTeam, "Operative")}
               onJoinAsSpymaster={(nextTeam) => joinTeamAs(nextTeam, "Spymaster")}

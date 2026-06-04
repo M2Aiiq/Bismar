@@ -43,6 +43,7 @@ export interface Room {
   settings: RoomSettings;
   board: Card[];
   clues: Clue[];
+  eliminatedTeams: Exclude<Team, "Unassigned">[];
   currentTurn: Exclude<Team, "Unassigned">;
   turnPhase: TurnPhase;
   turnEndsAt: number | null;
