@@ -121,17 +121,23 @@ function TeamPanel({
               </button>
             ) : null}
           </div>
-          {spymaster ? (
-            <div className="mt-2 overflow-hidden text-right text-xs font-black text-[#F8FAFC]">{spymaster.name}</div>
+          {(spymaster || operatives.length) ? (
+            <div className="mt-2 flex w-fit max-w-full flex-col items-end self-end text-right">
+              {spymaster ? (
+                <div className="max-w-full overflow-hidden text-right text-xs font-black text-[#F8FAFC]">
+                  {spymaster.name}
+                </div>
+              ) : null}
+              {spymaster && operatives.length ? <div className="mt-1 h-px w-full bg-white/40" /> : null}
+              <div className="mt-1 flex flex-col items-end gap-1 text-right text-[11px] font-bold text-[#F8FAFC]/95">
+                {operatives.map((currentPlayer) => (
+                  <span key={currentPlayer.id} className="max-w-full text-right">
+                    {currentPlayer.name}
+                  </span>
+                ))}
+              </div>
+            </div>
           ) : null}
-        </div>
-        {spymaster && operatives.length ? <div className="h-px w-full bg-white/40" /> : null}
-        <div className="mt-1 flex w-full flex-col items-end gap-1 overflow-hidden text-right text-[11px] font-bold text-[#F8FAFC]/95">
-          {operatives.map((currentPlayer) => (
-            <span key={currentPlayer.id} className="max-w-full self-end text-right">
-              {currentPlayer.name}
-            </span>
-          ))}
         </div>
       </div>
     </div>
