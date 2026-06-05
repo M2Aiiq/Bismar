@@ -39,6 +39,12 @@
         "pausedRemainingMs": {
           ".validate": "!newData.exists() || newData.isNumber() || newData.val() === null"
         },
+        "pendingRevealCardId": {
+          ".validate": "!newData.exists() || newData.isNumber() || newData.val() === null"
+        },
+        "pendingRevealAt": {
+          ".validate": "!newData.exists() || newData.isNumber() || newData.val() === null"
+        },
         "turnEndsAt": {
           ".validate": "!newData.exists() || newData.isNumber()"
         },

@@ -1,5 +1,3 @@
-import { useEffect, useRef, useState } from "react";
-
 import type { Card } from "../types/game";
 
 interface GameBoardProps {
@@ -9,6 +7,7 @@ interface GameBoardProps {
   revealAll?: boolean;
   onReveal?: (cardId: number) => void;
   onBlockedReveal?: () => void;
+  pendingRevealCardId?: number | null;
   compact?: boolean;
   fontScale?: "compact" | "comfortable" | "expanded";
 }
@@ -119,6 +118,7 @@ export function GameBoard({
   revealAll = false,
   onReveal,
   onBlockedReveal,
+  pendingRevealCardId = null,
   compact = false,
   fontScale = "compact",
 }: GameBoardProps) {
@@ -126,16 +126,6 @@ export function GameBoard({
   const rowCount = Math.max(1, Math.ceil(board.length / columnCount));
   const denseBoard = board.length >= 36;
   const compactBoardAspectRatio = (columnCount * (denseBoard ? 1.36 : 1.3)) / rowCount;
-  const [pendingRevealCardId, setPendingRevealCardId] = useState<number | null>(null);
-  const revealTimeoutRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (revealTimeoutRef.current !== null) {
-        window.clearTimeout(revealTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const handleReveal = (cardId: number) => {
     if (!onReveal || pendingRevealCardId !== null) {
@@ -147,12 +137,7 @@ export function GameBoard({
       return;
     }
 
-    setPendingRevealCardId(cardId);
-    revealTimeoutRef.current = window.setTimeout(() => {
-      onReveal(cardId);
-      setPendingRevealCardId(null);
-      revealTimeoutRef.current = null;
-    }, 700);
+    onReveal(cardId);
   };
 
   return (

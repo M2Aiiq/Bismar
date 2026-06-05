@@ -36,6 +36,8 @@ function getNextCluePhaseState(currentRoom: Room, nextTurn: ActiveTeam, clues = 
     clues,
     currentTurn: nextTurn,
     turnPhase: "Clue" as TurnPhase,
+    pendingRevealCardId: null,
+    pendingRevealAt: null,
     isPaused: false,
     pausedRemainingMs: null,
     turnEndsAt: getNextTurnEndsAt(currentRoom.settings.roundTimerSeconds),
@@ -46,6 +48,8 @@ function getPausedStartState(roundTimerSeconds: number) {
   return {
     isPaused: true,
     pausedRemainingMs: roundTimerSeconds * 1000,
+    pendingRevealCardId: null,
+    pendingRevealAt: null,
     turnEndsAt: null,
   };
 }
@@ -88,6 +92,109 @@ function getWinningTeam(currentRoom: Room, board: Room["board"]) {
   return aliveTeams.length === 1 ? aliveTeams[0] : null;
 }
 
+const PENDING_REVEAL_DURATION_MS = 700;
+
+function getClearedPendingRevealState() {
+  return {
+    pendingRevealCardId: null,
+    pendingRevealAt: null,
+  };
+}
+
+function resolveCardReveal(currentRoom: Room, cardId: number) {
+  const nextBoard = currentRoom.board.map((card) => (card.id === cardId ? { ...card, isRevealed: true } : card));
+  const selectedCard = nextBoard.find((card) => card.id === cardId);
+
+  if (!selectedCard) {
+    return {
+      ...currentRoom,
+      ...getClearedPendingRevealState(),
+    };
+  }
+
+  if (selectedCard.type === "Control") {
+    const activeTeams = getActiveTeams(currentRoom.settings.teamCount);
+
+    if (activeTeams.length <= 2) {
+      return {
+        ...currentRoom,
+        board: nextBoard,
+        winner: nextTeam(currentRoom.currentTurn, activeTeams),
+        ...getClearedPendingRevealState(),
+        isPaused: false,
+        pausedRemainingMs: null,
+        turnPhase: "Clue",
+        turnEndsAt: null,
+        gameState: "GameOver",
+      };
+    }
+
+    const nextEliminatedTeams = currentRoom.eliminatedTeams.includes(currentRoom.currentTurn)
+      ? currentRoom.eliminatedTeams
+      : [...currentRoom.eliminatedTeams, currentRoom.currentTurn];
+    const aliveTeams = activeTeams.filter((team) => !nextEliminatedTeams.includes(team));
+
+    if (aliveTeams.length <= 1) {
+      return {
+        ...currentRoom,
+        board: nextBoard,
+        eliminatedTeams: nextEliminatedTeams,
+        winner: aliveTeams[0] ?? null,
+        ...getClearedPendingRevealState(),
+        isPaused: false,
+        pausedRemainingMs: null,
+        turnPhase: "Clue",
+        turnEndsAt: null,
+        gameState: "GameOver",
+      };
+    }
+
+    const nextTurn = nextTeam(currentRoom.currentTurn, aliveTeams);
+
+    return {
+      ...currentRoom,
+      board: nextBoard,
+      eliminatedTeams: nextEliminatedTeams,
+      ...getNextCluePhaseState(currentRoom, nextTurn, currentRoom.clues),
+    };
+  }
+
+  const winningTeam = getWinningTeam(currentRoom, nextBoard);
+
+  if (winningTeam) {
+    return {
+      ...currentRoom,
+      board: nextBoard,
+      winner: winningTeam,
+      ...getClearedPendingRevealState(),
+      isPaused: false,
+      pausedRemainingMs: null,
+      turnPhase: "Clue",
+      turnEndsAt: null,
+      gameState: "GameOver",
+    };
+  }
+
+  const nextTurn: PlayerTeam =
+    selectedCard.type === currentRoom.currentTurn ? currentRoom.currentTurn : getNextAliveTurn(currentRoom.currentTurn, currentRoom);
+
+  if (nextTurn === currentRoom.currentTurn) {
+    return {
+      ...currentRoom,
+      board: nextBoard,
+      ...getClearedPendingRevealState(),
+      turnPhase: "Guess",
+      turnEndsAt: currentRoom.turnEndsAt ?? getNextTurnEndsAt(currentRoom.settings.roundTimerSeconds),
+    };
+  }
+
+  return {
+    ...currentRoom,
+    board: nextBoard,
+    ...getNextCluePhaseState(currentRoom, nextTurn, currentRoom.clues),
+  };
+}
+
 interface GameRoomContextValue {
   room: Room | null;
   player: Player | null;
@@ -113,6 +220,7 @@ interface GameRoomContextValue {
   expireTurnTimer: () => Promise<void>;
   endGuessTurn: () => Promise<void>;
   revealCard: (cardId: number) => Promise<void>;
+  resolvePendingReveal: () => Promise<void>;
   resetGame: () => Promise<void>;
 }
 
@@ -1025,97 +1133,62 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             return currentValue;
           }
 
-          const nextBoard = currentRoom.board.map((card) =>
-            card.id === cardId ? { ...card, isRevealed: true } : card,
-          );
-          const selectedCard = nextBoard.find((card) => card.id === cardId);
-
-          if (!selectedCard) {
+          if (currentRoom.pendingRevealCardId !== null) {
             return currentValue;
-          }
-
-          if (selectedCard.type === "Control") {
-            const activeTeams = getActiveTeams(currentRoom.settings.teamCount);
-
-            if (activeTeams.length <= 2) {
-              return {
-                ...currentRoom,
-                board: nextBoard,
-                winner: nextTeam(currentRoom.currentTurn, activeTeams),
-                isPaused: false,
-                pausedRemainingMs: null,
-                turnPhase: "Clue",
-                turnEndsAt: null,
-                gameState: "GameOver",
-              };
-            }
-
-            const nextEliminatedTeams = currentRoom.eliminatedTeams.includes(currentRoom.currentTurn)
-              ? currentRoom.eliminatedTeams
-              : [...currentRoom.eliminatedTeams, currentRoom.currentTurn];
-            const aliveTeams = activeTeams.filter((team) => !nextEliminatedTeams.includes(team));
-
-            if (aliveTeams.length <= 1) {
-              return {
-                ...currentRoom,
-                board: nextBoard,
-                eliminatedTeams: nextEliminatedTeams,
-                winner: aliveTeams[0] ?? null,
-                  isPaused: false,
-                  pausedRemainingMs: null,
-                turnPhase: "Clue",
-                turnEndsAt: null,
-                gameState: "GameOver",
-              };
-            }
-
-            const nextTurn = nextTeam(currentRoom.currentTurn, aliveTeams);
-
-            return {
-              ...currentRoom,
-              board: nextBoard,
-              eliminatedTeams: nextEliminatedTeams,
-              ...getNextCluePhaseState(currentRoom, nextTurn, currentRoom.clues),
-            };
-          }
-
-          const winningTeam = getWinningTeam(currentRoom, nextBoard);
-
-          if (winningTeam) {
-            return {
-              ...currentRoom,
-              board: nextBoard,
-              winner: winningTeam,
-              isPaused: false,
-              pausedRemainingMs: null,
-              turnPhase: "Clue",
-              turnEndsAt: null,
-              gameState: "GameOver",
-            };
-          }
-
-          const nextTurn: PlayerTeam =
-            selectedCard.type === currentRoom.currentTurn
-              ? currentRoom.currentTurn
-              : getNextAliveTurn(currentRoom.currentTurn, currentRoom);
-
-          if (nextTurn === currentRoom.currentTurn) {
-            return {
-              ...currentRoom,
-              board: nextBoard,
-              turnPhase: "Guess",
-              turnEndsAt: currentRoom.turnEndsAt ?? getNextTurnEndsAt(currentRoom.settings.roundTimerSeconds),
-            };
           }
 
           return {
             ...currentRoom,
-            board: nextBoard,
-            ...getNextCluePhaseState(currentRoom, nextTurn, currentRoom.clues),
+            pendingRevealCardId: cardId,
+            pendingRevealAt: Date.now() + PENDING_REVEAL_DURATION_MS,
+            turnEndsAt: currentRoom.turnEndsAt ? currentRoom.turnEndsAt + PENDING_REVEAL_DURATION_MS : null,
           };
         });
       }, "تعذر كشف الكارت."),
     [playerId, roomId, runAction],
+  );
+
+  const resolvePendingReveal = useCallback(
+    async () =>
+      runAction(async () => {
+        if (!roomId) {
+          return;
+        }
+
+        const database = getRealtimeDatabase();
+
+        if (!database) {
+          return;
+        }
+
+        await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
+          const currentRoom = normalizeRoom(currentValue);
+
+          if (!currentRoom || currentRoom.gameState !== "Playing" || currentRoom.turnPhase !== "Guess" || currentRoom.isPaused) {
+            return currentValue;
+          }
+
+          if (currentRoom.pendingRevealCardId === null || currentRoom.pendingRevealAt === null) {
+            return currentValue;
+          }
+
+          if (currentRoom.pendingRevealAt > Date.now()) {
+            return currentValue;
+          }
+
+          const originalCard = currentRoom.board.find((card) => card.id === currentRoom.pendingRevealCardId);
+
+          if (!originalCard || originalCard.isRevealed) {
+            return {
+              ...currentRoom,
+              ...getClearedPendingRevealState(),
+            };
+          }
+
+          return resolveCardReveal(currentRoom, currentRoom.pendingRevealCardId);
+        });
+      }, "تعذر تأكيد كشف الكارت."),
+    [roomId, runAction],
   );
 
   const resetGame = useCallback(
@@ -1182,6 +1255,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       expireTurnTimer,
       endGuessTurn,
       revealCard,
+      resolvePendingReveal,
       resetGame,
     }),
     [
@@ -1208,6 +1282,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       expireTurnTimer,
       endGuessTurn,
       updateRoomSettings,
+      resolvePendingReveal,
     ],
   );
 

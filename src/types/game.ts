@@ -46,6 +46,8 @@ export interface Room {
   eliminatedTeams: Exclude<Team, "Unassigned">[];
   isPaused: boolean;
   pausedRemainingMs: number | null;
+  pendingRevealCardId: number | null;
+  pendingRevealAt: number | null;
   currentTurn: Exclude<Team, "Unassigned">;
   turnPhase: TurnPhase;
   turnEndsAt: number | null;

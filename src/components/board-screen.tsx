@@ -285,8 +285,19 @@ function TeamPanel({
 }
 
 export function BoardScreen() {
-  const { room, player, isBusy, joinTeamAs, sendClue, togglePauseGame, expireTurnTimer, endGuessTurn, revealCard, resetGame } =
-    useGameRoom();
+  const {
+    room,
+    player,
+    isBusy,
+    joinTeamAs,
+    sendClue,
+    togglePauseGame,
+    expireTurnTimer,
+    endGuessTurn,
+    revealCard,
+    resolvePendingReveal,
+    resetGame,
+  } = useGameRoom();
   const [clueDraft, setClueDraft] = useState("");
   const [clueCount, setClueCount] = useState("1");
   const [isLargeFont, setIsLargeFont] = useState(false);
@@ -481,6 +492,33 @@ export function BoardScreen() {
   }, [toastMessage]);
 
   useEffect(() => {
+    if (
+      !room ||
+      room.gameState !== "Playing" ||
+      room.turnPhase !== "Guess" ||
+      room.isPaused ||
+      room.pendingRevealCardId === null ||
+      room.pendingRevealAt === null
+    ) {
+      return;
+    }
+
+    const waitMs = Math.max(0, room.pendingRevealAt - Date.now());
+    const timeoutId = window.setTimeout(() => {
+      void resolvePendingReveal();
+    }, waitMs);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [
+    resolvePendingReveal,
+    room?.gameState,
+    room?.isPaused,
+    room?.pendingRevealAt,
+    room?.pendingRevealCardId,
+    room?.turnPhase,
+  ]);
+
+  useEffect(() => {
     if (!isClueBarVisible || visibleClues.length === 0) {
       return;
     }
@@ -540,7 +578,7 @@ export function BoardScreen() {
   const timerProgress = roundDurationMs <= 0 ? 0 : Math.min(1, Math.max(0, remainingMs / roundDurationMs));
 
   useEffect(() => {
-    if (room.gameState !== "Playing" || room.isPaused || !room.turnEndsAt) {
+    if (room.gameState !== "Playing" || room.isPaused || room.pendingRevealCardId !== null || !room.turnEndsAt) {
       handledExpiredTurnRef.current = null;
       return;
     }
@@ -558,7 +596,16 @@ export function BoardScreen() {
 
     handledExpiredTurnRef.current = expiryKey;
     void expireTurnTimer();
-  }, [expireTurnTimer, remainingMs, room.currentTurn, room.gameState, room.isPaused, room.turnEndsAt, room.turnPhase]);
+  }, [
+    expireTurnTimer,
+    remainingMs,
+    room.currentTurn,
+    room.gameState,
+    room.isPaused,
+    room.pendingRevealCardId,
+    room.turnEndsAt,
+    room.turnPhase,
+  ]);
 
   const handleClueSend = () => {
     if (!clueDraft.trim()) {
@@ -727,6 +774,7 @@ export function BoardScreen() {
               canReveal={canReveal && !isBusy}
               onReveal={(cardId: number) => revealCard(cardId)}
               onBlockedReveal={handleBlockedCardReveal}
+              pendingRevealCardId={room.pendingRevealCardId}
               revealAll={room.gameState === "GameOver"}
               compact
               fontScale={boardFontScale}

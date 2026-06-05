@@ -115,6 +115,8 @@ export function createInitialRoom(roomId: string, host: Player): Room {
     eliminatedTeams: [],
     isPaused: false,
     pausedRemainingMs: null,
+    pendingRevealCardId: null,
+    pendingRevealAt: null,
     currentTurn,
     turnPhase: "Clue",
     turnEndsAt: null,
@@ -147,6 +149,18 @@ function sanitizeRoundTimerSeconds(value: unknown) {
 }
 
 function sanitizeTurnEndsAt(value: unknown) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return null;
+  }
+
+  return Math.max(0, Math.round(value));
+}
+
+function sanitizePendingRevealCardId(value: unknown) {
   if (value === null || value === undefined) {
     return null;
   }
@@ -257,6 +271,8 @@ export function normalizeRoom(value: unknown): Room | null {
     eliminatedTeams,
     isPaused: Boolean((room as Partial<Room>).isPaused),
     pausedRemainingMs: sanitizePausedRemainingMs((room as Partial<Room>).pausedRemainingMs),
+    pendingRevealCardId: sanitizePendingRevealCardId((room as Partial<Room>).pendingRevealCardId),
+    pendingRevealAt: sanitizeTurnEndsAt((room as Partial<Room>).pendingRevealAt),
     currentTurn: normalizedTurn,
     turnPhase: sanitizeTurnPhase((room as Partial<Room>).turnPhase),
     turnEndsAt: sanitizeTurnEndsAt(room.turnEndsAt),
