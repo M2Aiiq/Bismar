@@ -9,8 +9,8 @@ const ibmPlexSansArabic = IBM_Plex_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: "كلمات عراقية",
-  description: "لعبة جماعية لحظية مستوحاة من Codenames ومبنية بالكامل بأسلوب Serverless.",
+  title: "بسمار",
+  description: "تنافس مع اصدقائك في معارك الكلمات و التلميحات",
 };
 
 export default function RootLayout({
