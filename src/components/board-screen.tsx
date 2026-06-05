@@ -271,12 +271,12 @@ function TeamPanel({
           ) : null}
           {spymaster ? (
             <div className="mt-2 flex w-full items-center justify-end gap-2 overflow-visible text-right">
-              <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 overflow-visible text-right text-[13px] font-black text-[#F8FAFC]">
-                <span className="truncate">{spymaster.name}</span>
+              <div className="flex min-w-0 flex-1 flex-row-reverse items-center justify-end gap-1.5 overflow-visible text-right text-[13px] font-black text-[#F8FAFC]">
                 <span
                   aria-hidden="true"
                   className={`mb-px h-1.5 w-1.5 shrink-0 rounded-full ${presenceDotClass(isPlayerOnline(spymaster))}`}
                 />
+                <span className="truncate text-right">{spymaster.name}</span>
               </div>
               {canKickPlayer(spymaster) ? (
                 <button
@@ -306,12 +306,12 @@ function TeamPanel({
           ) : null}
           {operatives.map((currentPlayer) => (
             <div key={currentPlayer.id} className="flex w-full items-center justify-end gap-2 self-start overflow-visible text-right">
-              <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 overflow-visible text-right">
-                <span className="truncate">{currentPlayer.name}</span>
+              <div className="flex min-w-0 flex-1 flex-row-reverse items-center justify-end gap-1.5 overflow-visible text-right">
                 <span
                   aria-hidden="true"
                   className={`mb-px h-1.5 w-1.5 shrink-0 rounded-full ${presenceDotClass(isPlayerOnline(currentPlayer))}`}
                 />
+                <span className="truncate text-right">{currentPlayer.name}</span>
               </div>
               {canKickPlayer(currentPlayer) ? (
                 <button
