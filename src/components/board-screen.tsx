@@ -194,6 +194,20 @@ function ClueNotificationModal({ clue }: ClueNotificationModalProps) {
   );
 }
 
+interface ToastNoticeProps {
+  message: string;
+}
+
+function ToastNotice({ message }: ToastNoticeProps) {
+  return (
+    <div className="fixed bottom-24 left-1/2 z-[80] -translate-x-1/2 px-4" dir="rtl">
+      <div className="rounded-2xl border border-white/15 bg-[#0F172A]/92 px-4 py-2.5 text-sm font-black text-[#F8FAFC] shadow-[0_0_18px_rgba(15,23,42,0.34)] backdrop-blur-md">
+        {message}
+      </div>
+    </div>
+  );
+}
+
 function TeamPanel({
   team,
   players,
@@ -281,6 +295,7 @@ export function BoardScreen() {
   const [incomingClue, setIncomingClue] = useState<Clue | null>(null);
   const [turnBannerState, setTurnBannerState] = useState<{ team: ActiveTeam; phase: TurnPhase } | null>(null);
   const [isTurnBannerVisible, setIsTurnBannerVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const handledExpiredTurnRef = useRef<string | null>(null);
   const latestClueRef = useRef<HTMLDivElement | null>(null);
@@ -454,6 +469,18 @@ export function BoardScreen() {
   }, [incomingClue]);
 
   useEffect(() => {
+    if (!toastMessage) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setToastMessage(null);
+    }, 1800);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [toastMessage]);
+
+  useEffect(() => {
     if (!isClueBarVisible || visibleClues.length === 0) {
       return;
     }
@@ -541,6 +568,30 @@ export function BoardScreen() {
     void sendClue(clueDraft, Number(clueCount));
     setClueDraft("");
     setClueCount("1");
+  };
+
+  const showToast = (message: string) => {
+    setToastMessage(null);
+    window.setTimeout(() => setToastMessage(message), 10);
+  };
+
+  const handleBlockedCardReveal = () => {
+    if (room.gameState === "Playing" && !room.isPaused) {
+      showToast("ليس دورك");
+    }
+  };
+
+  const handlePauseToggle = () => {
+    if (!player.isHost) {
+      showToast("متاح للمضيف فقط");
+      return;
+    }
+
+    if (isBusy || room.gameState !== "Playing") {
+      return;
+    }
+
+    void togglePauseGame();
   };
 
   return (
@@ -675,6 +726,7 @@ export function BoardScreen() {
               showTruth={showTruth}
               canReveal={canReveal && !isBusy}
               onReveal={(cardId: number) => revealCard(cardId)}
+              onBlockedReveal={handleBlockedCardReveal}
               revealAll={room.gameState === "GameOver"}
               compact
               fontScale={boardFontScale}
@@ -708,8 +760,8 @@ export function BoardScreen() {
               <div className="-mr-2">
                 <button
                   type="button"
-                  onClick={() => void togglePauseGame()}
-                  disabled={!canTogglePause || isBusy}
+                  onClick={handlePauseToggle}
+                  disabled={isBusy}
                   aria-label={room.isPaused ? "تشغيل اللعبة" : "إيقاف اللعبة"}
                   className={`flex h-11 w-12 items-center justify-center rounded-l-[1.15rem] border border-r-0 backdrop-blur-md transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
                     room.isPaused
@@ -760,6 +812,7 @@ export function BoardScreen() {
         </div>
       ) : null}
       {incomingClue ? <ClueNotificationModal clue={incomingClue} /> : null}
+      {toastMessage ? <ToastNotice message={toastMessage} /> : null}
       {turnBannerState ? (
         <TurnTransitionBanner
           team={turnBannerState.team}

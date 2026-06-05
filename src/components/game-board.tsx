@@ -8,6 +8,7 @@ interface GameBoardProps {
   canReveal: boolean;
   revealAll?: boolean;
   onReveal?: (cardId: number) => void;
+  onBlockedReveal?: () => void;
   compact?: boolean;
   fontScale?: "compact" | "comfortable" | "expanded";
 }
@@ -117,6 +118,7 @@ export function GameBoard({
   canReveal,
   revealAll = false,
   onReveal,
+  onBlockedReveal,
   compact = false,
   fontScale = "compact",
 }: GameBoardProps) {
@@ -136,7 +138,12 @@ export function GameBoard({
   }, []);
 
   const handleReveal = (cardId: number) => {
-    if (!onReveal || !canReveal || pendingRevealCardId !== null) {
+    if (!onReveal || pendingRevealCardId !== null) {
+      return;
+    }
+
+    if (!canReveal) {
+      onBlockedReveal?.();
       return;
     }
 
@@ -172,7 +179,7 @@ export function GameBoard({
           <button
             key={card.id}
             type="button"
-            disabled={!onReveal || !canReveal || card.isRevealed || pendingRevealCardId !== null}
+            disabled={!onReveal || card.isRevealed || pendingRevealCardId !== null}
             onClick={() => handleReveal(card.id)}
             dir="rtl"
             className={cx(
