@@ -100,9 +100,9 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
     });
   };
 
-  const handleNameSave = () => {
+  const handleNameSave = async () => {
     try {
-      savePlayerName(nameDraft);
+      await savePlayerName(nameDraft);
       setNameError(null);
       setIsRenameOpen(false);
     } catch (error) {

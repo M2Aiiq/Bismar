@@ -59,9 +59,9 @@ export function HomeScreen() {
     return `مرحباً ${playerName}`;
   }, [playerName]);
 
-  function handleSaveName() {
+  async function handleSaveName() {
     try {
-      savePlayerName(draftName);
+      await savePlayerName(draftName);
       setNameError(null);
       setIsNameDialogOpen(false);
     } catch (error) {

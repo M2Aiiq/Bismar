@@ -98,7 +98,7 @@ interface GameRoomContextValue {
   error: string | null;
   firebaseReady: boolean;
   clearError: () => void;
-  savePlayerName: (name: string) => void;
+  savePlayerName: (name: string) => Promise<void>;
   createRoom: (name: string) => Promise<void>;
   joinRoom: (roomCode: string, name: string) => Promise<void>;
   leaveRoom: () => Promise<void>;
@@ -332,8 +332,36 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const savePlayerName = useCallback(
-    (name: string) => {
+    async (name: string) => {
       const sanitizedName = validatePlayerName(name);
+
+      if (roomId) {
+        const database = getRealtimeDatabase();
+
+        if (database) {
+          await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
+            const currentRoom = normalizeRoom(currentValue);
+
+            if (!currentRoom) {
+              return currentValue;
+            }
+
+            const currentPlayer = currentRoom.players.find((entry) => entry.id === playerId);
+
+            if (!currentPlayer) {
+              return currentValue;
+            }
+
+            return {
+              ...currentRoom,
+              players: upsertPlayer(currentRoom.players, {
+                ...currentPlayer,
+                name: sanitizedName,
+              }),
+            };
+          });
+        }
+      }
 
       setPlayerName(sanitizedName);
       saveSessionRoom(roomId || null, playerId, sanitizedName);
