@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { ActiveTeam } from "../lib/teams";
 import type { Card } from "../types/game";
@@ -162,6 +162,9 @@ export function GameBoard({
   const denseBoard = board.length >= 36;
   const compactBoardAspectRatio = (columnCount * (denseBoard ? 1.36 : 1.3)) / rowCount;
   const [peekingCardIds, setPeekingCardIds] = useState<Record<number, boolean>>({});
+  const [recentlyRevealedCardIds, setRecentlyRevealedCardIds] = useState<Record<number, boolean>>({});
+  const previousRevealedCardIdsRef = useRef<Set<number>>(new Set());
+  const revealCleanupTimeoutsRef = useRef<Record<number, number>>({});
 
   useEffect(() => {
     const revealedCardIds = new Set(board.filter((card) => card.isRevealed).map((card) => card.id));
@@ -170,6 +173,50 @@ export function GameBoard({
       Object.fromEntries(Object.entries(current).filter(([cardId, isPeeking]) => isPeeking && revealedCardIds.has(Number(cardId)))),
     );
   }, [board]);
+
+  useEffect(() => {
+    const nextRevealedCardIds = new Set(board.filter((card) => card.isRevealed).map((card) => card.id));
+    const newlyRevealedCardIds = [...nextRevealedCardIds].filter((cardId) => !previousRevealedCardIdsRef.current.has(cardId));
+
+    if (newlyRevealedCardIds.length > 0) {
+      setRecentlyRevealedCardIds((current) => {
+        const next = { ...current };
+
+        for (const cardId of newlyRevealedCardIds) {
+          next[cardId] = true;
+        }
+
+        return next;
+      });
+
+      for (const cardId of newlyRevealedCardIds) {
+        const existingTimeoutId = revealCleanupTimeoutsRef.current[cardId];
+
+        if (existingTimeoutId) {
+          window.clearTimeout(existingTimeoutId);
+        }
+
+        revealCleanupTimeoutsRef.current[cardId] = window.setTimeout(() => {
+          setRecentlyRevealedCardIds((current) => {
+            const next = { ...current };
+            delete next[cardId];
+            return next;
+          });
+          delete revealCleanupTimeoutsRef.current[cardId];
+        }, 520);
+      }
+    }
+
+    previousRevealedCardIdsRef.current = nextRevealedCardIds;
+  }, [board]);
+
+  useEffect(() => {
+    return () => {
+      for (const timeoutId of Object.values(revealCleanupTimeoutsRef.current)) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, []);
 
   const handleCardClick = (card: Card) => {
     if (card.isRevealed) {
@@ -214,6 +261,7 @@ export function GameBoard({
         const voteCount = voteCountsByCard[card.id] ?? 0;
         const hasVotes = voteCount > 0;
         const isPendingReveal = pendingRevealCardId === card.id;
+        const isRevealAnimating = Boolean(recentlyRevealedCardIds[card.id]);
 
         return (
           <button
@@ -238,6 +286,7 @@ export function GameBoard({
                 "z-10 scale-[1.02] border-white/95 ring-2 ring-white/85 ring-offset-2 ring-offset-transparent shadow-[0_0_18px_rgba(255,255,255,0.65),0_0_34px_rgba(255,255,255,0.2)]",
               isPendingReveal &&
                 "z-10 scale-[1.03] border-white ring-2 ring-white/95 ring-offset-2 ring-offset-transparent shadow-[0_0_26px_rgba(255,255,255,0.88),0_0_48px_rgba(255,255,255,0.34)]",
+              isRevealAnimating && "shadow-[0_0_22px_rgba(255,255,255,0.24)]",
               card.isRevealed
                 ? "cursor-pointer"
                 : !card.isRevealed && canReveal && onReveal
@@ -279,6 +328,18 @@ export function GameBoard({
                 </span>
               </div>
             )}
+            {usesRevealedToken && isRevealAnimating ? (
+              <>
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 z-20 animate-card-reveal-cover rounded-[inherit] border border-white/35 bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] shadow-[inset_0_2px_0_rgba(255,255,255,0.85)]"
+                />
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-0 top-0 z-20 h-1/3 animate-card-reveal-flash bg-gradient-to-b from-white/60 to-transparent"
+                />
+              </>
+            ) : null}
             {hasVotes && !usesRevealedToken ? (
               <span className="pointer-events-none absolute inset-x-0 bottom-1 z-20 flex items-center justify-center gap-1">
                 {Array.from({ length: voteCount }).map((_, index) => (
