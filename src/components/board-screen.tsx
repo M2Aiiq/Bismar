@@ -610,7 +610,7 @@ export function BoardScreen() {
     ? Array.from(new Set<ActiveTeam>([...room.eliminatedTeams, room.currentTurn]))
     : room.eliminatedTeams;
   const usesMultiRowTeamGrid = activeTeams.length > 2;
-  const shouldUseExpandedDenseFont = isLargeFont && room.board.length >= 36 && activeTeams.length >= 3;
+  const shouldUseExpandedDenseFont = isLargeFont && (room.settings.extraRows === 3 || (room.board.length >= 36 && activeTeams.length >= 3));
   const shouldShowClueInput =
     !room.isPaused && player.role === "Spymaster" && player.team === room.currentTurn && room.turnPhase === "Clue";
   const shouldShowClueStrip = visibleClues.length > 0;

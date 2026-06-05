@@ -321,32 +321,25 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                   <p className="text-xs font-bold text-[#F8FAFC]/70">اسطر اضافية</p>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
-                  {(
-                    [
-                      { value: 0, label: "بدون" },
-                      { value: 1, label: "سطر" },
-                      { value: 2, label: "سطران" },
-                      { value: 3, label: "ثلاث اسطر" },
-                    ] as const
-                  ).map((option) => (
+                  {([0, 1, 2, 3] as const).map((count) => (
                     <button
-                      key={option.value}
+                      key={count}
                       type="button"
                       onClick={() =>
                         setDraftSettings((currentValue) =>
                           currentValue
-                            ? { ...currentValue, extraRows: option.value }
+                            ? { ...currentValue, extraRows: count }
                             : currentValue,
                         )
                       }
                       disabled={isBusy || !player.isHost}
-                      className={`rounded-2xl py-2 px-1 text-xs md:text-sm font-bold transition ${
-                        (draftSettings?.extraRows ?? 0) === option.value
+                      className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${
+                        (draftSettings?.extraRows ?? 0) === count
                           ? "bg-[#2563EB] text-[#F8FAFC]"
-                          : "border border-white/10 bg-[#1E293B] text-[#F8FAFC]/85 hover:bg-[#152033]"
+                          : "border border-white/15 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-[#111d34]"
                       } disabled:cursor-not-allowed disabled:opacity-60`}
                     >
-                      {option.label}
+                      {count}
                     </button>
                   ))}
                 </div>
@@ -590,32 +583,25 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                     <p className="text-xs font-bold text-[#F8FAFC]/70">اسطر اضافية</p>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
-                    {(
-                      [
-                        { value: 0, label: "بدون" },
-                        { value: 1, label: "سطر" },
-                        { value: 2, label: "سطران" },
-                        { value: 3, label: "ثلاث اسطر" },
-                      ] as const
-                    ).map((option) => (
+                    {([0, 1, 2, 3] as const).map((count) => (
                       <button
-                        key={option.value}
+                        key={count}
                         type="button"
                         onClick={() =>
                           setDraftSettings((currentValue) =>
                             currentValue
-                              ? { ...currentValue, extraRows: option.value }
+                              ? { ...currentValue, extraRows: count }
                               : currentValue,
                           )
                         }
                         disabled={isBusy || !player.isHost}
-                        className={`rounded-2xl py-2 px-1 text-xs md:text-sm font-bold transition ${
-                          (draftSettings?.extraRows ?? 0) === option.value
+                        className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${
+                          (draftSettings?.extraRows ?? 0) === count
                             ? "bg-[#2563EB] text-[#F8FAFC]"
-                            : "border border-white/10 bg-[#1E293B] text-[#F8FAFC]/85 hover:bg-[#152033]"
+                            : "border border-white/15 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-[#111d34]"
                         } disabled:cursor-not-allowed disabled:opacity-60`}
                       >
-                        {option.label}
+                        {count}
                       </button>
                     ))}
                   </div>
