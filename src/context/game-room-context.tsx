@@ -92,7 +92,7 @@ function getWinningTeam(currentRoom: Room, board: Room["board"]) {
   return aliveTeams.length === 1 ? aliveTeams[0] : null;
 }
 
-const PENDING_REVEAL_DURATION_MS = 700;
+const PENDING_REVEAL_DURATION_MS = 1000;
 
 function getClearedPendingRevealState() {
   return {
