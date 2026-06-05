@@ -12,6 +12,10 @@ import type { Clue, Player, TurnPhase } from "../types/game";
 
 const CLUE_COUNT_OPTIONS = Array.from({ length: 9 }, (_, index) => String(index + 1));
 
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
 interface TeamPanelProps {
   team: ActiveTeam;
   players: Player[];
@@ -20,6 +24,7 @@ interface TeamPanelProps {
   isCurrentTurn: boolean;
   isEliminated: boolean;
   isBusy: boolean;
+  onRemovePlayer: (playerId: string) => void;
   onJoinAsOperative: (team: ActiveTeam) => void;
   onJoinAsSpymaster: (team: ActiveTeam) => void;
 }
@@ -216,6 +221,7 @@ function TeamPanel({
   isCurrentTurn,
   isEliminated,
   isBusy,
+  onRemovePlayer,
   onJoinAsOperative,
   onJoinAsSpymaster,
 }: TeamPanelProps) {
@@ -230,6 +236,32 @@ function TeamPanel({
   const operatives = orderedPlayers.filter((currentPlayer) => currentPlayer.role === "Operative");
   const canShowJoinAsOperative = !isEliminated && (currentPlayer.role !== "Operative" || currentPlayer.team !== team);
   const canShowJoinAsSpymaster = !isEliminated && (currentPlayer.role !== "Spymaster" || currentPlayer.team !== team);
+  const canKickPlayers = currentPlayer.isHost;
+
+  function PlayerRow({ entry, prominent = false }: { entry: Player; prominent?: boolean }) {
+    const canRemove = canKickPlayers && entry.id !== currentPlayer.id && !entry.isHost;
+
+    return (
+      <div className="flex w-full items-center justify-between gap-2">
+        {canRemove ? (
+          <button
+            type="button"
+            onClick={() => onRemovePlayer(entry.id)}
+            disabled={isBusy}
+            aria-label={`طرد ${entry.name}`}
+            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/20 bg-black/20 text-[10px] font-black text-white/90 transition active:scale-95 disabled:opacity-50"
+          >
+            ×
+          </button>
+        ) : (
+          <span className="h-5 w-5 shrink-0" aria-hidden="true" />
+        )}
+        <span className={cx("min-w-0 flex-1 truncate", prominent ? "text-[13px] font-black" : "text-xs font-bold")}>
+          {entry.name}
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -258,7 +290,9 @@ function TeamPanel({
             </div>
           ) : null}
           {spymaster ? (
-            <div className="mt-2 overflow-hidden text-right text-[13px] font-black text-[#F8FAFC]">{spymaster.name}</div>
+            <div className="mt-2 w-full overflow-hidden text-right text-[#F8FAFC]">
+              <PlayerRow entry={spymaster} prominent />
+            </div>
           ) : null}
         </div>
         <div className="h-px w-full bg-white/40" />
@@ -274,9 +308,9 @@ function TeamPanel({
             </button>
           ) : null}
           {operatives.map((currentPlayer) => (
-            <span key={currentPlayer.id} className="max-w-full self-start text-left">
-              {currentPlayer.name}
-            </span>
+            <div key={currentPlayer.id} className="w-full">
+              <PlayerRow entry={currentPlayer} />
+            </div>
           ))}
         </div>
       </div>
@@ -290,6 +324,7 @@ export function BoardScreen() {
     player,
     isBusy,
     joinTeamAs,
+    removePlayerFromRoom,
     sendClue,
     togglePauseGame,
     expireTurnTimer,
@@ -663,6 +698,7 @@ export function BoardScreen() {
               isCurrentTurn={team === currentTeam}
               isEliminated={displayedEliminatedTeams.includes(team)}
               isBusy={isBusy}
+              onRemovePlayer={(targetPlayerId) => void removePlayerFromRoom(targetPlayerId)}
               onJoinAsOperative={(nextTeam) => joinTeamAs(nextTeam, "Operative")}
               onJoinAsSpymaster={(nextTeam) => joinTeamAs(nextTeam, "Spymaster")}
             />
