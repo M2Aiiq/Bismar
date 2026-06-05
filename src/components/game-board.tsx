@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { ActiveTeam } from "../lib/teams";
 import type { Card } from "../types/game";
@@ -90,45 +90,29 @@ function resolveTruthPreviewTone(card: Card) {
   }
 }
 
-function resolveIdentityLayerClass(cardType: Card["type"]) {
+function resolveShutterSurfaceClass(cardType: Card["type"]) {
   switch (cardType) {
     case "Red":
-      return "bg-[#DC2626] text-[#F8FAFC] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14),inset_0_10px_20px_rgba(15,23,42,0.2)] [text-shadow:0_1px_2px_rgba(15,23,42,0.35)]";
+      return "bg-gradient-to-b from-[#EF4444] to-[#B91C1C] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14),inset_0_10px_20px_rgba(15,23,42,0.2)]";
     case "Blue":
-      return "bg-[#2563EB] text-[#F8FAFC] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14),inset_0_10px_20px_rgba(15,23,42,0.2)] [text-shadow:0_1px_2px_rgba(15,23,42,0.35)]";
+      return "bg-gradient-to-b from-[#3B82F6] to-[#1D4ED8] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14),inset_0_10px_20px_rgba(15,23,42,0.2)]";
     case "Green":
-      return "bg-[#10B981] text-[#F8FAFC] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14),inset_0_10px_20px_rgba(15,23,42,0.2)] [text-shadow:0_1px_2px_rgba(15,23,42,0.35)]";
+      return "bg-gradient-to-b from-[#10B981] to-[#047857] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14),inset_0_10px_20px_rgba(15,23,42,0.2)]";
     case "Gold":
-      return "bg-[#EAB308] text-[#0F172A] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2),inset_0_10px_20px_rgba(15,23,42,0.18)]";
+      return "bg-gradient-to-b from-[#FACC15] to-[#CA8A04] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2),inset_0_10px_20px_rgba(15,23,42,0.18)]";
     case "Neutral":
-      return "bg-[#FFFFFF] text-[#0F172A] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.95),inset_0_10px_22px_rgba(226,232,240,0.65),0_0_14px_rgba(255,255,255,0.22)]";
+      return "bg-gradient-to-b from-[#FFFFFF] to-[#E5E7EB] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.92),inset_0_10px_20px_rgba(148,163,184,0.22)]";
     case "Control":
-      return "bg-[#090D16] text-[#EF4444] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),inset_0_10px_20px_rgba(0,0,0,0.42)] [text-shadow:0_0_8px_rgba(239,68,68,0.28)]";
+      return "bg-gradient-to-b from-[#1F2937] to-[#020617] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),inset_0_10px_20px_rgba(0,0,0,0.42)]";
   }
 }
 
-function resolveRevealedCardTone(cardType: Card["type"]) {
-  switch (cardType) {
-    case "Red":
-      return "border-[#DC2626] bg-gradient-to-b from-[#EF4444] to-[#DC2626]";
-    case "Blue":
-      return "border-[#2563EB] bg-gradient-to-b from-[#3B82F6] to-[#2563EB]";
-    case "Green":
-      return "border-[#10B981] bg-gradient-to-b from-[#34D399] to-[#10B981]";
-    case "Gold":
-      return "border-[#EAB308] bg-gradient-to-b from-[#FACC15] to-[#EAB308]";
-    case "Neutral":
-      return "border-[#475569] bg-gradient-to-b from-[#64748B] to-[#475569]";
-    case "Control":
-      return "border-[#090D16] bg-gradient-to-b from-[#242F41] to-[#090D16]";
+function getShutterTransformClass(isRevealed: boolean, isPeeking: boolean) {
+  if (!isRevealed) {
+    return "-translate-y-full";
   }
-}
 
-function revealedPeekTextClass(cardType: Card["type"]) {
-  return cx(
-    "animate-fade-in text-white/90 font-black text-xs sm:text-sm underline decoration-dashed decoration-white/40 underline-offset-4 tracking-wide",
-    cardType === "Gold" && "text-[#0F172A]/90 decoration-[#0F172A]/30",
-  );
+  return isPeeking ? "-translate-y-[82%]" : "translate-y-0";
 }
 
 function voteDotClass(team: ActiveTeam) {
@@ -161,68 +145,31 @@ export function GameBoard({
   const rowCount = Math.max(1, Math.ceil(board.length / columnCount));
   const denseBoard = board.length >= 36;
   const compactBoardAspectRatio = (columnCount * (denseBoard ? 1.36 : 1.3)) / rowCount;
-  const [peekingCardIds, setPeekingCardIds] = useState<Record<number, boolean>>({});
-  const [recentlyRevealedCardIds, setRecentlyRevealedCardIds] = useState<Record<number, boolean>>({});
-  const previousRevealedCardIdsRef = useRef<Set<number>>(new Set());
-  const revealCleanupTimeoutsRef = useRef<Record<number, number>>({});
+  const [peekedCards, setPeekedCards] = useState<Record<number, boolean>>({});
+
+  const boardStateKey = useMemo(
+    () => board.map((card) => `${card.id}:${card.isRevealed ? 1 : 0}`).join("|"),
+    [board],
+  );
 
   useEffect(() => {
     const revealedCardIds = new Set(board.filter((card) => card.isRevealed).map((card) => card.id));
 
-    setPeekingCardIds((current) =>
-      Object.fromEntries(Object.entries(current).filter(([cardId, isPeeking]) => isPeeking && revealedCardIds.has(Number(cardId)))),
-    );
-  }, [board]);
+    setPeekedCards((currentValue) => {
+      const nextValue = Object.fromEntries(
+        Object.entries(currentValue).filter(([cardId, isPeeked]) => isPeeked && revealedCardIds.has(Number(cardId))),
+      ) as Record<number, boolean>;
 
-  useEffect(() => {
-    const nextRevealedCardIds = new Set(board.filter((card) => card.isRevealed).map((card) => card.id));
-    const newlyRevealedCardIds = [...nextRevealedCardIds].filter((cardId) => !previousRevealedCardIdsRef.current.has(cardId));
+      return Object.keys(nextValue).length === Object.keys(currentValue).length ? currentValue : nextValue;
+    });
+  }, [boardStateKey, board]);
 
-    if (newlyRevealedCardIds.length > 0) {
-      setRecentlyRevealedCardIds((current) => {
-        const next = { ...current };
-
-        for (const cardId of newlyRevealedCardIds) {
-          next[cardId] = true;
-        }
-
-        return next;
-      });
-
-      for (const cardId of newlyRevealedCardIds) {
-        const existingTimeoutId = revealCleanupTimeoutsRef.current[cardId];
-
-        if (existingTimeoutId) {
-          window.clearTimeout(existingTimeoutId);
-        }
-
-        revealCleanupTimeoutsRef.current[cardId] = window.setTimeout(() => {
-          setRecentlyRevealedCardIds((current) => {
-            const next = { ...current };
-            delete next[cardId];
-            return next;
-          });
-          delete revealCleanupTimeoutsRef.current[cardId];
-        }, 520);
-      }
-    }
-
-    previousRevealedCardIdsRef.current = nextRevealedCardIds;
-  }, [board]);
-
-  useEffect(() => {
-    return () => {
-      for (const timeoutId of Object.values(revealCleanupTimeoutsRef.current)) {
-        window.clearTimeout(timeoutId);
-      }
-    };
-  }, []);
-
-  const handleCardClick = (card: Card) => {
+  const handleCardClick = (card: Card, event: React.MouseEvent<HTMLButtonElement>) => {
     if (card.isRevealed) {
-      setPeekingCardIds((current) => ({
-        ...current,
-        [card.id]: !current[card.id],
+      event.stopPropagation();
+      setPeekedCards((currentValue) => ({
+        ...currentValue,
+        [card.id]: !currentValue[card.id],
       }));
       return;
     }
@@ -255,29 +202,30 @@ export function GameBoard({
       {board.map((card) => {
         const shouldShowTruth = revealAll || showTruth || card.isRevealed;
         const textClass = cardTextClass(card.text, fontScale, denseBoard);
-        const isPeeking = Boolean(peekingCardIds[card.id]);
-        const usesRevealedToken = card.isRevealed;
+        const usesShutterReveal = card.isRevealed;
         const usesTruthPreview = shouldShowTruth && !card.isRevealed;
         const voteCount = voteCountsByCard[card.id] ?? 0;
         const hasVotes = voteCount > 0;
         const isPendingReveal = pendingRevealCardId === card.id;
-        const isRevealAnimating = Boolean(recentlyRevealedCardIds[card.id]);
+        const isPeeking = Boolean(peekedCards[card.id]);
+        const shutterTransformClass = getShutterTransformClass(card.isRevealed, isPeeking);
 
         return (
           <button
             key={card.id}
             type="button"
             disabled={!onReveal && !card.isRevealed}
-            onClick={() => handleCardClick(card)}
+            onClick={(event) => handleCardClick(card, event)}
             dir="rtl"
+            aria-pressed={card.isRevealed ? isPeeking : undefined}
             className={cx(
-              "relative h-full min-h-0 select-none overflow-hidden border text-center transition-all duration-150",
-              denseBoard ? "flex items-center justify-center rounded-xl p-1.5" : "flex items-center justify-center rounded-[1.15rem] p-2",
+              "relative h-full w-full min-h-0 select-none overflow-hidden border text-center transition-all duration-150",
+              denseBoard ? "rounded-xl" : "rounded-[1.15rem]",
               compact
                 ? ""
                 : "aspect-square p-2 text-sm md:text-base",
-              usesRevealedToken
-                ? resolveRevealedCardTone(card.type)
+              usesShutterReveal
+                ? "border-slate-900/15 bg-transparent"
                 : usesTruthPreview
                   ? resolveTruthPreviewTone(card)
                   : "border-[#D6D0C5] bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] text-[#0F172A] shadow-[inset_0_2.5px_0px_rgba(255,255,255,0.8),_0_4px_6px_-1px_rgba(0,0,0,0.15)] hover:border-[#C7BFB1]",
@@ -286,14 +234,51 @@ export function GameBoard({
                 "z-10 scale-[1.02] border-white/95 ring-2 ring-white/85 ring-offset-2 ring-offset-transparent shadow-[0_0_18px_rgba(255,255,255,0.65),0_0_34px_rgba(255,255,255,0.2)]",
               isPendingReveal &&
                 "z-10 scale-[1.03] border-white ring-2 ring-white/95 ring-offset-2 ring-offset-transparent shadow-[0_0_26px_rgba(255,255,255,0.88),0_0_48px_rgba(255,255,255,0.34)]",
-              isRevealAnimating && "shadow-[0_0_22px_rgba(255,255,255,0.24)]",
-              card.isRevealed
-                ? "cursor-pointer"
-                : !card.isRevealed && canReveal && onReveal
-                  ? "cursor-pointer active:scale-95"
-                  : "cursor-default",
+              card.isRevealed && "cursor-pointer active:scale-[0.99]",
+              !card.isRevealed && canReveal && onReveal && "cursor-pointer active:scale-95",
+              !card.isRevealed && !canReveal && "cursor-default",
             )}
           >
+            <div
+              className={cx(
+                "relative h-full w-full overflow-hidden",
+                denseBoard ? "rounded-xl" : "rounded-[1.15rem]",
+              )}
+            >
+              <div
+                className={cx(
+                  "absolute inset-0 z-0 flex items-center justify-center",
+                  usesTruthPreview
+                    ? resolveTruthPreviewTone(card)
+                    : "bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] text-[#0F172A] shadow-[inset_0_2.5px_0px_rgba(255,255,255,0.8),_0_4px_6px_-1px_rgba(0,0,0,0.15)]",
+                )}
+              >
+                <span className={cx(textClass, "relative z-10", card.type === "Control" && shouldShowTruth && "tracking-widest")}>
+                  {card.text}
+                </span>
+              </div>
+
+              <div
+                aria-hidden="true"
+                className={cx(
+                  "absolute inset-0 z-30 h-full w-full transition-transform duration-300 ease-out",
+                  shutterTransformClass,
+                )}
+              >
+                <div
+                  className={cx(
+                    "relative h-full w-full",
+                    resolveShutterSurfaceClass(card.type),
+                  )}
+                >
+                  <div className="absolute inset-0 opacity-20">
+                    <div className="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-white/30" />
+                    <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-white/15" />
+                    <div className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-white/10" />
+                  </div>
+                </div>
+              </div>
+
             {isPendingReveal ? (
               <>
                 <span
@@ -307,40 +292,7 @@ export function GameBoard({
                 className="pointer-events-none absolute inset-0 bg-white/5 opacity-100 animate-pulse"
               />
             ) : null}
-            {usesRevealedToken ? (
-              <div className="relative z-10 flex h-full w-full items-center justify-center">
-                {isPeeking ? (
-                  <span
-                    className={cx(
-                      revealedPeekTextClass(card.type),
-                      "relative z-10 max-w-full px-1 text-center [text-wrap:balance]",
-                      card.type === "Control" && "tracking-widest",
-                    )}
-                  >
-                    {card.text}
-                  </span>
-                ) : null}
-              </div>
-            ) : (
-              <div className="relative z-10 flex h-full w-full items-center justify-center">
-                <span className={cx(textClass, card.type === "Control" && shouldShowTruth && "tracking-widest")}>
-                  {card.text}
-                </span>
-              </div>
-            )}
-            {usesRevealedToken && isRevealAnimating ? (
-              <>
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 z-20 animate-card-reveal-cover rounded-[inherit] border border-white/35 bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] shadow-[inset_0_2px_0_rgba(255,255,255,0.85)]"
-                />
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-x-0 top-0 z-20 h-1/3 animate-card-reveal-flash bg-gradient-to-b from-white/60 to-transparent"
-                />
-              </>
-            ) : null}
-            {hasVotes && !usesRevealedToken ? (
+            {hasVotes && !usesShutterReveal ? (
               <span className="pointer-events-none absolute inset-x-0 bottom-1 z-20 flex items-center justify-center gap-1">
                 {Array.from({ length: voteCount }).map((_, index) => (
                   <span
@@ -351,6 +303,7 @@ export function GameBoard({
                 ))}
               </span>
             ) : null}
+            </div>
           </button>
         );
       })}
