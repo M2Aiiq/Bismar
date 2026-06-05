@@ -12,10 +12,6 @@ import type { Clue, Player, TurnPhase } from "../types/game";
 
 const CLUE_COUNT_OPTIONS = Array.from({ length: 9 }, (_, index) => String(index + 1));
 
-function cx(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(" ");
-}
-
 interface TeamPanelProps {
   team: ActiveTeam;
   players: Player[];
@@ -24,9 +20,9 @@ interface TeamPanelProps {
   isCurrentTurn: boolean;
   isEliminated: boolean;
   isBusy: boolean;
-  onRemovePlayer: (playerId: string) => void;
   onJoinAsOperative: (team: ActiveTeam) => void;
   onJoinAsSpymaster: (team: ActiveTeam) => void;
+  onKickPlayer: (playerId: string) => void;
 }
 
 function teamPanelClass(team: ActiveTeam, isCurrentTurn: boolean, isEliminated: boolean) {
@@ -221,9 +217,9 @@ function TeamPanel({
   isCurrentTurn,
   isEliminated,
   isBusy,
-  onRemovePlayer,
   onJoinAsOperative,
   onJoinAsSpymaster,
+  onKickPlayer,
 }: TeamPanelProps) {
   const orderedPlayers = [...players].sort((left, right) => {
     if (left.role === right.role) {
@@ -236,32 +232,7 @@ function TeamPanel({
   const operatives = orderedPlayers.filter((currentPlayer) => currentPlayer.role === "Operative");
   const canShowJoinAsOperative = !isEliminated && (currentPlayer.role !== "Operative" || currentPlayer.team !== team);
   const canShowJoinAsSpymaster = !isEliminated && (currentPlayer.role !== "Spymaster" || currentPlayer.team !== team);
-  const canKickPlayers = currentPlayer.isHost;
-
-  function PlayerRow({ entry, prominent = false }: { entry: Player; prominent?: boolean }) {
-    const canRemove = canKickPlayers && entry.id !== currentPlayer.id && !entry.isHost;
-
-    return (
-      <div className="flex w-full items-center justify-between gap-2">
-        {canRemove ? (
-          <button
-            type="button"
-            onClick={() => onRemovePlayer(entry.id)}
-            disabled={isBusy}
-            aria-label={`طرد ${entry.name}`}
-            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/20 bg-black/20 text-[10px] font-black text-white/90 transition active:scale-95 disabled:opacity-50"
-          >
-            ×
-          </button>
-        ) : (
-          <span className="h-5 w-5 shrink-0" aria-hidden="true" />
-        )}
-        <span className={cx("min-w-0 flex-1 truncate", prominent ? "text-[13px] font-black" : "text-xs font-bold")}>
-          {entry.name}
-        </span>
-      </div>
-    );
-  }
+  const canKickPlayer = (playerToKick: Player) => currentPlayer.isHost && !playerToKick.isHost && playerToKick.id !== currentPlayer.id;
 
   return (
     <div
@@ -290,8 +261,23 @@ function TeamPanel({
             </div>
           ) : null}
           {spymaster ? (
-            <div className="mt-2 w-full overflow-hidden text-right text-[#F8FAFC]">
-              <PlayerRow entry={spymaster} prominent />
+            <div className="mt-2 flex w-full items-center justify-between gap-2 overflow-hidden">
+              {canKickPlayer(spymaster) ? (
+                <button
+                  type="button"
+                  onClick={() => onKickPlayer(spymaster.id)}
+                  disabled={isBusy}
+                  aria-label={`طرد ${spymaster.name}`}
+                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/25 bg-black/20 text-[11px] font-black text-[#F8FAFC] transition active:scale-95 disabled:opacity-60"
+                >
+                  x
+                </button>
+              ) : (
+                <span aria-hidden="true" className="h-5 w-5 shrink-0" />
+              )}
+              <div className="min-w-0 flex-1 overflow-hidden text-right text-[13px] font-black text-[#F8FAFC]">
+                {spymaster.name}
+              </div>
             </div>
           ) : null}
         </div>
@@ -308,8 +294,21 @@ function TeamPanel({
             </button>
           ) : null}
           {operatives.map((currentPlayer) => (
-            <div key={currentPlayer.id} className="w-full">
-              <PlayerRow entry={currentPlayer} />
+            <div key={currentPlayer.id} className="flex w-full items-center justify-between gap-2 self-start">
+              {canKickPlayer(currentPlayer) ? (
+                <button
+                  type="button"
+                  onClick={() => onKickPlayer(currentPlayer.id)}
+                  disabled={isBusy}
+                  aria-label={`طرد ${currentPlayer.name}`}
+                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/25 bg-black/20 text-[11px] font-black text-[#F8FAFC] transition active:scale-95 disabled:opacity-60"
+                >
+                  x
+                </button>
+              ) : (
+                <span aria-hidden="true" className="h-5 w-5 shrink-0" />
+              )}
+              <span className="min-w-0 flex-1 overflow-hidden text-left">{currentPlayer.name}</span>
             </div>
           ))}
         </div>
@@ -324,7 +323,7 @@ export function BoardScreen() {
     player,
     isBusy,
     joinTeamAs,
-    removePlayerFromRoom,
+    kickPlayer,
     sendClue,
     togglePauseGame,
     expireTurnTimer,
@@ -698,9 +697,9 @@ export function BoardScreen() {
               isCurrentTurn={team === currentTeam}
               isEliminated={displayedEliminatedTeams.includes(team)}
               isBusy={isBusy}
-              onRemovePlayer={(targetPlayerId) => void removePlayerFromRoom(targetPlayerId)}
               onJoinAsOperative={(nextTeam) => joinTeamAs(nextTeam, "Operative")}
               onJoinAsSpymaster={(nextTeam) => joinTeamAs(nextTeam, "Spymaster")}
+              onKickPlayer={(targetPlayerId) => kickPlayer(targetPlayerId)}
             />
           ) : (
             <div key={`team-slot-${index}`} aria-hidden="true" className="border border-transparent opacity-0" />

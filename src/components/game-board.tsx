@@ -271,19 +271,10 @@ export function GameBoard({
                     resolveShutterSurfaceClass(card.type),
                   )}
                 >
-                  <div className="absolute inset-0 opacity-90">
-                    <div className="absolute left-1/2 top-1/2 h-14 w-14 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/28" />
-                    <div className="absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/16" />
-                    <div className="absolute left-1/2 top-1/2 h-[3px] w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/14" />
-                    <div className="absolute left-1/2 top-1/2 h-24 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/14" />
-                    <div className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/24" />
-                    <div className="absolute left-[22%] top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/26 shadow-[0_0_10px_rgba(255,255,255,0.18)]" />
-                    <div className="absolute left-1/2 top-[22%] h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/26 shadow-[0_0_10px_rgba(255,255,255,0.18)]" />
-                    <div className="absolute left-[78%] top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/26 shadow-[0_0_10px_rgba(255,255,255,0.18)]" />
-                    <div className="absolute left-1/2 top-[78%] h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/26 shadow-[0_0_10px_rgba(255,255,255,0.18)]" />
-                    <div className="absolute left-1/2 top-1/2 flex h-full w-full -translate-x-1/2 -translate-y-1/2 items-center justify-center">
-                      <span className="select-none text-[2.2rem] font-black tracking-[0.18em] text-white/14">B</span>
-                    </div>
+                  <div className="absolute inset-0 opacity-20">
+                    <div className="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-white/30" />
+                    <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-white/15" />
+                    <div className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-white/10" />
                   </div>
                 </div>
               </div>

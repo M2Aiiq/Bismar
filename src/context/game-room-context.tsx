@@ -237,10 +237,10 @@ interface GameRoomContextValue {
   createRoom: (name: string) => Promise<void>;
   joinRoom: (roomCode: string, name: string) => Promise<void>;
   leaveRoom: () => Promise<void>;
-  removePlayerFromRoom: (targetPlayerId: string) => Promise<void>;
   chooseTeam: (team: Team) => Promise<void>;
   chooseRole: (role: Role) => Promise<void>;
   joinTeamAs: (team: ActiveTeam, role: Role) => Promise<void>;
+  kickPlayer: (targetPlayerId: string) => Promise<void>;
   updateRoomSettings: (settings: Partial<RoomSettings>) => Promise<void>;
   launchGameWithSettings: (settings: Partial<RoomSettings>) => Promise<void>;
   startGame: () => Promise<void>;
@@ -442,11 +442,11 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        if (!nextRoom.players.some((entry) => entry.id === playerId)) {
+        if (!nextRoom.players.some((currentPlayer) => currentPlayer.id === playerId)) {
           setRoom(null);
           setRoomId("");
           saveSessionRoom(null, playerId, playerName);
-          setError("تمت إزالتك من الغرفة.");
+          setError("تم إخراجك من الغرفة.");
           return;
         }
 
@@ -639,55 +639,6 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
     [playerId, playerName, roomId, runAction],
   );
 
-  const removePlayerFromRoom = useCallback(
-    async (targetPlayerId: string) =>
-      runAction(async () => {
-        if (!roomId || !targetPlayerId || targetPlayerId === playerId) {
-          return;
-        }
-
-        const database = getRealtimeDatabase();
-
-        if (!database) {
-          return;
-        }
-
-        const roomRef = ref(database, getRoomPath(roomId));
-
-        await runTransaction(roomRef, (currentValue) => {
-          const currentRoom = normalizeRoom(currentValue);
-
-          if (!currentRoom) {
-            return currentValue;
-          }
-
-          const actor = currentRoom.players.find((entry) => entry.id === playerId);
-          const targetPlayer = currentRoom.players.find((entry) => entry.id === targetPlayerId);
-
-          if (!actor?.isHost || !targetPlayer || targetPlayer.isHost) {
-            return currentValue;
-          }
-
-          const remainingPlayers = currentRoom.players.filter((entry) => entry.id !== targetPlayerId);
-
-          if (!remainingPlayers.length) {
-            return null;
-          }
-
-          const nextOperativeSelections = Object.fromEntries(
-            Object.entries(currentRoom.operativeSelections).filter(([entryPlayerId]) => entryPlayerId !== targetPlayerId),
-          ) as Room["operativeSelections"];
-
-          return {
-            ...currentRoom,
-            players: remainingPlayers,
-            operativeSelections: nextOperativeSelections,
-          };
-        });
-      }, "تعذر طرد اللاعب."),
-    [playerId, roomId, runAction],
-  );
-
   const chooseTeam = useCallback(
     async (team: Team) =>
       runAction(async () => {
@@ -830,6 +781,48 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           };
         });
       }, "تعذر الانضمام إلى الفريق."),
+    [playerId, roomId, runAction],
+  );
+
+  const kickPlayer = useCallback(
+    async (targetPlayerId: string) =>
+      runAction(async () => {
+        if (!roomId || !targetPlayerId) {
+          return;
+        }
+
+        const database = getRealtimeDatabase();
+
+        if (!database) {
+          return;
+        }
+
+        await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
+          const currentRoom = normalizeRoom(currentValue);
+
+          if (!currentRoom) {
+            return currentValue;
+          }
+
+          const actor = currentRoom.players.find((entry) => entry.id === playerId);
+          const targetPlayer = currentRoom.players.find((entry) => entry.id === targetPlayerId);
+
+          if (!actor?.isHost || !targetPlayer || targetPlayer.id === actor.id || targetPlayer.isHost) {
+            return currentValue;
+          }
+
+          const remainingPlayers = currentRoom.players.filter((entry) => entry.id !== targetPlayerId);
+
+          if (!remainingPlayers.length) {
+            return null;
+          }
+
+          return {
+            ...currentRoom,
+            players: remainingPlayers,
+          };
+        });
+      }, "تعذر طرد اللاعب."),
     [playerId, roomId, runAction],
   );
 
@@ -1352,10 +1345,10 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       createRoom,
       joinRoom,
       leaveRoom,
-      removePlayerFromRoom,
       chooseTeam,
       chooseRole,
       joinTeamAs,
+      kickPlayer,
       launchGameWithSettings,
       updateRoomSettings,
       startGame,
@@ -1376,9 +1369,9 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       isReady,
       joinRoom,
       joinTeamAs,
+      kickPlayer,
       launchGameWithSettings,
       leaveRoom,
-      removePlayerFromRoom,
       player,
       playerName,
       savePlayerName,
