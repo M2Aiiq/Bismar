@@ -11,6 +11,22 @@ const ibmPlexSansArabic = IBM_Plex_Sans_Arabic({
 export const metadata: Metadata = {
   title: "بسمار",
   description: "تنافس مع اصدقائك في معارك الكلمات و التلميحات",
+  openGraph: {
+    title: "بسمار",
+    description: "تنافس مع اصدقائك في معارك الكلمات و التلميحات",
+    images: [
+      {
+        url: "/bismar.jpg",
+        alt: "بسمار",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "بسمار",
+    description: "تنافس مع اصدقائك في معارك الكلمات و التلميحات",
+    images: ["/bismar.jpg"],
+  },
 };
 
 export default function RootLayout({
