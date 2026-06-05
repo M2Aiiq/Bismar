@@ -703,6 +703,35 @@ export function BoardScreen() {
             </button>
           </div>
 
+          {room.gameState === "Playing" ? (
+            <div className="mt-2 flex w-full shrink-0 justify-end overflow-visible">
+              <div className="-mr-2">
+                <button
+                  type="button"
+                  onClick={() => void togglePauseGame()}
+                  disabled={!canTogglePause || isBusy}
+                  aria-label={room.isPaused ? "تشغيل اللعبة" : "إيقاف اللعبة"}
+                  className={`flex h-11 w-12 items-center justify-center rounded-l-[1.15rem] border border-r-0 backdrop-blur-md transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+                    room.isPaused
+                      ? "border-[#86EFAC]/45 bg-[#064E3B]/90 shadow-[0_0_14px_rgba(16,185,129,0.24)]"
+                      : "border-white/20 bg-[#0F172A]/88 shadow-[0_0_14px_rgba(15,23,42,0.28)]"
+                  }`}
+                >
+                  {room.isPaused ? (
+                    <svg viewBox="0 0 24 24" className="h-5.5 w-5.5 fill-[#ECFDF5]" aria-hidden="true">
+                      <path d="M8 5.5v13l10-6.5L8 5.5Z" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" className="h-5.5 w-5.5 fill-[#F8FAFC]" aria-hidden="true">
+                      <rect x="6" y="5" width="4" height="14" rx="1.2" />
+                      <rect x="14" y="5" width="4" height="14" rx="1.2" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+          ) : null}
+
           {canStartNewGame ? (
             <div className="mt-3 flex w-full shrink-0 justify-center">
               <button
@@ -739,34 +768,6 @@ export function BoardScreen() {
         />
       ) : null}
       {room.gameState === "GameOver" ? <GameOverScreen /> : null}
-      {room.gameState === "Playing" ? (
-        <div className="pointer-events-none fixed bottom-16 right-0 z-40 flex w-full justify-end px-0">
-          <div className="pointer-events-auto translate-x-2">
-            <button
-              type="button"
-              onClick={() => void togglePauseGame()}
-              disabled={!canTogglePause || isBusy}
-              aria-label={room.isPaused ? "تشغيل اللعبة" : "إيقاف اللعبة"}
-              className={`flex h-14 w-16 items-center justify-center rounded-l-[1.4rem] border border-r-0 backdrop-blur-md transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
-                room.isPaused
-                  ? "border-[#86EFAC]/45 bg-[#064E3B]/90 shadow-[0_0_18px_rgba(16,185,129,0.28)]"
-                  : "border-white/20 bg-[#0F172A]/88 shadow-[0_0_18px_rgba(15,23,42,0.32)]"
-              }`}
-            >
-              {room.isPaused ? (
-                <svg viewBox="0 0 24 24" className="h-7 w-7 fill-[#ECFDF5]" aria-hidden="true">
-                  <path d="M8 5.5v13l10-6.5L8 5.5Z" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" className="h-7 w-7 fill-[#F8FAFC]" aria-hidden="true">
-                  <rect x="6" y="5" width="4" height="14" rx="1.2" />
-                  <rect x="14" y="5" width="4" height="14" rx="1.2" />
-                </svg>
-              )}
-            </button>
-          </div>
-        </div>
-      ) : null}
     </section>
   );
 }
