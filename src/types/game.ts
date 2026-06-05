@@ -39,6 +39,7 @@ export interface Clue {
 export interface Room {
   roomId: string;
   players: Player[];
+  presence: Record<string, boolean>;
   gameState: GameState;
   settings: RoomSettings;
   board: Card[];

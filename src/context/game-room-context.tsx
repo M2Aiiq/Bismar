@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { get, onValue, ref, runTransaction, set } from "firebase/database";
+import { get, onDisconnect, onValue, ref, runTransaction, set } from "firebase/database";
 
 import {
   countHiddenCards,
@@ -267,6 +267,10 @@ function getRoomPath(roomId: string) {
   return `rooms/${roomId}`;
 }
 
+function getPresencePath(roomId: string, playerId: string) {
+  return `${getRoomPath(roomId)}/presence/${playerId}`;
+}
+
 function readSession() {
   if (typeof window === "undefined") {
     return null;
@@ -458,6 +462,38 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
     );
   }, [isReady, playerId, playerName, roomId]);
 
+  useEffect(() => {
+    if (!isReady || !roomId || !playerId || !isFirebaseConfigured) {
+      return;
+    }
+
+    const database = getRealtimeDatabase();
+
+    if (!database) {
+      return;
+    }
+
+    const connectedRef = ref(database, ".info/connected");
+    const presenceRef = ref(database, getPresencePath(roomId, playerId));
+    let isCleanedUp = false;
+
+    const unsubscribe = onValue(connectedRef, (snapshot) => {
+      if (snapshot.val() !== true || isCleanedUp) {
+        return;
+      }
+
+      void onDisconnect(presenceRef)
+        .set(false)
+        .then(() => set(presenceRef, true));
+    });
+
+    return () => {
+      isCleanedUp = true;
+      unsubscribe();
+      void set(presenceRef, false);
+    };
+  }, [isReady, playerId, roomId]);
+
   const player = useMemo(() => {
     return room?.players.find((currentPlayer) => currentPlayer.id === playerId) ?? null;
   }, [playerId, room]);
@@ -574,6 +610,10 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
 
           return {
             ...currentRoom,
+            presence: {
+              ...(currentRoom.presence ?? {}),
+              [nextPlayer.id]: true,
+            },
             players: upsertPlayer(currentRoom.players, nextPlayer),
           };
         });
@@ -628,6 +668,9 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
 
           return {
             ...currentRoom,
+            presence: Object.fromEntries(
+              Object.entries(currentRoom.presence ?? {}).filter(([currentPresencePlayerId]) => currentPresencePlayerId !== playerId),
+            ),
             players: remainingPlayers,
           };
         });
@@ -819,6 +862,11 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
 
           return {
             ...currentRoom,
+            presence: Object.fromEntries(
+              Object.entries(currentRoom.presence ?? {}).filter(
+                ([currentPresencePlayerId]) => currentPresencePlayerId !== targetPlayerId,
+              ),
+            ),
             players: remainingPlayers,
           };
         });

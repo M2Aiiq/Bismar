@@ -108,6 +108,7 @@ export function createInitialRoom(roomId: string, host: Player): Room {
   return {
     roomId,
     players: [host],
+    presence: { [host.id]: true },
     gameState: "Lobby",
     settings,
     board,
@@ -123,6 +124,34 @@ export function createInitialRoom(roomId: string, host: Player): Room {
     turnEndsAt: null,
     winner: null,
   };
+}
+
+function sanitizePresence(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {} as Record<string, boolean>;
+  }
+
+  return Object.entries(value).reduce<Record<string, boolean>>((result, [playerId, isOnline]) => {
+    if (typeof playerId !== "string" || !playerId || typeof isOnline !== "boolean") {
+      return result;
+    }
+
+    result[playerId] = isOnline;
+    return result;
+  }, {});
+}
+
+function prunePresence(presence: Record<string, boolean>, players: Player[]) {
+  const activePlayerIds = new Set(players.map((player) => player.id));
+
+  return Object.entries(presence).reduce<Record<string, boolean>>((result, [playerId, isOnline]) => {
+    if (!activePlayerIds.has(playerId)) {
+      return result;
+    }
+
+    result[playerId] = isOnline;
+    return result;
+  }, {});
 }
 
 export function countHiddenCards(board: Card[], team: ActiveTeam) {
@@ -312,9 +341,11 @@ export function normalizeRoom(value: unknown): Room | null {
     room.players,
     normalizedTurn,
   );
+  const presence = prunePresence(sanitizePresence((room as Partial<Room>).presence), room.players);
 
   return {
     ...room,
+    presence,
     settings: normalizedSettings,
     clues: sanitizeClues(room.clues),
     eliminatedTeams,

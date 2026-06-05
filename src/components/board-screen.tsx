@@ -15,6 +15,7 @@ const CLUE_COUNT_OPTIONS = Array.from({ length: 9 }, (_, index) => String(index 
 interface TeamPanelProps {
   team: ActiveTeam;
   players: Player[];
+  presence: Record<string, boolean>;
   currentPlayer: Player;
   remainingCards: number;
   isCurrentTurn: boolean;
@@ -23,6 +24,10 @@ interface TeamPanelProps {
   onJoinAsOperative: (team: ActiveTeam) => void;
   onJoinAsSpymaster: (team: ActiveTeam) => void;
   onKickPlayer: (playerId: string) => void;
+}
+
+function presenceDotClass(isOnline: boolean) {
+  return isOnline ? "bg-[#22C55E] shadow-[0_0_10px_rgba(34,197,94,0.55)]" : "bg-[#EF4444] shadow-[0_0_10px_rgba(239,68,68,0.45)]";
 }
 
 function teamPanelClass(team: ActiveTeam, isCurrentTurn: boolean, isEliminated: boolean) {
@@ -212,6 +217,7 @@ function ToastNotice({ message }: ToastNoticeProps) {
 function TeamPanel({
   team,
   players,
+  presence,
   currentPlayer,
   remainingCards,
   isCurrentTurn,
@@ -233,6 +239,7 @@ function TeamPanel({
   const canShowJoinAsOperative = !isEliminated && (currentPlayer.role !== "Operative" || currentPlayer.team !== team);
   const canShowJoinAsSpymaster = !isEliminated && (currentPlayer.role !== "Spymaster" || currentPlayer.team !== team);
   const canKickPlayer = (playerToKick: Player) => currentPlayer.isHost && !playerToKick.isHost && playerToKick.id !== currentPlayer.id;
+  const isPlayerOnline = (targetPlayer: Player) => presence[targetPlayer.id] === true;
 
   return (
     <div
@@ -262,8 +269,12 @@ function TeamPanel({
           ) : null}
           {spymaster ? (
             <div className="mt-2 flex w-full items-center justify-end gap-2 overflow-hidden text-right">
-              <div className="min-w-0 flex-1 overflow-hidden text-right text-[13px] font-black text-[#F8FAFC]">
-                {spymaster.name}
+              <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 overflow-hidden text-right text-[13px] font-black text-[#F8FAFC]">
+                <span className="truncate">{spymaster.name}</span>
+                <span
+                  aria-hidden="true"
+                  className={`h-2.5 w-2.5 shrink-0 rounded-full ${presenceDotClass(isPlayerOnline(spymaster))}`}
+                />
               </div>
               {canKickPlayer(spymaster) ? (
                 <button
@@ -293,7 +304,13 @@ function TeamPanel({
           ) : null}
           {operatives.map((currentPlayer) => (
             <div key={currentPlayer.id} className="flex w-full items-center justify-end gap-2 self-start text-right">
-              <span className="min-w-0 flex-1 overflow-hidden text-right">{currentPlayer.name}</span>
+              <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 overflow-hidden text-right">
+                <span className="truncate">{currentPlayer.name}</span>
+                <span
+                  aria-hidden="true"
+                  className={`h-2.5 w-2.5 shrink-0 rounded-full ${presenceDotClass(isPlayerOnline(currentPlayer))}`}
+                />
+              </div>
               {canKickPlayer(currentPlayer) ? (
                 <button
                   type="button"
@@ -688,6 +705,7 @@ export function BoardScreen() {
               key={team}
               team={team}
               players={room.players.filter((entry) => entry.team === team)}
+              presence={room.presence}
               currentPlayer={player}
               remainingCards={countHiddenCards(room.board, team)}
               isCurrentTurn={team === currentTeam}
