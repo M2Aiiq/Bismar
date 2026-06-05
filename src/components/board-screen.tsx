@@ -261,7 +261,10 @@ function TeamPanel({
             </div>
           ) : null}
           {spymaster ? (
-            <div className="mt-2 flex w-full items-center justify-between gap-2 overflow-hidden">
+            <div className="mt-2 flex w-full items-center justify-end gap-2 overflow-hidden text-right">
+              <div className="min-w-0 flex-1 overflow-hidden text-right text-[13px] font-black text-[#F8FAFC]">
+                {spymaster.name}
+              </div>
               {canKickPlayer(spymaster) ? (
                 <button
                   type="button"
@@ -272,12 +275,7 @@ function TeamPanel({
                 >
                   x
                 </button>
-              ) : (
-                <span aria-hidden="true" className="h-5 w-5 shrink-0" />
-              )}
-              <div className="min-w-0 flex-1 overflow-hidden text-right text-[13px] font-black text-[#F8FAFC]">
-                {spymaster.name}
-              </div>
+              ) : null}
             </div>
           ) : null}
         </div>
@@ -294,7 +292,8 @@ function TeamPanel({
             </button>
           ) : null}
           {operatives.map((currentPlayer) => (
-            <div key={currentPlayer.id} className="flex w-full items-center justify-between gap-2 self-start">
+            <div key={currentPlayer.id} className="flex w-full items-center justify-end gap-2 self-start text-right">
+              <span className="min-w-0 flex-1 overflow-hidden text-right">{currentPlayer.name}</span>
               {canKickPlayer(currentPlayer) ? (
                 <button
                   type="button"
@@ -305,10 +304,7 @@ function TeamPanel({
                 >
                   x
                 </button>
-              ) : (
-                <span aria-hidden="true" className="h-5 w-5 shrink-0" />
-              )}
-              <span className="min-w-0 flex-1 overflow-hidden text-left">{currentPlayer.name}</span>
+              ) : null}
             </div>
           ))}
         </div>
