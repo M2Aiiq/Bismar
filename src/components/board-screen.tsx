@@ -654,7 +654,7 @@ export function BoardScreen() {
 
       <div className={`mt-1 flex min-h-0 items-start overflow-hidden px-1.5 sm:px-2 ${boardSectionHeightClass}`}>
         <div className={`mx-auto flex h-full w-full flex-col ${boardWidthClass} items-center justify-start overflow-visible`}>
-          <div className="flex min-h-0 w-full items-start justify-center overflow-visible pb-1">
+          <div className="flex min-h-0 w-full items-start justify-center overflow-visible pt-2 pb-1">
             <GameBoard
               board={room.board}
               showTruth={showTruth}
