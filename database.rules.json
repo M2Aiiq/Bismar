@@ -33,6 +33,12 @@
         "turnPhase": {
           ".validate": "!newData.exists() || newData.val() === 'Clue' || newData.val() === 'Guess'"
         },
+        "isPaused": {
+          ".validate": "!newData.exists() || newData.isBoolean()"
+        },
+        "pausedRemainingMs": {
+          ".validate": "!newData.exists() || newData.isNumber() || newData.val() === null"
+        },
         "turnEndsAt": {
           ".validate": "!newData.exists() || newData.isNumber()"
         },

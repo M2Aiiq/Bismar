@@ -271,7 +271,7 @@ function TeamPanel({
 }
 
 export function BoardScreen() {
-  const { room, player, isBusy, joinTeamAs, sendClue, expireTurnTimer, endGuessTurn, revealCard, resetGame } =
+  const { room, player, isBusy, joinTeamAs, sendClue, togglePauseGame, expireTurnTimer, endGuessTurn, revealCard, resetGame } =
     useGameRoom();
   const [clueDraft, setClueDraft] = useState("");
   const [clueCount, setClueCount] = useState("1");
@@ -475,10 +475,19 @@ export function BoardScreen() {
 
   const showTruth = player.role === "Spymaster" || room.gameState === "GameOver";
   const canReveal =
-    room.gameState === "Playing" && player.role === "Operative" && player.team === room.currentTurn && room.turnPhase === "Guess";
+    room.gameState === "Playing" &&
+    !room.isPaused &&
+    player.role === "Operative" &&
+    player.team === room.currentTurn &&
+    room.turnPhase === "Guess";
   const canEndTurn =
-    room.gameState === "Playing" && player.role === "Operative" && player.team === room.currentTurn && room.turnPhase === "Guess";
+    room.gameState === "Playing" &&
+    !room.isPaused &&
+    player.role === "Operative" &&
+    player.team === room.currentTurn &&
+    room.turnPhase === "Guess";
   const canStartNewGame = room.gameState === "GameOver" && player.isHost;
+  const canTogglePause = room.gameState === "Playing" && player.isHost;
   const activeTeams = getActiveTeams(room.settings.teamCount);
   const currentTeam = room.currentTurn;
   const isAssassinGameOver = room.gameState === "GameOver" && room.board.some((card) => card.type === "Control" && card.isRevealed);
@@ -488,7 +497,7 @@ export function BoardScreen() {
   const usesMultiRowTeamGrid = activeTeams.length > 2;
   const shouldUseExpandedDenseFont = isLargeFont && room.board.length >= 36 && activeTeams.length >= 3;
   const shouldShowClueInput =
-    player.role === "Spymaster" && player.team === room.currentTurn && room.turnPhase === "Clue";
+    !room.isPaused && player.role === "Spymaster" && player.team === room.currentTurn && room.turnPhase === "Clue";
   const shouldShowClueStrip = visibleClues.length > 0;
   const teamSlots: Array<ActiveTeam | null> = activeTeams.length === 3 ? [...activeTeams, null] : activeTeams;
   const teamGridHeightClass = usesMultiRowTeamGrid ? "h-[25vh]" : "h-[22vh]";
@@ -496,11 +505,15 @@ export function BoardScreen() {
   const boardWidthClass = room.board.length > 25 ? "max-w-[44rem]" : "max-w-md";
   const boardFontScale = shouldUseExpandedDenseFont ? "expanded" : isLargeFont ? "comfortable" : "compact";
   const roundDurationMs = room.settings.roundTimerSeconds * 1000;
-  const remainingMs = room.turnEndsAt ? Math.max(0, room.turnEndsAt - nowMs) : 0;
+  const remainingMs = room.isPaused
+    ? Math.max(0, room.pausedRemainingMs ?? roundDurationMs)
+    : room.turnEndsAt
+      ? Math.max(0, room.turnEndsAt - nowMs)
+      : 0;
   const timerProgress = roundDurationMs <= 0 ? 0 : Math.min(1, Math.max(0, remainingMs / roundDurationMs));
 
   useEffect(() => {
-    if (room.gameState !== "Playing" || !room.turnEndsAt) {
+    if (room.gameState !== "Playing" || room.isPaused || !room.turnEndsAt) {
       handledExpiredTurnRef.current = null;
       return;
     }
@@ -518,7 +531,7 @@ export function BoardScreen() {
 
     handledExpiredTurnRef.current = expiryKey;
     void expireTurnTimer();
-  }, [expireTurnTimer, remainingMs, room.currentTurn, room.gameState, room.turnEndsAt, room.turnPhase]);
+  }, [expireTurnTimer, remainingMs, room.currentTurn, room.gameState, room.isPaused, room.turnEndsAt, room.turnPhase]);
 
   const handleClueSend = () => {
     if (!clueDraft.trim()) {
@@ -559,7 +572,9 @@ export function BoardScreen() {
       <div className="h-1.5 w-full overflow-hidden bg-black/25">
         <div className="flex h-full w-full justify-end">
           <div
-            className={`h-full transition-[width,background-color] duration-200 ${timerBarClass(timerProgress)}`}
+            className={`h-full transition-[width,background-color] duration-200 ${
+              room.isPaused ? "bg-white/55" : timerBarClass(timerProgress)
+            }`}
             style={{ width: `${timerProgress * 100}%` }}
           />
         </div>
@@ -724,6 +739,34 @@ export function BoardScreen() {
         />
       ) : null}
       {room.gameState === "GameOver" ? <GameOverScreen /> : null}
+      {room.gameState === "Playing" ? (
+        <div className="pointer-events-none fixed bottom-16 right-0 z-40 flex w-full justify-end px-0">
+          <div className="pointer-events-auto translate-x-2">
+            <button
+              type="button"
+              onClick={() => void togglePauseGame()}
+              disabled={!canTogglePause || isBusy}
+              aria-label={room.isPaused ? "تشغيل اللعبة" : "إيقاف اللعبة"}
+              className={`flex h-14 w-16 items-center justify-center rounded-l-[1.4rem] border border-r-0 backdrop-blur-md transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+                room.isPaused
+                  ? "border-[#86EFAC]/45 bg-[#064E3B]/90 shadow-[0_0_18px_rgba(16,185,129,0.28)]"
+                  : "border-white/20 bg-[#0F172A]/88 shadow-[0_0_18px_rgba(15,23,42,0.32)]"
+              }`}
+            >
+              {room.isPaused ? (
+                <svg viewBox="0 0 24 24" className="h-7 w-7 fill-[#ECFDF5]" aria-hidden="true">
+                  <path d="M8 5.5v13l10-6.5L8 5.5Z" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" className="h-7 w-7 fill-[#F8FAFC]" aria-hidden="true">
+                  <rect x="6" y="5" width="4" height="14" rx="1.2" />
+                  <rect x="14" y="5" width="4" height="14" rx="1.2" />
+                </svg>
+              )}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

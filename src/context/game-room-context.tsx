@@ -36,8 +36,30 @@ function getNextCluePhaseState(currentRoom: Room, nextTurn: ActiveTeam, clues = 
     clues,
     currentTurn: nextTurn,
     turnPhase: "Clue" as TurnPhase,
+    isPaused: false,
+    pausedRemainingMs: null,
     turnEndsAt: getNextTurnEndsAt(currentRoom.settings.roundTimerSeconds),
   };
+}
+
+function getPausedStartState(roundTimerSeconds: number) {
+  return {
+    isPaused: true,
+    pausedRemainingMs: roundTimerSeconds * 1000,
+    turnEndsAt: null,
+  };
+}
+
+function getCurrentRemainingMs(currentRoom: Room) {
+  if (currentRoom.isPaused) {
+    return currentRoom.pausedRemainingMs ?? currentRoom.settings.roundTimerSeconds * 1000;
+  }
+
+  if (currentRoom.turnEndsAt) {
+    return Math.max(0, currentRoom.turnEndsAt - Date.now());
+  }
+
+  return currentRoom.settings.roundTimerSeconds * 1000;
 }
 
 function getAliveTeams(currentRoom: Room) {
@@ -87,6 +109,7 @@ interface GameRoomContextValue {
   launchGameWithSettings: (settings: Partial<RoomSettings>) => Promise<void>;
   startGame: () => Promise<void>;
   sendClue: (text: string, count: number) => Promise<void>;
+  togglePauseGame: () => Promise<void>;
   expireTurnTimer: () => Promise<void>;
   endGuessTurn: () => Promise<void>;
   revealCard: (cardId: number) => Promise<void>;
@@ -637,7 +660,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
                 eliminatedTeams: [],
                 currentTurn,
                 turnPhase: "Clue",
-                turnEndsAt: getNextTurnEndsAt(nextSettings.roundTimerSeconds),
+              ...getPausedStartState(nextSettings.roundTimerSeconds),
                 winner: null,
                 gameState: "Playing",
               };
@@ -647,8 +670,12 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
               ...currentRoom,
               settings: nextSettings,
               turnPhase: currentRoom.turnPhase,
+              isPaused: currentRoom.isPaused,
+              pausedRemainingMs: currentRoom.pausedRemainingMs,
               turnEndsAt:
-                nextSettings.roundTimerSeconds !== currentRoom.settings.roundTimerSeconds
+                currentRoom.isPaused
+                  ? null
+                  : nextSettings.roundTimerSeconds !== currentRoom.settings.roundTimerSeconds
                   ? getNextTurnEndsAt(nextSettings.roundTimerSeconds)
                   : currentRoom.turnEndsAt ?? getNextTurnEndsAt(nextSettings.roundTimerSeconds),
             };
@@ -660,6 +687,8 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             settings: nextSettings,
             clues: currentRoom.clues ?? [],
             eliminatedTeams: currentRoom.eliminatedTeams.filter((team) => activeTeams.includes(team)),
+            isPaused: currentRoom.isPaused,
+            pausedRemainingMs: currentRoom.pausedRemainingMs,
             currentTurn: activeTeams.includes(currentRoom.currentTurn) ? currentRoom.currentTurn : activeTeams[0],
             turnPhase: "Clue",
             turnEndsAt: null,
@@ -703,7 +732,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             eliminatedTeams: [],
             currentTurn,
             turnPhase: "Clue",
-            turnEndsAt: getNextTurnEndsAt(currentRoom.settings.roundTimerSeconds),
+            ...getPausedStartState(currentRoom.settings.roundTimerSeconds),
             winner: null,
             gameState: "Playing",
           };
@@ -750,7 +779,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             eliminatedTeams: [],
             currentTurn,
             turnPhase: "Clue",
-            turnEndsAt: getNextTurnEndsAt(nextSettings.roundTimerSeconds),
+            ...getPausedStartState(nextSettings.roundTimerSeconds),
             winner: null,
             gameState: "Playing",
           };
@@ -782,7 +811,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
           const currentRoom = normalizeRoom(currentValue);
 
-          if (!currentRoom || currentRoom.gameState !== "Playing" || currentRoom.turnPhase !== "Clue") {
+          if (!currentRoom || currentRoom.gameState !== "Playing" || currentRoom.turnPhase !== "Clue" || currentRoom.isPaused) {
             return currentValue;
           }
 
@@ -818,6 +847,52 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
     [playerId, roomId, runAction],
   );
 
+  const togglePauseGame = useCallback(
+    async () =>
+      runAction(async () => {
+        if (!roomId) {
+          return;
+        }
+
+        const database = getRealtimeDatabase();
+
+        if (!database) {
+          return;
+        }
+
+        await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
+          const currentRoom = normalizeRoom(currentValue);
+
+          if (!currentRoom || currentRoom.gameState !== "Playing") {
+            return currentValue;
+          }
+
+          const actor = currentRoom.players.find((currentPlayer) => currentPlayer.id === playerId);
+
+          if (!actor?.isHost) {
+            return currentValue;
+          }
+
+          if (currentRoom.isPaused) {
+            return {
+              ...currentRoom,
+              isPaused: false,
+              pausedRemainingMs: null,
+              turnEndsAt: Date.now() + getCurrentRemainingMs(currentRoom),
+            };
+          }
+
+          return {
+            ...currentRoom,
+            isPaused: true,
+            pausedRemainingMs: getCurrentRemainingMs(currentRoom),
+            turnEndsAt: null,
+          };
+        });
+      }, "تعذر تغيير حالة الإيقاف."),
+    [playerId, roomId, runAction],
+  );
+
   const expireTurnTimer = useCallback(
     async () =>
       runAction(async () => {
@@ -834,7 +909,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
           const currentRoom = normalizeRoom(currentValue);
 
-          if (!currentRoom || currentRoom.gameState !== "Playing" || !currentRoom.turnEndsAt) {
+          if (!currentRoom || currentRoom.gameState !== "Playing" || currentRoom.isPaused || !currentRoom.turnEndsAt) {
             return currentValue;
           }
 
@@ -869,7 +944,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
           const currentRoom = normalizeRoom(currentValue);
 
-          if (!currentRoom || currentRoom.gameState !== "Playing" || currentRoom.turnPhase !== "Guess") {
+          if (!currentRoom || currentRoom.gameState !== "Playing" || currentRoom.turnPhase !== "Guess" || currentRoom.isPaused) {
             return currentValue;
           }
 
@@ -906,7 +981,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
           const currentRoom = normalizeRoom(currentValue);
 
-          if (!currentRoom || currentRoom.gameState !== "Playing" || currentRoom.turnPhase !== "Guess") {
+          if (!currentRoom || currentRoom.gameState !== "Playing" || currentRoom.turnPhase !== "Guess" || currentRoom.isPaused) {
             return currentValue;
           }
 
@@ -939,6 +1014,8 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
                 ...currentRoom,
                 board: nextBoard,
                 winner: nextTeam(currentRoom.currentTurn, activeTeams),
+                isPaused: false,
+                pausedRemainingMs: null,
                 turnPhase: "Clue",
                 turnEndsAt: null,
                 gameState: "GameOver",
@@ -956,6 +1033,8 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
                 board: nextBoard,
                 eliminatedTeams: nextEliminatedTeams,
                 winner: aliveTeams[0] ?? null,
+                  isPaused: false,
+                  pausedRemainingMs: null,
                 turnPhase: "Clue",
                 turnEndsAt: null,
                 gameState: "GameOver",
@@ -979,6 +1058,8 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
               ...currentRoom,
               board: nextBoard,
               winner: winningTeam,
+              isPaused: false,
+              pausedRemainingMs: null,
               turnPhase: "Clue",
               turnEndsAt: null,
               gameState: "GameOver",
@@ -1038,7 +1119,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             eliminatedTeams: [],
             currentTurn,
             turnPhase: "Clue",
-            turnEndsAt: getNextTurnEndsAt(currentRoom.settings.roundTimerSeconds),
+            ...getPausedStartState(currentRoom.settings.roundTimerSeconds),
             winner: null,
             gameState: "Playing",
           };
@@ -1069,6 +1150,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       updateRoomSettings,
       startGame,
       sendClue,
+      togglePauseGame,
       expireTurnTimer,
       endGuessTurn,
       revealCard,
@@ -1094,6 +1176,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       roomId,
       startGame,
       sendClue,
+      togglePauseGame,
       expireTurnTimer,
       endGuessTurn,
       updateRoomSettings,

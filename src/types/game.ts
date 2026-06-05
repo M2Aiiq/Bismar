@@ -44,6 +44,8 @@ export interface Room {
   board: Card[];
   clues: Clue[];
   eliminatedTeams: Exclude<Team, "Unassigned">[];
+  isPaused: boolean;
+  pausedRemainingMs: number | null;
   currentTurn: Exclude<Team, "Unassigned">;
   turnPhase: TurnPhase;
   turnEndsAt: number | null;
