@@ -28,8 +28,8 @@ interface TeamPanelProps {
 
 function presenceDotClass(isOnline: boolean) {
   return isOnline
-    ? "bg-[#22C55E] shadow-[0_0_10px_rgba(34,197,94,0.9),0_0_18px_rgba(34,197,94,0.45)]"
-    : "bg-[#EF4444] shadow-[0_0_10px_rgba(239,68,68,0.82),0_0_18px_rgba(239,68,68,0.38)]";
+    ? "bg-[#22C55E] shadow-[0_0_6px_rgba(34,197,94,0.92),0_0_12px_rgba(34,197,94,0.42)]"
+    : "bg-[#EF4444] shadow-[0_0_6px_rgba(239,68,68,0.85),0_0_12px_rgba(239,68,68,0.34)]";
 }
 
 function teamPanelClass(team: ActiveTeam, isCurrentTurn: boolean, isEliminated: boolean) {
@@ -270,13 +270,13 @@ function TeamPanel({
             </div>
           ) : null}
           {spymaster ? (
-            <div className="mt-2 flex w-full items-center justify-end gap-2 overflow-hidden text-right">
-              <div className="flex min-w-0 flex-1 flex-row-reverse items-center justify-end gap-1.5 overflow-hidden text-right text-[13px] font-black text-[#F8FAFC]">
+            <div className="mt-2 flex w-full items-center justify-end gap-2 overflow-visible text-right">
+              <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 overflow-visible text-right text-[13px] font-black text-[#F8FAFC]">
+                <span className="truncate">{spymaster.name}</span>
                 <span
                   aria-hidden="true"
-                  className={`h-2 w-2 shrink-0 rounded-full ${presenceDotClass(isPlayerOnline(spymaster))}`}
+                  className={`mb-px h-1.5 w-1.5 shrink-0 rounded-full ${presenceDotClass(isPlayerOnline(spymaster))}`}
                 />
-                <span className="truncate">{spymaster.name}</span>
               </div>
               {canKickPlayer(spymaster) ? (
                 <button
@@ -305,13 +305,13 @@ function TeamPanel({
             </button>
           ) : null}
           {operatives.map((currentPlayer) => (
-            <div key={currentPlayer.id} className="flex w-full items-center justify-end gap-2 self-start text-right">
-              <div className="flex min-w-0 flex-1 flex-row-reverse items-center justify-end gap-1.5 overflow-hidden text-right">
+            <div key={currentPlayer.id} className="flex w-full items-center justify-end gap-2 self-start overflow-visible text-right">
+              <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 overflow-visible text-right">
+                <span className="truncate">{currentPlayer.name}</span>
                 <span
                   aria-hidden="true"
-                  className={`h-2 w-2 shrink-0 rounded-full ${presenceDotClass(isPlayerOnline(currentPlayer))}`}
+                  className={`mb-px h-1.5 w-1.5 shrink-0 rounded-full ${presenceDotClass(isPlayerOnline(currentPlayer))}`}
                 />
-                <span className="truncate">{currentPlayer.name}</span>
               </div>
               {canKickPlayer(currentPlayer) ? (
                 <button
