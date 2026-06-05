@@ -9,6 +9,8 @@ const DEFAULT_SETTINGS: RoomSettings = {
   wordCategory: "General",
 };
 
+const RECENT_BOARD_HISTORY_COUNT = 2;
+
 export function createRoomId(length = 5) {
   const digits = "0123456789";
 
@@ -27,6 +29,36 @@ export function shuffleList<T>(items: T[]) {
   }
 
   return copy;
+}
+
+function buildRecentWords(words: string[], previousRecentWords: string[], boardSize: number) {
+  const maxRecentWords = boardSize * RECENT_BOARD_HISTORY_COUNT;
+  const seenWords = new Set<string>();
+  const recentWords: string[] = [];
+
+  for (const word of [...words, ...previousRecentWords]) {
+    if (seenWords.has(word)) {
+      continue;
+    }
+
+    seenWords.add(word);
+    recentWords.push(word);
+
+    if (recentWords.length >= maxRecentWords) {
+      break;
+    }
+  }
+
+  return recentWords;
+}
+
+function pickBoardWords(words: string[], boardSize: number, recentWords: string[]) {
+  const shuffledWords = shuffleList(words);
+  const recentWordSet = new Set(recentWords);
+  const freshWords = shuffledWords.filter((word) => !recentWordSet.has(word));
+  const fallbackWords = shuffledWords.filter((word) => recentWordSet.has(word));
+
+  return [...freshWords, ...fallbackWords].slice(0, boardSize);
 }
 
 export function getDefaultRoomSettings(): RoomSettings {
@@ -71,11 +103,11 @@ function createCardTypes(
   return shuffleList(types);
 }
 
-export function createBoardState(settings: RoomSettings = DEFAULT_SETTINGS) {
+export function createBoardState(settings: RoomSettings = DEFAULT_SETTINGS, previousRecentWords: string[] = []) {
   const activeTeams = getActiveTeams(settings.teamCount);
   const boardSize = getBoardSize(settings.teamCount);
   const currentTurn = activeTeams[Math.floor(Math.random() * activeTeams.length)];
-  const words = shuffleList(getWordsByCategory(settings.wordCategory)).slice(0, boardSize);
+  const words = pickBoardWords(getWordsByCategory(settings.wordCategory), boardSize, previousRecentWords);
   const types = createCardTypes(activeTeams, currentTurn, settings.lossCardCount, boardSize);
 
   const board: Card[] = words.map((text, index) => ({
@@ -88,6 +120,7 @@ export function createBoardState(settings: RoomSettings = DEFAULT_SETTINGS) {
   return {
     board,
     currentTurn,
+    recentWords: buildRecentWords(words, previousRecentWords, boardSize),
   };
 }
 
@@ -103,7 +136,7 @@ export function createPlayer(playerId: string, name: string, isHost = false): Pl
 
 export function createInitialRoom(roomId: string, host: Player): Room {
   const settings = getDefaultRoomSettings();
-  const { board, currentTurn } = createBoardState(settings);
+  const { board, currentTurn, recentWords } = createBoardState(settings);
 
   return {
     roomId,
@@ -112,6 +145,7 @@ export function createInitialRoom(roomId: string, host: Player): Room {
     gameState: "Lobby",
     settings,
     board,
+    recentWords,
     clues: [],
     eliminatedTeams: [],
     operativeSelections: {},
@@ -168,6 +202,25 @@ function sanitizeLossCardCount(value: unknown): RoomSettings["lossCardCount"] {
 
 function sanitizeWordCategory(value: unknown): WordCategory {
   return value === "Cities" || value === "General" ? value : "General";
+}
+
+function sanitizeRecentWords(value: unknown, category: WordCategory) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const availableWords = new Set(getWordsByCategory(category));
+  const recentWords: string[] = [];
+
+  for (const entry of value) {
+    if (typeof entry !== "string" || !availableWords.has(entry) || recentWords.includes(entry)) {
+      continue;
+    }
+
+    recentWords.push(entry);
+  }
+
+  return recentWords;
 }
 
 function sanitizeRoundTimerSeconds(value: unknown) {
@@ -347,6 +400,7 @@ export function normalizeRoom(value: unknown): Room | null {
     ...room,
     presence,
     settings: normalizedSettings,
+    recentWords: sanitizeRecentWords((room as Partial<Room>).recentWords, normalizedSettings.wordCategory),
     clues: sanitizeClues(room.clues),
     eliminatedTeams,
     operativeSelections,

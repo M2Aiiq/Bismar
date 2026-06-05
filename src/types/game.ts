@@ -43,6 +43,7 @@ export interface Room {
   gameState: GameState;
   settings: RoomSettings;
   board: Card[];
+  recentWords: string[];
   clues: Clue[];
   eliminatedTeams: Exclude<Team, "Unassigned">[];
   operativeSelections: Record<string, number>;

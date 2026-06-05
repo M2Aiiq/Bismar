@@ -904,6 +904,8 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           const nextSettings = sanitizeSettingsUpdate(currentRoom.settings, settings);
           const nextPlayers = applyTeamCountToPlayers(currentRoom.players, nextSettings.teamCount);
           const activeTeams = getActiveTeams(nextSettings.teamCount);
+          const nextRecentWords =
+            nextSettings.wordCategory !== currentRoom.settings.wordCategory ? [] : currentRoom.recentWords;
 
           if (wasPlaying) {
             const requiresBoardReset =
@@ -912,13 +914,14 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
               nextSettings.wordCategory !== currentRoom.settings.wordCategory;
 
             if (requiresBoardReset) {
-              const { board, currentTurn } = createBoardState(nextSettings);
+              const { board, currentTurn, recentWords } = createBoardState(nextSettings, nextRecentWords);
 
               return {
                 ...currentRoom,
                 players: nextPlayers,
                 settings: nextSettings,
                 board,
+                recentWords,
                 clues: [],
                 eliminatedTeams: [],
                 currentTurn,
@@ -948,6 +951,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             ...currentRoom,
             players: nextPlayers,
             settings: nextSettings,
+            recentWords: nextRecentWords,
             clues: currentRoom.clues ?? [],
             eliminatedTeams: currentRoom.eliminatedTeams.filter((team) => activeTeams.includes(team)),
             isPaused: currentRoom.isPaused,
@@ -986,11 +990,12 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             return currentValue;
           }
 
-          const { board, currentTurn } = createBoardState(currentRoom.settings);
+          const { board, currentTurn, recentWords } = createBoardState(currentRoom.settings, currentRoom.recentWords);
 
           return {
             ...currentRoom,
             board,
+            recentWords,
             clues: [],
             eliminatedTeams: [],
             currentTurn,
@@ -1031,13 +1036,15 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             throw new Error("يجب تجهيز قائد ومحقق لكل فريق نشط قبل بدء الجولة.");
           }
 
-          const { board, currentTurn } = createBoardState(nextSettings);
+          const seedRecentWords = nextSettings.wordCategory !== currentRoom.settings.wordCategory ? [] : currentRoom.recentWords;
+          const { board, currentTurn, recentWords } = createBoardState(nextSettings, seedRecentWords);
 
           return {
             ...currentRoom,
             players: nextPlayers,
             settings: nextSettings,
             board,
+            recentWords,
             clues: [],
             eliminatedTeams: [],
             currentTurn,
@@ -1360,11 +1367,12 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             return currentValue;
           }
 
-          const { board, currentTurn } = createBoardState(currentRoom.settings);
+          const { board, currentTurn, recentWords } = createBoardState(currentRoom.settings, currentRoom.recentWords);
 
           return {
             ...currentRoom,
             board,
+            recentWords,
             clues: [],
             eliminatedTeams: [],
             currentTurn,
