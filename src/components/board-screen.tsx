@@ -704,7 +704,7 @@ export function BoardScreen() {
           </div>
 
           {room.gameState === "Playing" ? (
-            <div className="mt-2 flex w-full shrink-0 justify-end overflow-visible">
+            <div className="mt-2 flex w-full shrink-0 justify-start overflow-visible">
               <div className="-mr-2">
                 <button
                   type="button"
