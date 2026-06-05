@@ -22,9 +22,12 @@ function roleLabel(role: Role) {
 }
 
 export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementPanelProps) {
-  const { room, player, roomId, isBusy, chooseTeam, chooseRole, leaveRoom, startGame, launchGameWithSettings } =
+  const { room, player, roomId, isBusy, chooseTeam, chooseRole, leaveRoom, savePlayerName, launchGameWithSettings } =
     useGameRoom();
   const [copiedValue, setCopiedValue] = useState<"code" | "link" | null>(null);
+  const [isRenameOpen, setIsRenameOpen] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [nameError, setNameError] = useState<string | null>(null);
   const [draftSettings, setDraftSettings] = useState<{
     teamCount: TeamCount;
     wordCategory: WordCategory;
@@ -53,6 +56,10 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
   }
 
   useEffect(() => {
+    setNameDraft(player.name);
+  }, [player.name]);
+
+  useEffect(() => {
     setDraftSettings({
       teamCount: room.settings.teamCount,
       wordCategory: room.settings.wordCategory,
@@ -74,6 +81,7 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
   const setupControlsDisabled = isBusy || room.gameState !== "Lobby";
   const teamCountControlsDisabled = isBusy || !player.isHost;
   const canApplyDraft = player.isHost && !isBusy && draftSettings !== null;
+  const shouldShowHostControls = player.isHost;
 
   const handleApplyAndStart = () => {
     if (!draftSettings) {
@@ -90,6 +98,16 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
         onClose?.();
       }
     });
+  };
+
+  const handleNameSave = () => {
+    try {
+      savePlayerName(nameDraft);
+      setNameError(null);
+      setIsRenameOpen(false);
+    } catch (error) {
+      setNameError(error instanceof Error ? error.message : "تعذر تحديث الاسم.");
+    }
   };
 
   if (isModal) {
@@ -129,6 +147,17 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
               </button>
               <button
                 type="button"
+                onClick={() => {
+                  setNameDraft(player.name);
+                  setNameError(null);
+                  setIsRenameOpen((currentValue) => !currentValue);
+                }}
+                className="rounded-2xl border border-white/15 px-4 py-2 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#2563EB]/15"
+              >
+                تغيير الاسم
+              </button>
+              <button
+                type="button"
                 onClick={() => void leaveRoom()}
                 disabled={isBusy}
                 className="rounded-2xl border border-[#DC2626]/50 px-4 py-2 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#DC2626]/15 disabled:cursor-not-allowed disabled:opacity-60"
@@ -136,9 +165,42 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                 مغادرة الغرفة
               </button>
             </div>
+            {isRenameOpen ? (
+              <div className="mx-auto mt-4 max-w-md rounded-3xl border border-white/10 bg-[#152033] p-3">
+                <input
+                  type="text"
+                  value={nameDraft}
+                  onChange={(event) => setNameDraft(event.target.value.slice(0, 24))}
+                  placeholder="اسمك داخل اللعبة"
+                  className="h-11 w-full rounded-2xl border border-white/15 bg-[#0F172A] px-4 text-base font-bold text-[#F8FAFC] outline-none transition focus:border-[#2563EB]"
+                />
+                {nameError ? <p className="mt-2 text-xs font-bold text-[#FCA5A5]">{nameError}</p> : null}
+                <div className="mt-3 flex justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleNameSave}
+                    className="rounded-2xl bg-[#2563EB] px-4 py-2 text-sm font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8]"
+                  >
+                    حفظ الاسم
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsRenameOpen(false);
+                      setNameError(null);
+                      setNameDraft(player.name);
+                    }}
+                    className="rounded-2xl border border-white/15 px-4 py-2 text-sm font-bold text-[#F8FAFC]/85 transition hover:bg-white/5"
+                  >
+                    إلغاء
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
 
-          <div className="grid gap-5 p-5 md:p-7">
+          {shouldShowHostControls ? (
+            <div className="grid gap-5 p-5 md:p-7">
             <div>
               <div className="flex items-center justify-between gap-4">
                 <p className="text-sm font-bold text-[#F8FAFC]">عدد الفرق</p>
@@ -271,7 +333,8 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                 </button>
               </div>
             )}
-          </div>
+            </div>
+          ) : null}
         </div>
       </section>
     );
@@ -299,7 +362,50 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
             >
               {copiedValue === "link" ? "تم نسخ الرابط" : "نسخ الرابط"}
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                setNameDraft(player.name);
+                setNameError(null);
+                setIsRenameOpen((currentValue) => !currentValue);
+              }}
+              className="rounded-2xl border border-white/15 px-4 py-2 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#2563EB]/15"
+            >
+              تغيير الاسم
+            </button>
           </div>
+          {isRenameOpen ? (
+            <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#152033] p-3">
+              <input
+                type="text"
+                value={nameDraft}
+                onChange={(event) => setNameDraft(event.target.value.slice(0, 24))}
+                placeholder="اسمك داخل اللعبة"
+                className="h-11 w-full rounded-2xl border border-white/15 bg-[#0F172A] px-4 text-base font-bold text-[#F8FAFC] outline-none transition focus:border-[#2563EB]"
+              />
+              {nameError ? <p className="mt-2 text-xs font-bold text-[#FCA5A5]">{nameError}</p> : null}
+              <div className="mt-3 flex justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleNameSave}
+                  className="rounded-2xl bg-[#2563EB] px-4 py-2 text-sm font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8]"
+                >
+                  حفظ الاسم
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsRenameOpen(false);
+                    setNameError(null);
+                    setNameDraft(player.name);
+                  }}
+                  className="rounded-2xl border border-white/15 px-4 py-2 text-sm font-bold text-[#F8FAFC]/85 transition hover:bg-white/5"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </div>
+          ) : null}
           <button
             type="button"
             onClick={() => void leaveRoom()}
@@ -311,7 +417,8 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+      {shouldShowHostControls ? (
+        <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
         <div className="flex flex-col gap-6">
           <div className="rounded-[2rem] border border-white/10 bg-[#1E293B] p-6 shadow-lg">
             <div className="flex items-center justify-between gap-4">
@@ -537,7 +644,8 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
             ))}
           </div>
         </div>
-      </div>
+        </div>
+      ) : null}
 
       {isModal ? null : (
         <div className="w-full">
