@@ -1,3 +1,4 @@
+import type { ActiveTeam } from "../lib/teams";
 import type { Card } from "../types/game";
 
 interface GameBoardProps {
@@ -8,6 +9,7 @@ interface GameBoardProps {
   onReveal?: (cardId: number) => void;
   onBlockedReveal?: () => void;
   voteCountsByCard?: Record<number, number>;
+  voteIndicatorTeam?: ActiveTeam;
   pendingRevealCardId?: number | null;
   compact?: boolean;
   fontScale?: "compact" | "comfortable" | "expanded";
@@ -112,6 +114,19 @@ function shutterPlateClass(denseBoard: boolean, compact: boolean, isCovered: boo
   );
 }
 
+function voteDotClass(team: ActiveTeam) {
+  switch (team) {
+    case "Red":
+      return "bg-[#F87171] shadow-[0_0_10px_rgba(248,113,113,0.95)]";
+    case "Blue":
+      return "bg-[#60A5FA] shadow-[0_0_10px_rgba(96,165,250,0.95)]";
+    case "Green":
+      return "bg-[#34D399] shadow-[0_0_10px_rgba(52,211,153,0.95)]";
+    case "Gold":
+      return "bg-[#FACC15] shadow-[0_0_10px_rgba(250,204,21,0.95)]";
+  }
+}
+
 export function GameBoard({
   board,
   showTruth,
@@ -120,6 +135,7 @@ export function GameBoard({
   onReveal,
   onBlockedReveal,
   voteCountsByCard = {},
+  voteIndicatorTeam = "Red",
   pendingRevealCardId = null,
   compact = false,
   fontScale = "compact",
@@ -220,23 +236,23 @@ export function GameBoard({
                 <div aria-hidden="true" className={shutterPlateClass(denseBoard, compact, false)} />
               </>
             ) : (
-              <div className="relative z-10 flex h-full w-full flex-col items-center justify-center">
+              <div className="relative z-10 flex h-full w-full items-center justify-center">
                 <span className={cx(textClass, card.type === "Control" && shouldShowTruth && "tracking-widest")}>
                   {card.text}
                 </span>
-                {hasVotes ? (
-                  <span className="mt-1 flex items-center justify-center gap-1">
-                    {Array.from({ length: voteCount }).map((_, index) => (
-                      <span
-                        key={`${card.id}-vote-dot-${index}`}
-                        aria-hidden="true"
-                        className="h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.95)]"
-                      />
-                    ))}
-                  </span>
-                ) : null}
               </div>
             )}
+            {hasVotes && !usesShutterReveal ? (
+              <span className="pointer-events-none absolute inset-x-0 bottom-1 z-20 flex items-center justify-center gap-1">
+                {Array.from({ length: voteCount }).map((_, index) => (
+                  <span
+                    key={`${card.id}-vote-dot-${index}`}
+                    aria-hidden="true"
+                    className={cx("h-1.5 w-1.5 rounded-full", voteDotClass(voteIndicatorTeam))}
+                  />
+                ))}
+              </span>
+            ) : null}
           </button>
         );
       })}

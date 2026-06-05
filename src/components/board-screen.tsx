@@ -780,6 +780,7 @@ export function BoardScreen() {
               onReveal={(cardId: number) => revealCard(cardId)}
               onBlockedReveal={handleBlockedCardReveal}
               voteCountsByCard={voteCountsByCard}
+              voteIndicatorTeam={currentTeam}
               pendingRevealCardId={room.pendingRevealCardId}
               revealAll={room.gameState === "GameOver"}
               compact
