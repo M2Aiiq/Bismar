@@ -33,6 +33,7 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
     wordCategory: WordCategory;
     roundTimerSeconds: string;
     lossCardCount: (typeof LOSS_CARD_OPTIONS)[number];
+    extraRows: 0 | 1 | 2 | 3;
   } | null>(null);
   const origin = typeof window !== "undefined" ? window.location.origin : "";
 
@@ -65,12 +66,14 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
       wordCategory: room.settings.wordCategory,
       roundTimerSeconds: String(room.settings.roundTimerSeconds),
       lossCardCount: room.settings.lossCardCount,
+      extraRows: room.settings.extraRows ?? 0,
     });
   }, [
     room.settings.lossCardCount,
     room.settings.roundTimerSeconds,
     room.settings.teamCount,
     room.settings.wordCategory,
+    room.settings.extraRows,
   ]);
 
   const activeTeams = getActiveTeams(room.settings.teamCount);
@@ -93,6 +96,7 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
       wordCategory: draftSettings.wordCategory,
       roundTimerSeconds: Number(draftSettings.roundTimerSeconds),
       lossCardCount: draftSettings.lossCardCount,
+      extraRows: draftSettings.extraRows,
     }).then(() => {
       if (mode === "modal") {
         onClose?.();
@@ -307,6 +311,45 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                     {count}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-bold text-[#F8FAFC]">اضافات خاصة</p>
+              <div className="mt-3 rounded-[2rem] border border-white/10 bg-[#0F172A] p-4">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <p className="text-xs font-bold text-[#F8FAFC]/70">اسطر اضافية</p>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {(
+                    [
+                      { value: 0, label: "بدون" },
+                      { value: 1, label: "سطر" },
+                      { value: 2, label: "سطران" },
+                      { value: 3, label: "ثلاث اسطر" },
+                    ] as const
+                  ).map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() =>
+                        setDraftSettings((currentValue) =>
+                          currentValue
+                            ? { ...currentValue, extraRows: option.value }
+                            : currentValue,
+                        )
+                      }
+                      disabled={isBusy || !player.isHost}
+                      className={`rounded-2xl py-2 px-1 text-xs md:text-sm font-bold transition ${
+                        (draftSettings?.extraRows ?? 0) === option.value
+                          ? "bg-[#2563EB] text-[#F8FAFC]"
+                          : "border border-white/10 bg-[#1E293B] text-[#F8FAFC]/85 hover:bg-[#152033]"
+                      } disabled:cursor-not-allowed disabled:opacity-60`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -537,6 +580,45 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                       {count}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm font-bold text-[#F8FAFC]">اضافات خاصة</p>
+                <div className="mt-3 rounded-[2rem] border border-white/10 bg-[#0F172A] p-4">
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <p className="text-xs font-bold text-[#F8FAFC]/70">اسطر اضافية</p>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {(
+                      [
+                        { value: 0, label: "بدون" },
+                        { value: 1, label: "سطر" },
+                        { value: 2, label: "سطران" },
+                        { value: 3, label: "ثلاث اسطر" },
+                      ] as const
+                    ).map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() =>
+                          setDraftSettings((currentValue) =>
+                            currentValue
+                              ? { ...currentValue, extraRows: option.value }
+                              : currentValue,
+                          )
+                        }
+                        disabled={isBusy || !player.isHost}
+                        className={`rounded-2xl py-2 px-1 text-xs md:text-sm font-bold transition ${
+                          (draftSettings?.extraRows ?? 0) === option.value
+                            ? "bg-[#2563EB] text-[#F8FAFC]"
+                            : "border border-white/10 bg-[#1E293B] text-[#F8FAFC]/85 hover:bg-[#152033]"
+                        } disabled:cursor-not-allowed disabled:opacity-60`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 

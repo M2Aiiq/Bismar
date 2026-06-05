@@ -12,6 +12,7 @@ export interface RoomSettings {
   roundTimerSeconds: number;
   lossCardCount: 1 | 2 | 3 | 4;
   wordCategory: WordCategory;
+  extraRows: 0 | 1 | 2 | 3;
 }
 
 export interface Player {

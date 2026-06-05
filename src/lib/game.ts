@@ -7,6 +7,7 @@ const DEFAULT_SETTINGS: RoomSettings = {
   roundTimerSeconds: 60,
   lossCardCount: 1,
   wordCategory: "General",
+  extraRows: 0,
 };
 
 const RECENT_BOARD_HISTORY_COUNT = 2;
@@ -65,8 +66,14 @@ export function getDefaultRoomSettings(): RoomSettings {
   return { ...DEFAULT_SETTINGS };
 }
 
-function getBoardSize(teamCount: TeamCount) {
-  return teamCount === 2 ? 25 : 36;
+export function getColumnsCount(teamCount: TeamCount) {
+  return teamCount === 2 ? 5 : 6;
+}
+
+function getBoardSize(teamCount: TeamCount, extraRows: number = 0) {
+  const cols = getColumnsCount(teamCount);
+  const baseRows = teamCount === 2 ? 5 : 6;
+  return cols * (baseRows + extraRows);
 }
 
 function createCardTypes(
@@ -105,7 +112,7 @@ function createCardTypes(
 
 export function createBoardState(settings: RoomSettings = DEFAULT_SETTINGS, previousRecentWords: string[] = []) {
   const activeTeams = getActiveTeams(settings.teamCount);
-  const boardSize = getBoardSize(settings.teamCount);
+  const boardSize = getBoardSize(settings.teamCount, settings.extraRows);
   const currentTurn = activeTeams[Math.floor(Math.random() * activeTeams.length)];
   const words = pickBoardWords(getWordsByCategory(settings.wordCategory), boardSize, previousRecentWords);
   const types = createCardTypes(activeTeams, currentTurn, settings.lossCardCount, boardSize);
@@ -202,6 +209,10 @@ function sanitizeLossCardCount(value: unknown): RoomSettings["lossCardCount"] {
 
 function sanitizeWordCategory(value: unknown): WordCategory {
   return value === "Cities" || value === "General" ? value : "General";
+}
+
+function sanitizeExtraRows(value: unknown): 0 | 1 | 2 | 3 {
+  return value === 1 || value === 2 || value === 3 ? value : 0;
 }
 
 function sanitizeRecentWords(value: unknown, category: WordCategory) {
@@ -376,6 +387,7 @@ export function normalizeRoom(value: unknown): Room | null {
     roundTimerSeconds: sanitizeRoundTimerSeconds(settings.roundTimerSeconds),
     lossCardCount: sanitizeLossCardCount(settings.lossCardCount),
     wordCategory: sanitizeWordCategory(settings.wordCategory),
+    extraRows: sanitizeExtraRows(settings.extraRows),
   };
   const activeTeams = getActiveTeams(teamCount);
   const eliminatedTeams = sanitizeEliminatedTeams((room as Partial<Room>).eliminatedTeams, activeTeams);

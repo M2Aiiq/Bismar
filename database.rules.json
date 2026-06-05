@@ -13,7 +13,7 @@
           ".validate": "!newData.exists() || newData.val() === 'Lobby' || newData.val() === 'Playing' || newData.val() === 'GameOver'"
         },
         "settings": {
-          ".validate": "!newData.exists() || newData.hasChildren(['teamCount', 'roundTimerSeconds', 'lossCardCount', 'wordCategory'])",
+          ".validate": "!newData.exists() || newData.hasChildren(['teamCount', 'roundTimerSeconds', 'lossCardCount', 'wordCategory', 'extraRows'])",
           "teamCount": {
             ".validate": "newData.val() === 2 || newData.val() === 3 || newData.val() === 4"
           },
@@ -25,6 +25,9 @@
           },
           "wordCategory": {
             ".validate": "newData.isString() && (newData.val() === 'General' || newData.val() === 'Cities')"
+          },
+          "extraRows": {
+            ".validate": "newData.isNumber() && (newData.val() === 0 || newData.val() === 1 || newData.val() === 2 || newData.val() === 3)"
           }
         },
         "currentTurn": {

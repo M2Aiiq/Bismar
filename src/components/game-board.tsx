@@ -15,6 +15,7 @@ interface GameBoardProps {
   pendingRevealCardId?: number | null;
   compact?: boolean;
   fontScale?: "compact" | "comfortable" | "expanded";
+  columns?: number;
 }
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -140,8 +141,9 @@ export function GameBoard({
   pendingRevealCardId = null,
   compact = false,
   fontScale = "compact",
+  columns,
 }: GameBoardProps) {
-  const columnCount = Math.max(1, Math.round(Math.sqrt(board.length)));
+  const columnCount = columns ?? Math.max(1, Math.round(Math.sqrt(board.length)));
   const rowCount = Math.max(1, Math.ceil(board.length / columnCount));
   const denseBoard = board.length >= 36;
   const compactBoardAspectRatio = (columnCount * (denseBoard ? 1.36 : 1.3)) / rowCount;

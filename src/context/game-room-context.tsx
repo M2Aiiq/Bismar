@@ -368,6 +368,10 @@ function sanitizeWordCategory(value: unknown): WordCategory {
   return value === "Cities" || value === "General" ? value : "General";
 }
 
+function sanitizeExtraRows(value: unknown): 0 | 1 | 2 | 3 {
+  return value === 1 || value === 2 || value === 3 ? value : 0;
+}
+
 function sanitizeSettingsUpdate(
   currentSettings: RoomSettings,
   partialSettings: Partial<RoomSettings>,
@@ -379,6 +383,7 @@ function sanitizeSettingsUpdate(
     ),
     lossCardCount: sanitizeLossCardCount(partialSettings.lossCardCount ?? currentSettings.lossCardCount),
     wordCategory: sanitizeWordCategory(partialSettings.wordCategory ?? currentSettings.wordCategory),
+    extraRows: sanitizeExtraRows(partialSettings.extraRows ?? currentSettings.extraRows),
   };
 }
 
@@ -911,7 +916,8 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             const requiresBoardReset =
               nextSettings.teamCount !== currentRoom.settings.teamCount ||
               nextSettings.lossCardCount !== currentRoom.settings.lossCardCount ||
-              nextSettings.wordCategory !== currentRoom.settings.wordCategory;
+              nextSettings.wordCategory !== currentRoom.settings.wordCategory ||
+              nextSettings.extraRows !== currentRoom.settings.extraRows;
 
             if (requiresBoardReset) {
               const { board, currentTurn, recentWords } = createBoardState(nextSettings, nextRecentWords);

@@ -826,6 +826,7 @@ export function BoardScreen() {
           <div className="flex min-h-0 w-full items-start justify-center overflow-visible pt-2 pb-1">
             <GameBoard
               board={room.board}
+              columns={room.settings.teamCount === 2 ? 5 : 6}
               showTruth={showTruth}
               canReveal={canReveal && !isBusy}
               onReveal={(cardId: number) => revealCard(cardId)}
