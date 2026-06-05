@@ -84,3 +84,19 @@ input::placeholder {
     transform: translate3d(0, 0, 0) rotate(6deg);
   }
 }
+
+.animate-fade-in {
+  animation: fade-in 180ms ease-out;
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

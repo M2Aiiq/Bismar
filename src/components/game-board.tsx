@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import type { ActiveTeam } from "../lib/teams";
 import type { Card } from "../types/game";
 
@@ -105,12 +107,27 @@ function resolveIdentityLayerClass(cardType: Card["type"]) {
   }
 }
 
-function shutterPlateClass(denseBoard: boolean, compact: boolean, isCovered: boolean) {
+function resolveRevealedCardTone(cardType: Card["type"]) {
+  switch (cardType) {
+    case "Red":
+      return "border-[#DC2626] bg-gradient-to-b from-[#EF4444] to-[#DC2626]";
+    case "Blue":
+      return "border-[#2563EB] bg-gradient-to-b from-[#3B82F6] to-[#2563EB]";
+    case "Green":
+      return "border-[#10B981] bg-gradient-to-b from-[#34D399] to-[#10B981]";
+    case "Gold":
+      return "border-[#EAB308] bg-gradient-to-b from-[#FACC15] to-[#EAB308]";
+    case "Neutral":
+      return "border-[#475569] bg-gradient-to-b from-[#64748B] to-[#475569]";
+    case "Control":
+      return "border-[#090D16] bg-gradient-to-b from-[#242F41] to-[#090D16]";
+  }
+}
+
+function revealedPeekTextClass(cardType: Card["type"]) {
   return cx(
-    "relative z-20 h-full w-full border border-slate-300/60 bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] shadow-md transition-transform duration-300 ease-in-out",
-    denseBoard ? "rounded-xl p-1.5" : "rounded-[1.15rem] p-2",
-    compact ? "" : "aspect-square p-2 text-sm md:text-base",
-    !isCovered && "translate-y-[82%] opacity-90",
+    "animate-fade-in text-white/90 font-black text-xs sm:text-sm underline decoration-dashed decoration-white/40 underline-offset-4 tracking-wide",
+    cardType === "Gold" && "text-[#0F172A]/90 decoration-[#0F172A]/30",
   );
 }
 
@@ -144,8 +161,25 @@ export function GameBoard({
   const rowCount = Math.max(1, Math.ceil(board.length / columnCount));
   const denseBoard = board.length >= 36;
   const compactBoardAspectRatio = (columnCount * (denseBoard ? 1.36 : 1.3)) / rowCount;
+  const [peekingCardIds, setPeekingCardIds] = useState<Record<number, boolean>>({});
 
-  const handleReveal = (cardId: number) => {
+  useEffect(() => {
+    const revealedCardIds = new Set(board.filter((card) => card.isRevealed).map((card) => card.id));
+
+    setPeekingCardIds((current) =>
+      Object.fromEntries(Object.entries(current).filter(([cardId, isPeeking]) => isPeeking && revealedCardIds.has(Number(cardId)))),
+    );
+  }, [board]);
+
+  const handleCardClick = (card: Card) => {
+    if (card.isRevealed) {
+      setPeekingCardIds((current) => ({
+        ...current,
+        [card.id]: !current[card.id],
+      }));
+      return;
+    }
+
     if (!onReveal) {
       return;
     }
@@ -155,7 +189,7 @@ export function GameBoard({
       return;
     }
 
-    onReveal(cardId);
+    onReveal(card.id);
   };
 
   return (
@@ -174,7 +208,8 @@ export function GameBoard({
       {board.map((card) => {
         const shouldShowTruth = revealAll || showTruth || card.isRevealed;
         const textClass = cardTextClass(card.text, fontScale, denseBoard);
-        const usesShutterReveal = card.isRevealed;
+        const isPeeking = Boolean(peekingCardIds[card.id]);
+        const usesRevealedToken = card.isRevealed;
         const usesTruthPreview = shouldShowTruth && !card.isRevealed;
         const voteCount = voteCountsByCard[card.id] ?? 0;
         const hasVotes = voteCount > 0;
@@ -184,8 +219,8 @@ export function GameBoard({
           <button
             key={card.id}
             type="button"
-            disabled={!onReveal || card.isRevealed}
-            onClick={() => handleReveal(card.id)}
+            disabled={!onReveal && !card.isRevealed}
+            onClick={() => handleCardClick(card)}
             dir="rtl"
             className={cx(
               "relative h-full min-h-0 select-none overflow-hidden border text-center transition-all duration-150",
@@ -193,8 +228,8 @@ export function GameBoard({
               compact
                 ? ""
                 : "aspect-square p-2 text-sm md:text-base",
-              usesShutterReveal
-                ? "border-slate-900/15 bg-transparent"
+              usesRevealedToken
+                ? resolveRevealedCardTone(card.type)
                 : usesTruthPreview
                   ? resolveTruthPreviewTone(card)
                   : "border-[#D6D0C5] bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] text-[#0F172A] shadow-[inset_0_2.5px_0px_rgba(255,255,255,0.8),_0_4px_6px_-1px_rgba(0,0,0,0.15)] hover:border-[#C7BFB1]",
@@ -203,8 +238,11 @@ export function GameBoard({
                 "z-10 scale-[1.02] border-white/95 ring-2 ring-white/85 ring-offset-2 ring-offset-transparent shadow-[0_0_18px_rgba(255,255,255,0.65),0_0_34px_rgba(255,255,255,0.2)]",
               isPendingReveal &&
                 "z-10 scale-[1.03] border-white ring-2 ring-white/95 ring-offset-2 ring-offset-transparent shadow-[0_0_26px_rgba(255,255,255,0.88),0_0_48px_rgba(255,255,255,0.34)]",
-              !card.isRevealed && canReveal && onReveal && "cursor-pointer active:scale-95",
-              (!canReveal || card.isRevealed) && "cursor-default",
+              card.isRevealed
+                ? "cursor-pointer"
+                : !card.isRevealed && canReveal && onReveal
+                  ? "cursor-pointer active:scale-95"
+                  : "cursor-default",
             )}
           >
             {isPendingReveal ? (
@@ -220,21 +258,20 @@ export function GameBoard({
                 className="pointer-events-none absolute inset-0 bg-white/5 opacity-100 animate-pulse"
               />
             ) : null}
-            {usesShutterReveal ? (
-              <>
-                <div className={cx("absolute inset-0 z-10 flex items-center justify-center overflow-hidden", resolveIdentityLayerClass(card.type))}>
+            {usesRevealedToken ? (
+              <div className="relative z-10 flex h-full w-full items-center justify-center">
+                {isPeeking ? (
                   <span
                     className={cx(
-                      textClass,
-                      "relative z-10 whitespace-nowrap truncate px-1",
+                      revealedPeekTextClass(card.type),
+                      "relative z-10 max-w-full px-1 text-center [text-wrap:balance]",
                       card.type === "Control" && "tracking-widest",
                     )}
                   >
                     {card.text}
                   </span>
-                </div>
-                <div aria-hidden="true" className={shutterPlateClass(denseBoard, compact, false)} />
-              </>
+                ) : null}
+              </div>
             ) : (
               <div className="relative z-10 flex h-full w-full items-center justify-center">
                 <span className={cx(textClass, card.type === "Control" && shouldShowTruth && "tracking-widest")}>
@@ -242,7 +279,7 @@ export function GameBoard({
                 </span>
               </div>
             )}
-            {hasVotes && !usesShutterReveal ? (
+            {hasVotes && !usesRevealedToken ? (
               <span className="pointer-events-none absolute inset-x-0 bottom-1 z-20 flex items-center justify-center gap-1">
                 {Array.from({ length: voteCount }).map((_, index) => (
                   <span
