@@ -45,6 +45,11 @@
         "pendingRevealAt": {
           ".validate": "!newData.exists() || newData.isNumber() || newData.val() === null"
         },
+        "operativeSelections": {
+          "$playerId": {
+            ".validate": "!newData.exists() || newData.isNumber() || newData.val() === null"
+          }
+        },
         "turnEndsAt": {
           ".validate": "!newData.exists() || newData.isNumber()"
         },

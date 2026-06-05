@@ -36,6 +36,7 @@ function getNextCluePhaseState(currentRoom: Room, nextTurn: ActiveTeam, clues = 
     clues,
     currentTurn: nextTurn,
     turnPhase: "Clue" as TurnPhase,
+    operativeSelections: {},
     pendingRevealCardId: null,
     pendingRevealAt: null,
     isPaused: false,
@@ -48,6 +49,7 @@ function getPausedStartState(roundTimerSeconds: number) {
   return {
     isPaused: true,
     pausedRemainingMs: roundTimerSeconds * 1000,
+    operativeSelections: {},
     pendingRevealCardId: null,
     pendingRevealAt: null,
     turnEndsAt: null,
@@ -94,8 +96,15 @@ function getWinningTeam(currentRoom: Room, board: Room["board"]) {
 
 const PENDING_REVEAL_DURATION_MS = 1000;
 
-function getClearedPendingRevealState() {
+function getCurrentTurnOperatives(currentRoom: Room) {
+  return currentRoom.players.filter(
+    (player) => player.team === currentRoom.currentTurn && player.role === "Operative",
+  );
+}
+
+function getClearedGuessSelectionState() {
   return {
+    operativeSelections: {},
     pendingRevealCardId: null,
     pendingRevealAt: null,
   };
@@ -108,7 +117,7 @@ function resolveCardReveal(currentRoom: Room, cardId: number) {
   if (!selectedCard) {
     return {
       ...currentRoom,
-      ...getClearedPendingRevealState(),
+      ...getClearedGuessSelectionState(),
     };
   }
 
@@ -120,7 +129,7 @@ function resolveCardReveal(currentRoom: Room, cardId: number) {
         ...currentRoom,
         board: nextBoard,
         winner: nextTeam(currentRoom.currentTurn, activeTeams),
-        ...getClearedPendingRevealState(),
+        ...getClearedGuessSelectionState(),
         isPaused: false,
         pausedRemainingMs: null,
         turnPhase: "Clue",
@@ -140,7 +149,7 @@ function resolveCardReveal(currentRoom: Room, cardId: number) {
         board: nextBoard,
         eliminatedTeams: nextEliminatedTeams,
         winner: aliveTeams[0] ?? null,
-        ...getClearedPendingRevealState(),
+        ...getClearedGuessSelectionState(),
         isPaused: false,
         pausedRemainingMs: null,
         turnPhase: "Clue",
@@ -166,7 +175,7 @@ function resolveCardReveal(currentRoom: Room, cardId: number) {
       ...currentRoom,
       board: nextBoard,
       winner: winningTeam,
-      ...getClearedPendingRevealState(),
+      ...getClearedGuessSelectionState(),
       isPaused: false,
       pausedRemainingMs: null,
       turnPhase: "Clue",
@@ -182,7 +191,7 @@ function resolveCardReveal(currentRoom: Room, cardId: number) {
     return {
       ...currentRoom,
       board: nextBoard,
-      ...getClearedPendingRevealState(),
+      ...getClearedGuessSelectionState(),
       turnPhase: "Guess",
       turnEndsAt: currentRoom.turnEndsAt ?? getNextTurnEndsAt(currentRoom.settings.roundTimerSeconds),
     };
@@ -975,6 +984,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           return {
             ...currentRoom,
             clues: nextClues,
+            operativeSelections: {},
             turnPhase: "Guess",
             turnEndsAt: getNextTurnEndsAt(currentRoom.settings.roundTimerSeconds),
           };
@@ -1127,6 +1137,12 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             return currentValue;
           }
 
+          const currentTurnOperatives = getCurrentTurnOperatives(currentRoom);
+
+          if (currentTurnOperatives.length === 0) {
+            return currentValue;
+          }
+
           const originalCard = currentRoom.board.find((card) => card.id === cardId);
 
           if (!originalCard || originalCard.isRevealed) {
@@ -1137,8 +1153,24 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             return currentValue;
           }
 
+          const nextOperativeSelections = {
+            ...currentRoom.operativeSelections,
+            [actor.id]: cardId,
+          };
+          const consensusCount = currentTurnOperatives.filter(
+            (operative) => nextOperativeSelections[operative.id] === cardId,
+          ).length;
+
+          if (consensusCount < currentTurnOperatives.length) {
+            return {
+              ...currentRoom,
+              operativeSelections: nextOperativeSelections,
+            };
+          }
+
           return {
             ...currentRoom,
+            operativeSelections: nextOperativeSelections,
             pendingRevealCardId: cardId,
             pendingRevealAt: Date.now() + PENDING_REVEAL_DURATION_MS,
             turnEndsAt: currentRoom.turnEndsAt ? currentRoom.turnEndsAt + PENDING_REVEAL_DURATION_MS : null,
@@ -1181,7 +1213,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           if (!originalCard || originalCard.isRevealed) {
             return {
               ...currentRoom,
-              ...getClearedPendingRevealState(),
+              ...getClearedGuessSelectionState(),
             };
           }
 

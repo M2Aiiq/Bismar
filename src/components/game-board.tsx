@@ -7,6 +7,7 @@ interface GameBoardProps {
   revealAll?: boolean;
   onReveal?: (cardId: number) => void;
   onBlockedReveal?: () => void;
+  voteCountsByCard?: Record<number, number>;
   pendingRevealCardId?: number | null;
   compact?: boolean;
   fontScale?: "compact" | "comfortable" | "expanded";
@@ -118,6 +119,7 @@ export function GameBoard({
   revealAll = false,
   onReveal,
   onBlockedReveal,
+  voteCountsByCard = {},
   pendingRevealCardId = null,
   compact = false,
   fontScale = "compact",
@@ -158,6 +160,8 @@ export function GameBoard({
         const textClass = cardTextClass(card.text, fontScale, denseBoard);
         const usesShutterReveal = card.isRevealed;
         const usesTruthPreview = shouldShowTruth && !card.isRevealed;
+        const voteCount = voteCountsByCard[card.id] ?? 0;
+        const hasVotes = voteCount > 0;
         const isPendingReveal = pendingRevealCardId === card.id;
 
         return (
@@ -178,6 +182,9 @@ export function GameBoard({
                 : usesTruthPreview
                   ? resolveTruthPreviewTone(card)
                   : "border-[#D6D0C5] bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] text-[#0F172A] shadow-[inset_0_2.5px_0px_rgba(255,255,255,0.8),_0_4px_6px_-1px_rgba(0,0,0,0.15)] hover:border-[#C7BFB1]",
+              hasVotes &&
+                !isPendingReveal &&
+                "z-10 scale-[1.02] border-white/95 ring-2 ring-white/85 ring-offset-2 ring-offset-transparent shadow-[0_0_18px_rgba(255,255,255,0.65),0_0_34px_rgba(255,255,255,0.2)]",
               isPendingReveal &&
                 "z-10 scale-[1.03] border-white ring-2 ring-white/95 ring-offset-2 ring-offset-transparent shadow-[0_0_26px_rgba(255,255,255,0.88),0_0_48px_rgba(255,255,255,0.34)]",
               !card.isRevealed && canReveal && onReveal && "cursor-pointer active:scale-95",
@@ -191,6 +198,11 @@ export function GameBoard({
                   className="pointer-events-none absolute inset-0 bg-white/10 opacity-100 animate-pulse"
                 />
               </>
+            ) : hasVotes ? (
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 bg-white/5 opacity-100 animate-pulse"
+              />
             ) : null}
             {usesShutterReveal ? (
               <>
@@ -208,7 +220,22 @@ export function GameBoard({
                 <div aria-hidden="true" className={shutterPlateClass(denseBoard, compact, false)} />
               </>
             ) : (
-              <span className={cx(textClass, card.type === "Control" && shouldShowTruth && "tracking-widest")}>{card.text}</span>
+              <div className="relative z-10 flex h-full w-full flex-col items-center justify-center">
+                <span className={cx(textClass, card.type === "Control" && shouldShowTruth && "tracking-widest")}>
+                  {card.text}
+                </span>
+                {hasVotes ? (
+                  <span className="mt-1 flex items-center justify-center gap-1">
+                    {Array.from({ length: voteCount }).map((_, index) => (
+                      <span
+                        key={`${card.id}-vote-dot-${index}`}
+                        aria-hidden="true"
+                        className="h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.95)]"
+                      />
+                    ))}
+                  </span>
+                ) : null}
+              </div>
             )}
           </button>
         );

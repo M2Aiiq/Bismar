@@ -113,6 +113,7 @@ export function createInitialRoom(roomId: string, host: Player): Room {
     board,
     clues: [],
     eliminatedTeams: [],
+    operativeSelections: {},
     isPaused: false,
     pausedRemainingMs: null,
     pendingRevealCardId: null,
@@ -170,6 +171,48 @@ function sanitizePendingRevealCardId(value: unknown) {
   }
 
   return Math.max(0, Math.round(value));
+}
+
+function sanitizeOperativeSelections(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {} as Record<string, number>;
+  }
+
+  return Object.entries(value).reduce<Record<string, number>>((result, [playerId, cardId]) => {
+    if (typeof playerId !== "string" || !playerId) {
+      return result;
+    }
+
+    if (typeof cardId !== "number" || Number.isNaN(cardId)) {
+      return result;
+    }
+
+    result[playerId] = Math.max(0, Math.round(cardId));
+    return result;
+  }, {});
+}
+
+function pruneOperativeSelections(
+  selections: Record<string, number>,
+  board: Card[],
+  players: Player[],
+  currentTurn: ActiveTeam,
+) {
+  const activeCardIds = new Set(board.filter((card) => !card.isRevealed).map((card) => card.id));
+  const activeOperativeIds = new Set(
+    players
+      .filter((player) => player.team === currentTurn && player.role === "Operative")
+      .map((player) => player.id),
+  );
+
+  return Object.entries(selections).reduce<Record<string, number>>((result, [playerId, cardId]) => {
+    if (!activeOperativeIds.has(playerId) || !activeCardIds.has(cardId)) {
+      return result;
+    }
+
+    result[playerId] = cardId;
+    return result;
+  }, {});
 }
 
 function sanitizePausedRemainingMs(value: unknown) {
@@ -263,12 +306,19 @@ export function normalizeRoom(value: unknown): Room | null {
     : fallbackAliveTurn;
   const normalizedWinner =
     room.winner && activeTeams.includes(room.winner as ActiveTeam) ? (room.winner as ActiveTeam) : null;
+  const operativeSelections = pruneOperativeSelections(
+    sanitizeOperativeSelections((room as Partial<Room>).operativeSelections),
+    room.board,
+    room.players,
+    normalizedTurn,
+  );
 
   return {
     ...room,
     settings: normalizedSettings,
     clues: sanitizeClues(room.clues),
     eliminatedTeams,
+    operativeSelections,
     isPaused: Boolean((room as Partial<Room>).isPaused),
     pausedRemainingMs: sanitizePausedRemainingMs((room as Partial<Room>).pausedRemainingMs),
     pendingRevealCardId: sanitizePendingRevealCardId((room as Partial<Room>).pendingRevealCardId),

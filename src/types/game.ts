@@ -44,6 +44,7 @@ export interface Room {
   board: Card[];
   clues: Clue[];
   eliminatedTeams: Exclude<Team, "Unassigned">[];
+  operativeSelections: Record<string, number>;
   isPaused: boolean;
   pausedRemainingMs: number | null;
   pendingRevealCardId: number | null;

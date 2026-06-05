@@ -548,6 +548,7 @@ export function BoardScreen() {
   const canEndTurn =
     room.gameState === "Playing" &&
     !room.isPaused &&
+    room.pendingRevealCardId === null &&
     player.role === "Operative" &&
     player.team === room.currentTurn &&
     room.turnPhase === "Guess";
@@ -569,6 +570,10 @@ export function BoardScreen() {
   const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[62vh]" : "h-[65vh]";
   const boardWidthClass = room.board.length > 25 ? "max-w-[44rem]" : "max-w-md";
   const boardFontScale = shouldUseExpandedDenseFont ? "expanded" : isLargeFont ? "comfortable" : "compact";
+  const voteCountsByCard = Object.values(room.operativeSelections).reduce<Record<number, number>>((result, cardId) => {
+    result[cardId] = (result[cardId] ?? 0) + 1;
+    return result;
+  }, {});
   const roundDurationMs = room.settings.roundTimerSeconds * 1000;
   const remainingMs = room.isPaused
     ? Math.max(0, room.pausedRemainingMs ?? roundDurationMs)
@@ -774,6 +779,7 @@ export function BoardScreen() {
               canReveal={canReveal && !isBusy}
               onReveal={(cardId: number) => revealCard(cardId)}
               onBlockedReveal={handleBlockedCardReveal}
+              voteCountsByCard={voteCountsByCard}
               pendingRevealCardId={room.pendingRevealCardId}
               revealAll={room.gameState === "GameOver"}
               compact
