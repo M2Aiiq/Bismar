@@ -102,6 +102,25 @@ function getCurrentTurnOperatives(currentRoom: Room) {
   );
 }
 
+function getConsensusSelectionCardId(
+  currentTurnOperatives: Player[],
+  operativeSelections: Room["operativeSelections"],
+) {
+  if (currentTurnOperatives.length === 0) {
+    return null;
+  }
+
+  const firstCardId = operativeSelections[currentTurnOperatives[0].id];
+
+  if (typeof firstCardId !== "number") {
+    return null;
+  }
+
+  return currentTurnOperatives.every((operative) => operativeSelections[operative.id] === firstCardId)
+    ? firstCardId
+    : null;
+}
+
 function getClearedGuessSelectionState() {
   return {
     operativeSelections: {},
@@ -1149,31 +1168,30 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             return currentValue;
           }
 
-          if (currentRoom.pendingRevealCardId !== null) {
-            return currentValue;
-          }
-
           const nextOperativeSelections = {
             ...currentRoom.operativeSelections,
             [actor.id]: cardId,
           };
-          const consensusCount = currentTurnOperatives.filter(
-            (operative) => nextOperativeSelections[operative.id] === cardId,
-          ).length;
+          const consensusCardId = getConsensusSelectionCardId(currentTurnOperatives, nextOperativeSelections);
 
-          if (consensusCount < currentTurnOperatives.length) {
+          if (consensusCardId === null) {
             return {
               ...currentRoom,
               operativeSelections: nextOperativeSelections,
+              pendingRevealCardId: null,
+              pendingRevealAt: null,
             };
           }
 
           return {
             ...currentRoom,
             operativeSelections: nextOperativeSelections,
-            pendingRevealCardId: cardId,
+            pendingRevealCardId: consensusCardId,
             pendingRevealAt: Date.now() + PENDING_REVEAL_DURATION_MS,
-            turnEndsAt: currentRoom.turnEndsAt ? currentRoom.turnEndsAt + PENDING_REVEAL_DURATION_MS : null,
+            turnEndsAt:
+              currentRoom.pendingRevealCardId === null && currentRoom.turnEndsAt
+                ? currentRoom.turnEndsAt + PENDING_REVEAL_DURATION_MS
+                : currentRoom.turnEndsAt,
           };
         });
       }, "تعذر كشف الكارت."),

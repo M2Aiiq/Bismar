@@ -146,7 +146,7 @@ export function GameBoard({
   const compactBoardAspectRatio = (columnCount * (denseBoard ? 1.36 : 1.3)) / rowCount;
 
   const handleReveal = (cardId: number) => {
-    if (!onReveal || pendingRevealCardId !== null) {
+    if (!onReveal) {
       return;
     }
 
@@ -184,7 +184,7 @@ export function GameBoard({
           <button
             key={card.id}
             type="button"
-            disabled={!onReveal || card.isRevealed || pendingRevealCardId !== null}
+            disabled={!onReveal || card.isRevealed}
             onClick={() => handleReveal(card.id)}
             dir="rtl"
             className={cx(
