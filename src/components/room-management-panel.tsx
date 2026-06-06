@@ -22,8 +22,19 @@ function roleLabel(role: Role) {
 }
 
 export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementPanelProps) {
-  const { room, player, roomId, isBusy, chooseTeam, chooseRole, leaveRoom, savePlayerName, launchGameWithSettings } =
-    useGameRoom();
+  const {
+    room,
+    player,
+    roomId,
+    isBusy,
+    chooseTeam,
+    chooseRole,
+    leaveRoom,
+    savePlayerName,
+    launchGameWithSettings,
+    shuffleBoardWords,
+    shuffleTeams,
+  } = useGameRoom();
   const [copiedValue, setCopiedValue] = useState<"code" | "link" | null>(null);
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
@@ -339,6 +350,27 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => void shuffleBoardWords()}
+                disabled={isBusy}
+                className="flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-[#0F172A] px-4 py-3.5 text-sm font-black text-[#F8FAFC] transition hover:bg-[#111d34] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <img src="/shuffle.png" alt="" className="h-5 w-5 object-contain" />
+                خلط الكلمات
+              </button>
+              <button
+                type="button"
+                onClick={() => void shuffleTeams()}
+                disabled={isBusy}
+                className="flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-[#0F172A] px-4 py-3.5 text-sm font-black text-[#F8FAFC] transition hover:bg-[#111d34] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <img src="/refresh.png" alt="" className="h-5 w-5 object-contain" />
+                خلط الأفرقة
+              </button>
             </div>
 
             {isLobbyModal ? (
@@ -707,6 +739,28 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
 
       {isModal ? null : (
         <div className="w-full">
+          {player.isHost ? (
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <button
+                type="button"
+                onClick={() => void shuffleBoardWords()}
+                disabled={isBusy}
+                className="flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-[#0F172A] px-4 py-3.5 text-sm font-black text-[#F8FAFC] transition hover:bg-[#111d34] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <img src="/shuffle.png" alt="" className="h-5 w-5 object-contain" />
+                خلط الكلمات
+              </button>
+              <button
+                type="button"
+                onClick={() => void shuffleTeams()}
+                disabled={isBusy}
+                className="flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-[#0F172A] px-4 py-3.5 text-sm font-black text-[#F8FAFC] transition hover:bg-[#111d34] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <img src="/refresh.png" alt="" className="h-5 w-5 object-contain" />
+                خلط الأفرقة
+              </button>
+            </div>
+          ) : null}
           <button
             type="button"
             onClick={handleApplyAndStart}

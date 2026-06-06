@@ -18,6 +18,7 @@ import {
   createPlayer,
   createRoomId,
   normalizeRoom,
+  shuffleList,
 } from "../lib/game";
 import { getRealtimeDatabase, isFirebaseConfigured } from "../lib/firebase";
 import { getActiveTeams, isActiveTeam, nextTeam, type ActiveTeam } from "../lib/teams";
@@ -251,6 +252,8 @@ interface GameRoomContextValue {
   revealCard: (cardId: number) => Promise<void>;
   resolvePendingReveal: () => Promise<void>;
   resetGame: () => Promise<void>;
+  shuffleBoardWords: () => Promise<void>;
+  shuffleTeams: () => Promise<void>;
 }
 
 interface SessionState {
@@ -1392,6 +1395,107 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
     [player, roomId, runAction],
   );
 
+  const shuffleBoardWords = useCallback(
+    async () =>
+      runAction(async () => {
+        if (!roomId || !player?.isHost) {
+          throw new Error("فقط المضيف يمكنه خلط الكلمات.");
+        }
+
+        const database = getRealtimeDatabase();
+
+        if (!database) {
+          return;
+        }
+
+        await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
+          const currentRoom = normalizeRoom(currentValue);
+
+          if (!currentRoom) {
+            return currentValue;
+          }
+
+          const { board, currentTurn, recentWords } = createBoardState(currentRoom.settings, currentRoom.recentWords);
+
+          return {
+            ...currentRoom,
+            board,
+            recentWords,
+            clues: [],
+            eliminatedTeams: [],
+            currentTurn,
+            turnPhase: "Clue",
+            ...(currentRoom.gameState === "Playing"
+              ? getPausedStartState(currentRoom.settings.roundTimerSeconds)
+              : {
+                  turnEndsAt: null,
+                  isPaused: false,
+                  pausedRemainingMs: null,
+                  pendingRevealCardId: null,
+                  pendingRevealAt: null,
+                  operativeSelections: {},
+                }),
+            winner: null,
+          };
+        });
+      }, "تعذر خلط الكلمات."),
+    [player, roomId, runAction],
+  );
+
+  const shuffleTeams = useCallback(
+    async () =>
+      runAction(async () => {
+        if (!roomId || !player?.isHost) {
+          throw new Error("فقط المضيف يمكنه خلط الأفرقة.");
+        }
+
+        const database = getRealtimeDatabase();
+
+        if (!database) {
+          return;
+        }
+
+        await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
+          const currentRoom = normalizeRoom(currentValue);
+
+          if (!currentRoom) {
+            return currentValue;
+          }
+
+          const activeTeams = getActiveTeams(currentRoom.settings.teamCount);
+          const shuffledPlayers = shuffleList(currentRoom.players);
+
+          const nextPlayers = currentRoom.players.map((currentPlayer) => {
+            const index = shuffledPlayers.findIndex((shuffled) => shuffled.id === currentPlayer.id);
+            
+            let team: ActiveTeam;
+            let role: Role;
+            
+            if (index < activeTeams.length) {
+              team = activeTeams[index];
+              role = "Spymaster";
+            } else {
+              const teamIndex = (index - activeTeams.length) % activeTeams.length;
+              team = activeTeams[teamIndex];
+              role = "Operative";
+            }
+            
+            return {
+              ...currentPlayer,
+              team,
+              role,
+            };
+          });
+
+          return {
+            ...currentRoom,
+            players: nextPlayers,
+          };
+        });
+      }, "تعذر خلط الأفرقة."),
+    [player, roomId, runAction],
+  );
+
   const value = useMemo<GameRoomContextValue>(
     () => ({
       room,
@@ -1421,6 +1525,8 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       revealCard,
       resolvePendingReveal,
       resetGame,
+      shuffleBoardWords,
+      shuffleTeams,
     }),
     [
       chooseRole,
@@ -1448,6 +1554,8 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       endGuessTurn,
       updateRoomSettings,
       resolvePendingReveal,
+      shuffleBoardWords,
+      shuffleTeams,
     ],
   );
 
