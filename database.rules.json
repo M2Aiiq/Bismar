@@ -24,7 +24,7 @@
             ".validate": "newData.val() === 1 || newData.val() === 2 || newData.val() === 3 || newData.val() === 4"
           },
           "wordCategory": {
-            ".validate": "newData.isString() && (newData.val() === 'General' || newData.val() === 'Cities')"
+            ".validate": "newData.isString() && (newData.val() === 'General' || newData.val() === 'Cities' || newData.val() === 'Animals')"
           },
           "extraRows": {
             ".validate": "newData.isNumber() && (newData.val() === 0 || newData.val() === 1 || newData.val() === 2 || newData.val() === 3)"
@@ -76,7 +76,7 @@
         },
         "board": {
           "$cardIndex": {
-            ".validate": "!newData.exists() || (newData.hasChildren(['id', 'text', 'type', 'isRevealed']) && newData.child('id').exists() && newData.child('text').isString() && newData.child('text').val().length >= 1 && newData.child('text').val().length <= 20 && !newData.child('text').val().matches(/.*\\s.*/) && (newData.child('type').val() === 'Red' || newData.child('type').val() === 'Blue' || newData.child('type').val() === 'Green' || newData.child('type').val() === 'Gold' || newData.child('type').val() === 'Neutral' || newData.child('type').val() === 'Control') && newData.child('isRevealed').isBoolean())"
+            ".validate": "!newData.exists() || (newData.hasChildren(['id', 'text', 'type', 'isRevealed']) && newData.child('id').exists() && newData.child('text').isString() && newData.child('text').val().length >= 1 && newData.child('text').val().length <= 20 && (newData.child('type').val() === 'Red' || newData.child('type').val() === 'Blue' || newData.child('type').val() === 'Green' || newData.child('type').val() === 'Gold' || newData.child('type').val() === 'Neutral' || newData.child('type').val() === 'Control') && newData.child('isRevealed').isBoolean())"
           }
         },
         "clues": {
