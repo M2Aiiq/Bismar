@@ -242,7 +242,7 @@ export function GameBoard({
               {/* Front Side: Word display */}
               <div
                 className={cx(
-                  "card-front absolute inset-0 z-0 flex items-center justify-center border",
+                  "card-front absolute inset-0 z-0 flex items-center justify-center border overflow-hidden",
                   denseBoard ? "rounded-xl" : "rounded-[1.15rem]",
                   usesTruthPreview
                     ? resolveTruthPreviewTone(card)
@@ -284,7 +284,7 @@ export function GameBoard({
               <div
                 aria-hidden="true"
                 className={cx(
-                  "card-back absolute inset-0 z-10 border",
+                  "card-back absolute inset-0 z-10 border overflow-hidden",
                   denseBoard ? "rounded-xl" : "rounded-[1.15rem]",
                   "border-slate-900/15",
                   resolveShutterSurfaceClass(card.type),
