@@ -209,13 +209,12 @@ export function GameBoard({
       {board.map((card) => {
         const shouldShowTruth = revealAll || showTruth || card.isRevealed;
         const textClass = cardTextClass(card.text, fontScale, denseBoard);
-        const usesShutterReveal = card.isRevealed;
         const usesTruthPreview = shouldShowTruth && !card.isRevealed;
         const voteCount = voteCountsByCard[card.id] ?? 0;
         const hasVotes = voteCount > 0;
         const isPendingReveal = pendingRevealCardId === card.id;
         const isPeeking = Boolean(peekedCards[card.id]);
-        const shutterTransformClass = getShutterTransformClass(card.isRevealed, isPeeking);
+        const isFlipped = card.isRevealed && !isPeeking;
 
         return (
           <button
@@ -226,90 +225,77 @@ export function GameBoard({
             dir="rtl"
             aria-pressed={card.isRevealed ? isPeeking : undefined}
             className={cx(
-              "relative h-full w-full min-h-0 select-none overflow-hidden border text-center transition-all duration-150",
+              "card-perspective relative h-full w-full min-h-0 select-none bg-transparent border-0 p-0 text-center transition-all duration-150 outline-none",
               denseBoard ? "rounded-xl" : "rounded-[1.15rem]",
-              compact
-                ? ""
-                : "aspect-square p-2 text-sm md:text-base",
-              usesShutterReveal
-                ? "border-slate-900/15 bg-transparent"
-                : usesTruthPreview
-                  ? resolveTruthPreviewTone(card)
-                  : "border-[#D6D0C5] bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] text-[#0F172A] shadow-[inset_0_2.5px_0px_rgba(255,255,255,0.8),_0_4px_6px_-1px_rgba(0,0,0,0.15)] hover:border-[#C7BFB1]",
+              compact ? "" : "aspect-square text-sm md:text-base",
               hasVotes &&
                 !isPendingReveal &&
-                "z-10 scale-[1.02] border-white/95 ring-2 ring-white/85 ring-offset-2 ring-offset-transparent shadow-[0_0_18px_rgba(255,255,255,0.65),0_0_34px_rgba(255,255,255,0.2)]",
+                "z-10 scale-[1.02] ring-2 ring-white/85 ring-offset-2 ring-offset-transparent shadow-[0_0_18px_rgba(255,255,255,0.65),0_0_34px_rgba(255,255,255,0.2)]",
               isPendingReveal &&
-                "z-10 scale-[1.03] border-white ring-2 ring-white/95 ring-offset-2 ring-offset-transparent shadow-[0_0_26px_rgba(255,255,255,0.88),0_0_48px_rgba(255,255,255,0.34)]",
+                "z-10 scale-[1.03] ring-2 ring-white/95 ring-offset-2 ring-offset-transparent shadow-[0_0_26px_rgba(255,255,255,0.88),0_0_48px_rgba(255,255,255,0.34)]",
               card.isRevealed && "cursor-pointer active:scale-[0.99]",
               !card.isRevealed && canReveal && onReveal && "cursor-pointer active:scale-95",
               !card.isRevealed && !canReveal && "cursor-default",
             )}
           >
-            <div
-              className={cx(
-                "relative h-full w-full overflow-hidden",
-                denseBoard ? "rounded-xl" : "rounded-[1.15rem]",
-              )}
-            >
+            <div className={cx("card-inner", isFlipped && "card-flipped")}>
+              {/* Front Side: Word display */}
               <div
                 className={cx(
-                  "absolute inset-0 z-0 flex items-center justify-center",
+                  "card-front absolute inset-0 z-0 flex items-center justify-center border",
+                  denseBoard ? "rounded-xl" : "rounded-[1.15rem]",
                   usesTruthPreview
                     ? resolveTruthPreviewTone(card)
-                    : "bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] text-[#0F172A] shadow-[inset_0_2.5px_0px_rgba(255,255,255,0.8),_0_4px_6px_-1px_rgba(0,0,0,0.15)]",
+                    : "border-[#D6D0C5] bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] text-[#0F172A] shadow-[inset_0_2.5px_0px_rgba(255,255,255,0.8),_0_4px_6px_-1px_rgba(0,0,0,0.15)] hover:border-[#C7BFB1]",
                 )}
               >
                 <span className={cx(textClass, "relative z-10", card.type === "Control" && shouldShowTruth && "tracking-widest")}>
                   {card.text}
                 </span>
+
+                {isPendingReveal ? (
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 bg-white/10 opacity-100 animate-pulse"
+                    style={{ borderRadius: "inherit" }}
+                  />
+                ) : hasVotes ? (
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 bg-white/5 opacity-100 animate-pulse"
+                    style={{ borderRadius: "inherit" }}
+                  />
+                ) : null}
+
+                {hasVotes ? (
+                  <span className="pointer-events-none absolute inset-x-0 bottom-1 z-20 flex items-center justify-center gap-1">
+                    {Array.from({ length: voteCount }).map((_, index) => (
+                      <span
+                        key={`${card.id}-vote-dot-${index}`}
+                        aria-hidden="true"
+                        className={cx("h-1.5 w-1.5 rounded-full", voteDotClass(voteIndicatorTeam))}
+                      />
+                    ))}
+                  </span>
+                ) : null}
               </div>
 
+              {/* Back Side: Team identity / revealed color */}
               <div
                 aria-hidden="true"
                 className={cx(
-                  "absolute inset-0 z-30 h-full w-full transition-transform duration-300 ease-out",
-                  shutterTransformClass,
+                  "card-back absolute inset-0 z-10 border",
+                  denseBoard ? "rounded-xl" : "rounded-[1.15rem]",
+                  "border-slate-900/15",
+                  resolveShutterSurfaceClass(card.type),
                 )}
               >
-                <div
-                  className={cx(
-                    "relative h-full w-full",
-                    resolveShutterSurfaceClass(card.type),
-                  )}
-                >
-                  <div className="absolute inset-0 opacity-20">
-                    <div className="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-white/30" />
-                    <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-white/15" />
-                    <div className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-white/10" />
-                  </div>
+                <div className="absolute inset-0 opacity-20">
+                  <div className="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-white/30" />
+                  <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-white/15" />
+                  <div className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-white/10" />
                 </div>
               </div>
-
-            {isPendingReveal ? (
-              <>
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 bg-white/10 opacity-100 animate-pulse"
-                />
-              </>
-            ) : hasVotes ? (
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 bg-white/5 opacity-100 animate-pulse"
-              />
-            ) : null}
-            {hasVotes && !usesShutterReveal ? (
-              <span className="pointer-events-none absolute inset-x-0 bottom-1 z-20 flex items-center justify-center gap-1">
-                {Array.from({ length: voteCount }).map((_, index) => (
-                  <span
-                    key={`${card.id}-vote-dot-${index}`}
-                    aria-hidden="true"
-                    className={cx("h-1.5 w-1.5 rounded-full", voteDotClass(voteIndicatorTeam))}
-                  />
-                ))}
-              </span>
-            ) : null}
             </div>
           </button>
         );
