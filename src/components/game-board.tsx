@@ -16,6 +16,7 @@ interface GameBoardProps {
   compact?: boolean;
   fontScale?: "compact" | "comfortable" | "expanded";
   columns?: number;
+  maxHeightVh?: number;
 }
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -36,40 +37,40 @@ function cardTextClass(cardText: string, fontScale: GameBoardProps["fontScale"],
       if (denseBoard) {
         if (normalizedTextLength <= 6) {
           return boostedDenseFont
-            ? singleWordTextClass("px-0.5 text-[14px] font-black leading-none sm:px-1 sm:text-[16px]")
-            : singleWordTextClass("px-0.5 text-[10px] font-black leading-none sm:px-1 sm:text-[11px]");
+            ? singleWordTextClass("px-0.5 text-[14px] font-black leading-none sm:px-1 sm:text-[16px] md:text-[18px] lg:text-[20px] xl:text-[22px]")
+            : singleWordTextClass("px-0.5 text-[10px] font-black leading-none sm:px-1 sm:text-[11px] md:text-[13px] lg:text-[15px] xl:text-[17px]");
         }
 
         if (normalizedTextLength <= 8) {
           return boostedDenseFont
-            ? singleWordTextClass("px-0.5 text-[13px] font-black leading-none tracking-[-0.01em] sm:px-1 sm:text-[15px]")
-            : singleWordTextClass("px-0.5 text-[9px] font-black leading-none tracking-[-0.02em] sm:px-1 sm:text-[10px]");
+            ? singleWordTextClass("px-0.5 text-[13px] font-black leading-none tracking-[-0.01em] sm:px-1 sm:text-[15px] md:text-[17px] lg:text-[19px] xl:text-[21px]")
+            : singleWordTextClass("px-0.5 text-[9px] font-black leading-none tracking-[-0.02em] sm:px-1 sm:text-[10px] md:text-[12px] lg:text-[14px] xl:text-[16px]");
         }
 
         return boostedDenseFont
-          ? singleWordTextClass("px-0.5 text-[12px] font-black leading-none tracking-[-0.02em] sm:px-1 sm:text-[14px]")
-          : singleWordTextClass("px-0.5 text-[8px] font-black leading-none tracking-[-0.03em] sm:px-1 sm:text-[9px]");
+          ? singleWordTextClass("px-0.5 text-[12px] font-black leading-none tracking-[-0.02em] sm:px-1 sm:text-[14px] md:text-[16px] lg:text-[18px] xl:text-[20px]")
+          : singleWordTextClass("px-0.5 text-[8px] font-black leading-none tracking-[-0.03em] sm:px-1 sm:text-[9px] md:text-[11px] lg:text-[13px] xl:text-[15px]");
       }
 
-      return singleWordTextClass("px-1.5 text-sm font-black leading-tight sm:text-base");
+      return singleWordTextClass("px-1.5 text-sm font-black leading-tight sm:text-base md:text-lg lg:text-xl xl:text-2xl");
     }
 
     if (denseBoard) {
       return normalizedTextLength <= 8
-        ? singleWordTextClass("px-0.5 text-[9px] font-black leading-none sm:px-1 sm:text-[10px]")
-        : singleWordTextClass("px-0.5 text-[8px] font-black leading-none tracking-[-0.02em] sm:px-1 sm:text-[9px]");
+        ? singleWordTextClass("px-0.5 text-[9px] font-black leading-none sm:px-1 sm:text-[10px] md:text-[12px] lg:text-[14px] xl:text-[16px]")
+        : singleWordTextClass("px-0.5 text-[8px] font-black leading-none tracking-[-0.02em] sm:px-1 sm:text-[9px] md:text-[11px] lg:text-[13px] xl:text-[15px]");
     }
 
-    return singleWordTextClass("px-1 text-[11px] font-black leading-tight sm:text-sm");
+    return singleWordTextClass("px-1 text-[11px] font-black leading-tight sm:text-sm md:text-base lg:text-lg xl:text-xl");
   }
 
   if (fontScale === "comfortable" || boostedDenseFont) {
     return boostedDenseFont && denseBoard
-      ? "block w-full max-w-full whitespace-normal break-normal px-1 text-center text-[13px] font-black leading-[1.12] [text-wrap:balance] sm:px-1.5 sm:text-[15px]"
-      : "block w-full max-w-full whitespace-normal break-normal px-1 text-center text-[9px] font-black leading-[1.08] [text-wrap:balance] sm:px-1.5 sm:text-[10px]";
+      ? "block w-full max-w-full whitespace-normal break-normal px-1 text-center text-[13px] font-black leading-[1.12] [text-wrap:balance] sm:px-1.5 sm:text-[15px] md:text-[17px] lg:text-[19px] xl:text-[21px]"
+      : "block w-full max-w-full whitespace-normal break-normal px-1 text-center text-[9px] font-black leading-[1.08] [text-wrap:balance] sm:px-1.5 sm:text-[10px] md:text-[12px] lg:text-[14px] xl:text-[16px]";
   }
 
-  return "block w-full max-w-full whitespace-normal break-normal px-0.5 text-center text-[8px] font-black leading-[1.05] [text-wrap:balance] sm:px-1 sm:text-[9px]";
+  return "block w-full max-w-full whitespace-normal break-normal px-0.5 text-center text-[8px] font-black leading-[1.05] [text-wrap:balance] sm:px-1 sm:text-[9px] md:text-[11px] lg:text-[13px] xl:text-[15px]";
 }
 
 function resolveTruthPreviewTone(card: Card) {
@@ -142,6 +143,7 @@ export function GameBoard({
   compact = false,
   fontScale = "compact",
   columns,
+  maxHeightVh,
 }: GameBoardProps) {
   const columnCount = columns ?? Math.max(1, Math.round(Math.sqrt(board.length)));
   const rowCount = Math.max(1, Math.ceil(board.length / columnCount));
@@ -197,6 +199,9 @@ export function GameBoard({
           ? {
               gridTemplateRows: `repeat(${rowCount}, minmax(0, 1fr))`,
               aspectRatio: String(compactBoardAspectRatio),
+              width: maxHeightVh
+                ? `min(100%, calc(${maxHeightVh}vh * ${compactBoardAspectRatio}))`
+                : "100%",
             }
           : {}),
       }}

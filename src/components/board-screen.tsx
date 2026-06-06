@@ -617,7 +617,9 @@ export function BoardScreen() {
   const teamSlots: Array<ActiveTeam | null> = activeTeams.length === 3 ? [...activeTeams, null] : activeTeams;
   const teamGridHeightClass = usesMultiRowTeamGrid ? "h-[25vh]" : "h-[22vh]";
   const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[62vh]" : "h-[65vh]";
-  const boardWidthClass = room.board.length > 25 ? "max-w-[44rem]" : "max-w-md";
+  const boardWidthClass = room.board.length > 25
+    ? "max-w-[44rem] md:max-w-[60rem] lg:max-w-[75rem] xl:max-w-[85rem]"
+    : "max-w-md md:max-w-[48rem] lg:max-w-[60rem] xl:max-w-[70rem]";
   const boardFontScale = shouldUseExpandedDenseFont ? "expanded" : isLargeFont ? "comfortable" : "compact";
   const voteCountsByCard = Object.values(room.operativeSelections).reduce<Record<number, number>>((result, cardId) => {
     result[cardId] = (result[cardId] ?? 0) + 1;
@@ -827,6 +829,7 @@ export function BoardScreen() {
             <GameBoard
               board={room.board}
               columns={room.settings.teamCount === 2 ? 5 : 6}
+              maxHeightVh={usesMultiRowTeamGrid ? 62 : 65}
               showTruth={showTruth}
               canReveal={canReveal && !isBusy}
               onReveal={(cardId: number) => revealCard(cardId)}
