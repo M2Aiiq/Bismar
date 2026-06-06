@@ -315,34 +315,29 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
             </div>
 
             <div>
-              <p className="text-sm font-bold text-[#F8FAFC]">اضافات خاصة</p>
-              <div className="mt-3 rounded-[2rem] border border-white/10 bg-[#0F172A] p-4">
-                <div className="flex items-center justify-between gap-3 mb-3">
-                  <p className="text-xs font-bold text-[#F8FAFC]/70">اسطر اضافية</p>
-                </div>
-                <div className="grid grid-cols-4 gap-2">
-                  {([0, 1, 2, 3] as const).map((count) => (
-                    <button
-                      key={count}
-                      type="button"
-                      onClick={() =>
-                        setDraftSettings((currentValue) =>
-                          currentValue
-                            ? { ...currentValue, extraRows: count }
-                            : currentValue,
-                        )
-                      }
-                      disabled={isBusy || !player.isHost}
-                      className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${
-                        (draftSettings?.extraRows ?? 0) === count
-                          ? "bg-[#2563EB] text-[#F8FAFC]"
-                          : "border border-white/15 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-[#111d34]"
-                      } disabled:cursor-not-allowed disabled:opacity-60`}
-                    >
-                      {count}
-                    </button>
-                  ))}
-                </div>
+              <p className="text-sm font-bold text-[#F8FAFC]">اسطر اضافية</p>
+              <div className="mt-3 grid grid-cols-4 gap-2">
+                {([0, 1, 2, 3] as const).map((count) => (
+                  <button
+                    key={count}
+                    type="button"
+                    onClick={() =>
+                      setDraftSettings((currentValue) =>
+                        currentValue
+                          ? { ...currentValue, extraRows: count }
+                          : currentValue,
+                      )
+                    }
+                    disabled={isBusy || !player.isHost}
+                    className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${
+                      (draftSettings?.extraRows ?? 0) === count
+                        ? "bg-[#2563EB] text-[#F8FAFC]"
+                        : "border border-white/15 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-[#111d34]"
+                    } disabled:cursor-not-allowed disabled:opacity-60`}
+                  >
+                    {count}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -577,34 +572,29 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
               </div>
 
               <div>
-                <p className="text-sm font-bold text-[#F8FAFC]">اضافات خاصة</p>
-                <div className="mt-3 rounded-[2rem] border border-white/10 bg-[#0F172A] p-4">
-                  <div className="flex items-center justify-between gap-3 mb-3">
-                    <p className="text-xs font-bold text-[#F8FAFC]/70">اسطر اضافية</p>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    {([0, 1, 2, 3] as const).map((count) => (
-                      <button
-                        key={count}
-                        type="button"
-                        onClick={() =>
-                          setDraftSettings((currentValue) =>
-                            currentValue
-                              ? { ...currentValue, extraRows: count }
-                              : currentValue,
-                          )
-                        }
-                        disabled={isBusy || !player.isHost}
-                        className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${
-                          (draftSettings?.extraRows ?? 0) === count
-                            ? "bg-[#2563EB] text-[#F8FAFC]"
-                            : "border border-white/15 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-[#111d34]"
-                        } disabled:cursor-not-allowed disabled:opacity-60`}
-                      >
-                        {count}
-                      </button>
-                    ))}
-                  </div>
+                <p className="text-sm font-bold text-[#F8FAFC]">اسطر اضافية</p>
+                <div className="mt-3 grid grid-cols-4 gap-2">
+                  {([0, 1, 2, 3] as const).map((count) => (
+                    <button
+                      key={count}
+                      type="button"
+                      onClick={() =>
+                        setDraftSettings((currentValue) =>
+                          currentValue
+                            ? { ...currentValue, extraRows: count }
+                            : currentValue,
+                        )
+                      }
+                      disabled={isBusy || !player.isHost}
+                      className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${
+                        (draftSettings?.extraRows ?? 0) === count
+                          ? "bg-[#2563EB] text-[#F8FAFC]"
+                          : "border border-white/15 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-[#111d34]"
+                      } disabled:cursor-not-allowed disabled:opacity-60`}
+                    >
+                      {count}
+                    </button>
+                  ))}
                 </div>
               </div>
 
