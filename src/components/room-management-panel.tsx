@@ -10,7 +10,7 @@ import type { Role, TeamCount, WordCategory } from "../types/game";
 const ROLE_OPTIONS: Role[] = ["Spymaster", "Operative"];
 const TEAM_COUNT_OPTIONS: TeamCount[] = [2, 3, 4];
 const LOSS_CARD_OPTIONS = [1, 2, 3, 4] as const;
-const WORD_CATEGORY_OPTIONS: WordCategory[] = ["General", "Cities"];
+const WORD_CATEGORY_OPTIONS: WordCategory[] = ["General", "Cities", "Animals"];
 
 interface RoomManagementPanelProps {
   mode?: "lobby" | "modal";

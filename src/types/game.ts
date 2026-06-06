@@ -4,7 +4,7 @@ export type CardType = "Red" | "Blue" | "Green" | "Gold" | "Neutral" | "Control"
 export type GameState = "Lobby" | "Playing" | "GameOver";
 export type TurnPhase = "Clue" | "Guess";
 export type TeamCount = 2 | 3 | 4;
-export type WordCategory = "General" | "Cities";
+export type WordCategory = "General" | "Cities" | "Animals";
 export type Winner = Exclude<Team, "Unassigned"> | null;
 
 export interface RoomSettings {
