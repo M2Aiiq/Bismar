@@ -358,18 +358,18 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                   type="button"
                   onClick={() => void shuffleBoardWords()}
                   disabled={isBusy}
-                  className="flex items-center justify-center gap-2 rounded-2xl bg-[#2563EB] px-4 py-3.5 text-sm font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] active:scale-95 disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
+                  className="flex items-center justify-center gap-1.5 rounded-2xl bg-[#2563EB] px-3 py-2 text-xs font-black text-[#F8FAFC] whitespace-nowrap transition hover:bg-[#1D4ED8] active:scale-95 disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
                 >
-                  <img src="/shuffle.png" alt="" className="h-5 w-5 object-contain" />
+                  <img src="/shuffle.png" alt="" className="h-4.5 w-4.5 object-contain" />
                   خلط الكلمات
                 </button>
                 <button
                   type="button"
                   onClick={() => void shuffleTeams()}
                   disabled={isBusy}
-                  className="flex items-center justify-center gap-2 rounded-2xl bg-[#2563EB] px-4 py-3.5 text-sm font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] active:scale-95 disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
+                  className="flex items-center justify-center gap-1.5 rounded-2xl bg-[#2563EB] px-3 py-2 text-xs font-black text-[#F8FAFC] whitespace-nowrap transition hover:bg-[#1D4ED8] active:scale-95 disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
                 >
-                  <img src="/refresh.png" alt="" className="h-5 w-5 object-contain" />
+                  <img src="/refresh.png" alt="" className="h-4.5 w-4.5 object-contain" />
                   خلط الأفرقة
                 </button>
               </div>
@@ -387,7 +387,7 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                 </button>
               </div>
             ) : (
-              <div className="pt-2">
+              <div className="pt-1">
                 <button
                   type="button"
                   onClick={handleApplyAndStart}
