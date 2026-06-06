@@ -352,26 +352,28 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => void shuffleBoardWords()}
-                disabled={isBusy}
-                className="flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-[#0F172A] px-4 py-3.5 text-sm font-black text-[#F8FAFC] transition hover:bg-[#111d34] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <img src="/shuffle.png" alt="" className="h-5 w-5 object-contain" />
-                خلط الكلمات
-              </button>
-              <button
-                type="button"
-                onClick={() => void shuffleTeams()}
-                disabled={isBusy}
-                className="flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-[#0F172A] px-4 py-3.5 text-sm font-black text-[#F8FAFC] transition hover:bg-[#111d34] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <img src="/refresh.png" alt="" className="h-5 w-5 object-contain" />
-                خلط الأفرقة
-              </button>
-            </div>
+            {room.gameState !== "Lobby" && (
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => void shuffleBoardWords()}
+                  disabled={isBusy}
+                  className="flex items-center justify-center gap-2 rounded-2xl bg-[#2563EB] px-4 py-3.5 text-sm font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] active:scale-95 disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
+                >
+                  <img src="/shuffle.png" alt="" className="h-5 w-5 object-contain" />
+                  خلط الكلمات
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void shuffleTeams()}
+                  disabled={isBusy}
+                  className="flex items-center justify-center gap-2 rounded-2xl bg-[#2563EB] px-4 py-3.5 text-sm font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] active:scale-95 disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
+                >
+                  <img src="/refresh.png" alt="" className="h-5 w-5 object-contain" />
+                  خلط الأفرقة
+                </button>
+              </div>
+            )}
 
             {isLobbyModal ? (
               <div className="pt-2">
@@ -381,7 +383,7 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                   disabled={!canApplyDraft}
                   className="w-full rounded-2xl bg-[#2563EB] px-5 py-4 text-lg font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
                 >
-                  {player.isHost ? "بدء لعبة جديدة" : "بانتظار المضيف"}
+                  {player.isHost ? "بدء اللعبة" : "بانتظار المضيف"}
                 </button>
               </div>
             ) : (
@@ -736,38 +738,15 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
         </div>
         </div>
       ) : null}
-
       {isModal ? null : (
-        <div className="w-full">
-          {player.isHost ? (
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <button
-                type="button"
-                onClick={() => void shuffleBoardWords()}
-                disabled={isBusy}
-                className="flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-[#0F172A] px-4 py-3.5 text-sm font-black text-[#F8FAFC] transition hover:bg-[#111d34] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <img src="/shuffle.png" alt="" className="h-5 w-5 object-contain" />
-                خلط الكلمات
-              </button>
-              <button
-                type="button"
-                onClick={() => void shuffleTeams()}
-                disabled={isBusy}
-                className="flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-[#0F172A] px-4 py-3.5 text-sm font-black text-[#F8FAFC] transition hover:bg-[#111d34] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <img src="/refresh.png" alt="" className="h-5 w-5 object-contain" />
-                خلط الأفرقة
-              </button>
-            </div>
-          ) : null}
+        <div className="w-full mt-4">
           <button
             type="button"
             onClick={handleApplyAndStart}
             disabled={!canApplyDraft}
             className="w-full rounded-2xl bg-[#2563EB] px-5 py-4 text-lg font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
           >
-            {player.isHost ? "بدء لعبة جديدة" : "بانتظار المضيف"}
+            {player.isHost ? "بدء اللعبة" : "بانتظار المضيف"}
           </button>
         </div>
       )}
