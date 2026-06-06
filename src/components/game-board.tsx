@@ -146,7 +146,6 @@ export function GameBoard({
   const columnCount = columns ?? Math.max(1, Math.round(Math.sqrt(board.length)));
   const rowCount = Math.max(1, Math.ceil(board.length / columnCount));
   const denseBoard = board.length >= 36;
-  const baseSize = columns === 6 ? 36 : 25;
   const compactBoardAspectRatio = (columnCount * (denseBoard ? 1.36 : 1.3)) / rowCount;
   const [peekedCards, setPeekedCards] = useState<Record<number, boolean>>({});
 
@@ -203,7 +202,6 @@ export function GameBoard({
       }}
     >
       {board.map((card) => {
-        const isExtra = card.id >= baseSize;
         const shouldShowTruth = revealAll || showTruth || card.isRevealed;
         const textClass = cardTextClass(card.text, fontScale, denseBoard);
         const usesShutterReveal = card.isRevealed;
@@ -230,11 +228,9 @@ export function GameBoard({
                 : "aspect-square p-2 text-sm md:text-base",
               usesShutterReveal
                 ? "border-slate-900/15 bg-transparent"
-                : isExtra && !card.isRevealed
-                  ? "border-transparent bg-transparent text-[#F8FAFC]/90 shadow-none hover:bg-white/5 hover:border-white/10"
-                  : usesTruthPreview
-                    ? resolveTruthPreviewTone(card)
-                    : "border-[#D6D0C5] bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] text-[#0F172A] shadow-[inset_0_2.5px_0px_rgba(255,255,255,0.8),_0_4px_6px_-1px_rgba(0,0,0,0.15)] hover:border-[#C7BFB1]",
+                : usesTruthPreview
+                  ? resolveTruthPreviewTone(card)
+                  : "border-[#D6D0C5] bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] text-[#0F172A] shadow-[inset_0_2.5px_0px_rgba(255,255,255,0.8),_0_4px_6px_-1px_rgba(0,0,0,0.15)] hover:border-[#C7BFB1]",
               hasVotes &&
                 !isPendingReveal &&
                 "z-10 scale-[1.02] border-white/95 ring-2 ring-white/85 ring-offset-2 ring-offset-transparent shadow-[0_0_18px_rgba(255,255,255,0.65),0_0_34px_rgba(255,255,255,0.2)]",
@@ -254,11 +250,9 @@ export function GameBoard({
               <div
                 className={cx(
                   "absolute inset-0 z-0 flex items-center justify-center",
-                  isExtra && !card.isRevealed
-                    ? (shouldShowTruth ? "bg-transparent text-[#F8FAFC]/35" : "bg-transparent text-[#F8FAFC]/90")
-                    : usesTruthPreview
-                      ? resolveTruthPreviewTone(card)
-                      : "bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] text-[#0F172A] shadow-[inset_0_2.5px_0px_rgba(255,255,255,0.8),_0_4px_6px_-1px_rgba(0,0,0,0.15)]",
+                  usesTruthPreview
+                    ? resolveTruthPreviewTone(card)
+                    : "bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] text-[#0F172A] shadow-[inset_0_2.5px_0px_rgba(255,255,255,0.8),_0_4px_6px_-1px_rgba(0,0,0,0.15)]",
                 )}
               >
                 <span className={cx(textClass, "relative z-10", card.type === "Control" && shouldShowTruth && "tracking-widest")}>

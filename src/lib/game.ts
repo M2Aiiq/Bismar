@@ -81,6 +81,7 @@ function createCardTypes(
   startingTeam: ActiveTeam,
   lossCardCount: number,
   boardSize: number,
+  baseSize: number,
 ) {
   const teamCardCounts = activeTeams.reduce<Record<ActiveTeam, number>>(
     (counts, team) => ({
@@ -100,22 +101,28 @@ function createCardTypes(
   }
 
   const totalTeamCards = activeTeams.reduce((sum, team) => sum + teamCardCounts[team], 0);
-  const neutralCount = Math.max(0, boardSize - totalTeamCards - lossCardCount);
-  const types: CardType[] = [
+  const baseNeutralCount = Math.max(0, baseSize - totalTeamCards - lossCardCount);
+
+  const baseTypes: CardType[] = [
     ...activeTeams.flatMap((team) => Array.from({ length: teamCardCounts[team] }, () => team)),
-    ...Array.from({ length: neutralCount }, () => "Neutral" as const),
+    ...Array.from({ length: baseNeutralCount }, () => "Neutral" as const),
     ...Array.from({ length: lossCardCount }, () => "Control" as const),
   ];
 
-  return shuffleList(types);
+  const shuffledBase = shuffleList(baseTypes);
+  const extraCount = Math.max(0, boardSize - baseSize);
+  const extraTypes = Array.from({ length: extraCount }, () => "Neutral" as const);
+
+  return [...shuffledBase, ...extraTypes];
 }
 
 export function createBoardState(settings: RoomSettings = DEFAULT_SETTINGS, previousRecentWords: string[] = []) {
   const activeTeams = getActiveTeams(settings.teamCount);
   const boardSize = getBoardSize(settings.teamCount, settings.extraRows);
+  const baseSize = getBoardSize(settings.teamCount, 0);
   const currentTurn = activeTeams[Math.floor(Math.random() * activeTeams.length)];
   const words = pickBoardWords(getWordsByCategory(settings.wordCategory), boardSize, previousRecentWords);
-  const types = createCardTypes(activeTeams, currentTurn, settings.lossCardCount, boardSize);
+  const types = createCardTypes(activeTeams, currentTurn, settings.lossCardCount, boardSize, baseSize);
 
   const board: Card[] = words.map((text, index) => ({
     id: index,
