@@ -148,7 +148,24 @@ export function GameBoard({
   const columnCount = columns ?? Math.max(1, Math.round(Math.sqrt(board.length)));
   const rowCount = Math.max(1, Math.ceil(board.length / columnCount));
   const denseBoard = board.length >= 36;
-  const compactBoardAspectRatio = (columnCount * (denseBoard ? 1.36 : 1.3)) / rowCount;
+
+  const [isLandscape, setIsLandscape] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsLandscape(window.innerWidth >= window.innerHeight);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const cardRatio = isLandscape
+    ? (rowCount > 6 ? 1.9 : 1.6)
+    : (denseBoard ? 1.36 : 1.3);
+
+  const compactBoardAspectRatio = (columnCount * cardRatio) / rowCount;
   const [peekedCards, setPeekedCards] = useState<Record<number, boolean>>({});
 
   const boardStateKey = useMemo(
