@@ -379,22 +379,44 @@ export function BoardScreen() {
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "PrintScreen") {
+      const isPrintScreen = event.key === "PrintScreen";
+      const isMacScreenshot = event.metaKey && event.shiftKey && ["3", "4", "5"].includes(event.key);
+      const isPrintShortcut = event.ctrlKey && event.key === "p";
+
+      if (isPrintScreen || isMacScreenshot || isPrintShortcut) {
         setIsScreenshotBlur(true);
+        if (isPrintShortcut) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        try {
+          void navigator.clipboard.writeText("حماية لقطات الشاشة نشطة! يمنع تصوير الشاشة وغش الكلمات.");
+        } catch (e) {
+          // Ignore clipboard errors
+        }
         setTimeout(() => setIsScreenshotBlur(false), 2000);
       }
-      
-      if (event.ctrlKey && event.key === "p") {
-        event.preventDefault();
-        event.stopPropagation();
+    };
+
+    const handleKeyUp = (event: KeyboardEvent) => {
+      const isPrintScreen = event.key === "PrintScreen";
+      const isMacScreenshot = event.metaKey && event.shiftKey && ["3", "4", "5"].includes(event.key);
+
+      if (isPrintScreen || isMacScreenshot) {
         setIsScreenshotBlur(true);
-        setTimeout(() => setIsScreenshotBlur(false), 1000);
+        try {
+          void navigator.clipboard.writeText("حماية لقطات الشاشة نشطة! يمنع تصوير الشاشة وغش الكلمات.");
+        } catch (e) {
+          // Ignore clipboard errors
+        }
+        setTimeout(() => setIsScreenshotBlur(false), 2000);
       }
     };
 
     window.addEventListener("blur", handleBlur);
     window.addEventListener("focus", handleFocus);
     window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
@@ -409,6 +431,7 @@ export function BoardScreen() {
       window.removeEventListener("blur", handleBlur);
       window.removeEventListener("focus", handleFocus);
       window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [room?.gameState]);
