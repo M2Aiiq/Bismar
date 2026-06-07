@@ -115,3 +115,10 @@ input::placeholder {
 .card-back {
   transform: rotateY(180deg);
 }
+
+/* Print protection: hides the body when printing or exporting to PDF */
+@media print {
+  body {
+    display: none !important;
+  }
+}

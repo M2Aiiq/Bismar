@@ -363,6 +363,55 @@ export function BoardScreen() {
   const hasInitializedClueModalRef = useRef(false);
   const latestTurnBannerKeyRef = useRef<string | null>(null);
   const visibleClues = room?.clues ?? [];
+  const [isScreenshotBlur, setIsScreenshotBlur] = useState(false);
+
+  useEffect(() => {
+    if (room?.gameState !== "Playing") {
+      setIsScreenshotBlur(false);
+      return;
+    }
+
+    const handleBlur = () => {
+      setIsScreenshotBlur(true);
+    };
+    const handleFocus = () => {
+      setIsScreenshotBlur(false);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "PrintScreen") {
+        setIsScreenshotBlur(true);
+        setTimeout(() => setIsScreenshotBlur(false), 2000);
+      }
+      
+      if (event.ctrlKey && event.key === "p") {
+        event.preventDefault();
+        event.stopPropagation();
+        setIsScreenshotBlur(true);
+        setTimeout(() => setIsScreenshotBlur(false), 1000);
+      }
+    };
+
+    window.addEventListener("blur", handleBlur);
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("keydown", handleKeyDown);
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setIsScreenshotBlur(true);
+      } else {
+        setIsScreenshotBlur(false);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("blur", handleBlur);
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [room?.gameState]);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -931,6 +980,22 @@ export function BoardScreen() {
         />
       ) : null}
       {room.gameState === "GameOver" ? <GameOverScreen /> : null}
+
+      {isScreenshotBlur ? (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/90 backdrop-blur-xl transition-all duration-300">
+          <div className="mx-4 text-center p-6 md:p-8 rounded-[2rem] border border-white/10 bg-[#1E293B] shadow-[0_0_50px_rgba(0,0,0,0.5)] max-w-md animate-in fade-in zoom-in-95 duration-200">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#EF4444]/15 text-[#EF4444] mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-7 h-7">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+              </svg>
+            </div>
+            <p className="text-xl font-black text-[#F8FAFC]">تم إخفاء الشاشة</p>
+            <p className="mt-3 text-sm leading-6 text-[#F8FAFC]/75 font-semibold">
+              تم إخفاء محتوى اللعبة مؤقتاً لحماية سرية الكلمات ومنع لقطات الشاشة أو الغش. يرجى العودة إلى نافذة اللعبة للمتابعة.
+            </p>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
