@@ -52,6 +52,7 @@ export function HomeScreen() {
     savePlayerName,
     playerStats,
     resetPlayerStats,
+    leftRoomCode,
   } = useGameRoom();
   const inviteRoomCode = normalizeRoomCode(searchParams.get("room"));
   const autoJoinAttemptRef = useRef<string | null>(null);
@@ -85,6 +86,12 @@ export function HomeScreen() {
       return;
     }
 
+    if (leftRoomCode === inviteRoomCode) {
+      // تنظيف الرابط عبر راوتر Next.js لتحديث حالة searchParams بشكل تفاعلي
+      router.replace(window.location.pathname);
+      return;
+    }
+
     if (hasLeftRoomRef.current) {
       return;
     }
@@ -97,7 +104,7 @@ export function HomeScreen() {
     void joinRoom(inviteRoomCode, playerName).catch(() => {
       autoJoinAttemptRef.current = null;
     });
-  }, [firebaseReady, inviteRoomCode, isNameDialogOpen, joinRoom, playerName]);
+  }, [firebaseReady, inviteRoomCode, isNameDialogOpen, joinRoom, playerName, leftRoomCode, router]);
 
   useEffect(() => {
     if (!isJoinExpanded) {

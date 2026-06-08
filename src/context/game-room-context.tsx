@@ -684,6 +684,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         setPlayerName(sanitizedName);
         setRoomId(nextRoomId);
         saveSessionRoom(nextRoomId, playerId, sanitizedName);
+        setLeftRoomCode(null);
       }, "تعذر إنشاء الغرفة."),
     [playerId, runAction],
   );
@@ -736,6 +737,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         setPlayerName(sanitizedName);
         setRoomId(normalizedRoomCode);
         saveSessionRoom(normalizedRoomCode, playerId, sanitizedName);
+        setLeftRoomCode(null);
       }, "تعذر الانضمام إلى الغرفة."),
     [playerId, runAction],
   );
