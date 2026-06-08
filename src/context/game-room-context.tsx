@@ -257,6 +257,7 @@ interface GameRoomContextValue {
   shuffleTeams: () => Promise<void>;
   playerStats: { played: number; won: number; lost: number } | null;
   resetPlayerStats: () => void;
+  leftRoomCode: string | null;
 }
 
 interface SessionState {
@@ -418,6 +419,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [playerStats, setPlayerStats] = useState<{ played: number; won: number; lost: number } | null>(null);
   const isLeavingRef = useRef(false);
+  const [leftRoomCode, setLeftRoomCode] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -751,9 +753,10 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           return;
         }
 
+        const leavingRoomId = roomId;
         isLeavingRef.current = true;
         try {
-          const roomRef = ref(database, getRoomPath(roomId));
+          const roomRef = ref(database, getRoomPath(leavingRoomId));
 
           await runTransaction(roomRef, (currentValue) => {
             const currentRoom = normalizeRoom(currentValue);
@@ -793,6 +796,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           setRoom(null);
           setRoomId("");
           saveSessionRoom(null, playerId, playerName);
+          setLeftRoomCode(leavingRoomId);
 
           // تنظيف بارامتر الدعوة من URL لمنع إعادة الانضمام التلقائي
           if (typeof window !== "undefined") {
@@ -805,7 +809,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         } finally {
           isLeavingRef.current = false;
         }
-      }, "تعذر مغادرة الغرفة."),
+      }, "\u062a\u0639\u0630\u0631 \u0645\u063a\u0627\u062f\u0631\u0629 \u0627\u0644\u063a\u0631\u0641\u0629."),
     [playerId, playerName, roomId, runAction],
   );
 
@@ -1648,6 +1652,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       shuffleTeams,
       playerStats,
       resetPlayerStats,
+      leftRoomCode,
     }),
     [
       chooseRole,
@@ -1679,6 +1684,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       shuffleTeams,
       playerStats,
       resetPlayerStats,
+      leftRoomCode,
     ],
   );
 
