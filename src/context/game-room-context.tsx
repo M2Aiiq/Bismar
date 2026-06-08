@@ -10,6 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useRouter } from "next/navigation";
 import { get, onDisconnect, onValue, ref, runTransaction, set } from "firebase/database";
 
 import {
@@ -430,6 +431,8 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [playerStats, setPlayerStats] = useState<{ played: number; won: number; lost: number } | null>(null);
   const isLeavingRef = useRef(false);
+  const router = useRouter();
+  const prevRoomIdRef = useRef("");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -530,6 +533,22 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
 
     return () => window.clearTimeout(timeoutId);
   }, []);
+
+  useEffect(() => {
+    if (!roomId && prevRoomIdRef.current) {
+      if (typeof window !== "undefined") {
+        try {
+          const url = new URL(window.location.href);
+          if (url.searchParams.has("room")) {
+            router.replace(url.pathname);
+          }
+        } catch {
+          // Ignored
+        }
+      }
+    }
+    prevRoomIdRef.current = roomId;
+  }, [roomId, router]);
 
   useEffect(() => {
     if (!isReady || !roomId || !isFirebaseConfigured) {
