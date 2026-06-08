@@ -10,7 +10,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useRouter } from "next/navigation";
 import { get, onDisconnect, onValue, ref, runTransaction, set } from "firebase/database";
 
 import {
@@ -258,6 +257,7 @@ interface GameRoomContextValue {
   shuffleTeams: () => Promise<void>;
   playerStats: { played: number; won: number; lost: number } | null;
   resetPlayerStats: () => void;
+  hasJustLeft: boolean;
 }
 
 interface SessionState {
@@ -316,18 +316,6 @@ function saveSessionRoom(roomId: string | null, playerId: string, playerName: st
     playerName,
     roomId: roomId || undefined,
   });
-
-  if (typeof window !== "undefined" && !roomId) {
-    try {
-      const url = new URL(window.location.href);
-      if (url.searchParams.has("room")) {
-        url.searchParams.delete("room");
-        window.history.replaceState(null, "", url.pathname + url.search);
-      }
-    } catch {
-      // Ignored
-    }
-  }
 }
 
 function buildMessage(error: unknown, fallback: string) {
@@ -430,9 +418,8 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [playerStats, setPlayerStats] = useState<{ played: number; won: number; lost: number } | null>(null);
+  const [hasJustLeft, setHasJustLeft] = useState(false);
   const isLeavingRef = useRef(false);
-  const router = useRouter();
-  const prevRoomIdRef = useRef("");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -533,22 +520,6 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
 
     return () => window.clearTimeout(timeoutId);
   }, []);
-
-  useEffect(() => {
-    if (!roomId && prevRoomIdRef.current) {
-      if (typeof window !== "undefined") {
-        try {
-          const url = new URL(window.location.href);
-          if (url.searchParams.has("room")) {
-            router.replace(url.pathname);
-          }
-        } catch {
-          // Ignored
-        }
-      }
-    }
-    prevRoomIdRef.current = roomId;
-  }, [roomId, router]);
 
   useEffect(() => {
     if (!isReady || !roomId || !isFirebaseConfigured) {
@@ -712,6 +683,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
 
         setPlayerName(sanitizedName);
         setRoomId(nextRoomId);
+        setHasJustLeft(false);
         saveSessionRoom(nextRoomId, playerId, sanitizedName);
       }, "تعذر إنشاء الغرفة."),
     [playerId, runAction],
@@ -764,6 +736,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
 
         setPlayerName(sanitizedName);
         setRoomId(normalizedRoomCode);
+        setHasJustLeft(false);
         saveSessionRoom(normalizedRoomCode, playerId, sanitizedName);
       }, "تعذر الانضمام إلى الغرفة."),
     [playerId, runAction],
@@ -823,6 +796,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
 
           setRoom(null);
           setRoomId("");
+          setHasJustLeft(true);
           saveSessionRoom(null, playerId, playerName);
         } finally {
           isLeavingRef.current = false;
@@ -1670,6 +1644,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       shuffleTeams,
       playerStats,
       resetPlayerStats,
+      hasJustLeft,
     }),
     [
       chooseRole,
@@ -1701,6 +1676,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       shuffleTeams,
       playerStats,
       resetPlayerStats,
+      hasJustLeft,
     ],
   );
 
