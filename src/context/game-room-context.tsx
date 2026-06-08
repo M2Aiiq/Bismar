@@ -22,7 +22,7 @@ import {
 } from "../lib/game";
 import { getRealtimeDatabase, isFirebaseConfigured } from "../lib/firebase";
 import { getActiveTeams, isActiveTeam, nextTeam, type ActiveTeam } from "../lib/teams";
-import type { Player, Role, Room, RoomSettings, Team, TeamCount, TurnPhase, WordCategory } from "../types/game";
+import type { Difficulty, Player, Role, Room, RoomSettings, Team, TeamCount, TurnPhase, WordCategory } from "../types/game";
 
 type PlayerTeam = ActiveTeam;
 // Temporary bypass requested by the user to preview the next screen before restoring team readiness rules.
@@ -375,6 +375,10 @@ function sanitizeExtraRows(value: unknown): 0 | 1 | 2 | 3 {
   return value === 1 || value === 2 || value === 3 ? value : 0;
 }
 
+function sanitizeDifficulty(value: unknown): Difficulty {
+  return value === "Medium" || value === "Hard" ? value : "Normal";
+}
+
 function sanitizeSettingsUpdate(
   currentSettings: RoomSettings,
   partialSettings: Partial<RoomSettings>,
@@ -387,6 +391,7 @@ function sanitizeSettingsUpdate(
     lossCardCount: sanitizeLossCardCount(partialSettings.lossCardCount ?? currentSettings.lossCardCount),
     wordCategory: sanitizeWordCategory(partialSettings.wordCategory ?? currentSettings.wordCategory),
     extraRows: sanitizeExtraRows(partialSettings.extraRows ?? currentSettings.extraRows),
+    difficulty: sanitizeDifficulty(partialSettings.difficulty ?? currentSettings.difficulty),
   };
 }
 

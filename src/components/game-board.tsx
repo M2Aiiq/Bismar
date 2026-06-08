@@ -17,6 +17,8 @@ interface GameBoardProps {
   fontScale?: "compact" | "comfortable" | "expanded";
   columns?: number;
   maxHeightVh?: number;
+  difficulty?: "Normal" | "Medium" | "Hard";
+  playerTeam?: ActiveTeam;
 }
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -144,6 +146,8 @@ export function GameBoard({
   fontScale = "compact",
   columns,
   maxHeightVh,
+  difficulty,
+  playerTeam,
 }: GameBoardProps) {
   const columnCount = columns ?? Math.max(1, Math.round(Math.sqrt(board.length)));
   const rowCount = Math.max(1, Math.ceil(board.length / columnCount));
@@ -224,7 +228,20 @@ export function GameBoard({
       }}
     >
       {board.map((card) => {
-        const shouldShowTruth = revealAll || showTruth || card.isRevealed;
+        let shouldShowTruth = revealAll || card.isRevealed;
+        if (!shouldShowTruth && showTruth) {
+          if (difficulty === "Normal" || !difficulty) {
+            shouldShowTruth = true;
+          } else if (difficulty === "Medium") {
+            if (playerTeam && (card.type === playerTeam || card.type === "Neutral" || card.type === "Control")) {
+              shouldShowTruth = true;
+            }
+          } else if (difficulty === "Hard") {
+            if (playerTeam && (card.type === playerTeam || card.type === "Neutral")) {
+              shouldShowTruth = true;
+            }
+          }
+        }
         const textClass = cardTextClass(card.text, fontScale, denseBoard);
         const usesTruthPreview = shouldShowTruth && !card.isRevealed;
         const voteCount = voteCountsByCard[card.id] ?? 0;

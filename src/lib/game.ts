@@ -1,6 +1,6 @@
 import { getWordsByCategory } from "./words";
 import { getActiveTeams, type ActiveTeam } from "./teams";
-import type { Card, CardType, Clue, Player, Room, RoomSettings, TeamCount, TurnPhase, WordCategory } from "../types/game";
+import type { Card, CardType, Clue, Difficulty, Player, Room, RoomSettings, TeamCount, TurnPhase, WordCategory } from "../types/game";
 
 const DEFAULT_SETTINGS: RoomSettings = {
   teamCount: 2,
@@ -8,6 +8,7 @@ const DEFAULT_SETTINGS: RoomSettings = {
   lossCardCount: 1,
   wordCategory: "General",
   extraRows: 0,
+  difficulty: "Normal",
 };
 
 const RECENT_BOARD_HISTORY_COUNT = 2;
@@ -218,6 +219,10 @@ function sanitizeExtraRows(value: unknown): 0 | 1 | 2 | 3 {
   return value === 1 || value === 2 || value === 3 ? value : 0;
 }
 
+function sanitizeDifficulty(value: unknown): Difficulty {
+  return value === "Medium" || value === "Hard" ? value : "Normal";
+}
+
 function sanitizeRecentWords(value: unknown, category: WordCategory) {
   if (!Array.isArray(value)) {
     return [];
@@ -391,6 +396,7 @@ export function normalizeRoom(value: unknown): Room | null {
     lossCardCount: sanitizeLossCardCount(settings.lossCardCount),
     wordCategory: sanitizeWordCategory(settings.wordCategory),
     extraRows: sanitizeExtraRows(settings.extraRows),
+    difficulty: sanitizeDifficulty(settings.difficulty),
   };
   const activeTeams = getActiveTeams(teamCount);
   const eliminatedTeams = sanitizeEliminatedTeams((room as Partial<Room>).eliminatedTeams, activeTeams);

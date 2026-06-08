@@ -156,9 +156,8 @@ interface TurnTransitionBannerProps {
 function TurnTransitionBanner({ team, phase, isVisible }: TurnTransitionBannerProps) {
   return (
     <div
-      className={`pointer-events-none fixed left-0 right-0 top-1/4 z-50 w-full border-y bg-[#1E293B]/90 py-4 backdrop-blur-md transition-all duration-500 ${
-        isVisible ? "translate-x-0 opacity-100" : "translate-x-8 opacity-0"
-      } ${turnBannerFrameClass(team)}`}
+      className={`pointer-events-none fixed left-0 right-0 top-1/4 z-50 w-full border-y bg-[#1E293B]/90 py-4 backdrop-blur-md transition-all duration-500 ${isVisible ? "translate-x-0 opacity-100" : "translate-x-8 opacity-0"
+        } ${turnBannerFrameClass(team)}`}
       dir="rtl"
     >
       <div className="flex flex-col items-center justify-center px-4 text-center">
@@ -800,9 +799,8 @@ export function BoardScreen() {
       <div className="h-1.5 w-full overflow-hidden bg-black/25">
         <div className="flex h-full w-full justify-end">
           <div
-            className={`h-full transition-[width,background-color] duration-200 ${
-              room.isPaused ? "bg-white/55" : timerBarClass(timerProgress)
-            }`}
+            className={`h-full transition-[width,background-color] duration-200 ${room.isPaused ? "bg-white/55" : timerBarClass(timerProgress)
+              }`}
             style={{ width: `${timerProgress * 100}%` }}
           />
         </div>
@@ -811,9 +809,8 @@ export function BoardScreen() {
       {shouldShowClueStrip ? (
         <div className="mx-2 shrink-0">
           <div
-            className={`mx-auto w-full max-w-[44rem] transition-all duration-300 ease-out ${
-              isClueBarVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-            }`}
+            className={`mx-auto w-full max-w-[44rem] transition-all duration-300 ease-out ${isClueBarVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+              }`}
           >
             <div
               dir="rtl"
@@ -840,9 +837,8 @@ export function BoardScreen() {
       {shouldShowClueInput ? (
         <div className="mx-2 shrink-0">
           <div
-            className={`mx-auto w-full max-w-[44rem] transition-all duration-300 ease-out ${
-              isClueBarVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-            }`}
+            className={`mx-auto w-full max-w-[44rem] transition-all duration-300 ease-out ${isClueBarVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+              }`}
           >
             <div className="overflow-hidden rounded-2xl border border-white/20 bg-black/25 shadow-lg backdrop-blur-sm">
               <div className="grid h-10 grid-cols-[38px_44px_minmax(0,1fr)] items-center">
@@ -912,6 +908,8 @@ export function BoardScreen() {
               revealAll={room.gameState === "GameOver"}
               compact
               fontScale={boardFontScale}
+              difficulty={room.settings.difficulty}
+              playerTeam={player.team !== "Unassigned" ? (player.team as ActiveTeam) : undefined}
             />
           </div>
 
@@ -927,11 +925,10 @@ export function BoardScreen() {
               type="button"
               onClick={() => setIsLargeFont((currentValue) => !currentValue)}
               aria-pressed={isLargeFont}
-              className={`h-7 rounded-full border px-4 text-xs font-bold transition active:scale-95 ${
-                isLargeFont
-                  ? "border-white/55 bg-white/20 text-[#F8FAFC]"
-                  : "border-white/25 bg-black/10 text-slate-200"
-              }`}
+              className={`h-7 rounded-full border px-4 text-xs font-bold transition active:scale-95 ${isLargeFont
+                ? "border-white/55 bg-white/20 text-[#F8FAFC]"
+                : "border-white/25 bg-black/10 text-slate-200"
+                }`}
             >
               خط
             </button>
@@ -945,11 +942,10 @@ export function BoardScreen() {
                   onClick={handlePauseToggle}
                   disabled={isBusy}
                   aria-label={room.isPaused ? "تشغيل اللعبة" : "إيقاف اللعبة"}
-                  className={`flex h-11 w-12 items-center justify-center rounded-l-[1.15rem] border border-r-0 backdrop-blur-md transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
-                    room.isPaused
-                      ? "border-[#86EFAC]/45 bg-[#064E3B]/90 shadow-[0_0_14px_rgba(16,185,129,0.24)]"
-                      : "border-white/20 bg-[#0F172A]/88 shadow-[0_0_14px_rgba(15,23,42,0.28)]"
-                  }`}
+                  className={`flex h-11 w-12 items-center justify-center rounded-l-[1.15rem] border border-r-0 backdrop-blur-md transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${room.isPaused
+                    ? "border-[#86EFAC]/45 bg-[#064E3B]/90 shadow-[0_0_14px_rgba(16,185,129,0.24)]"
+                    : "border-white/20 bg-[#0F172A]/88 shadow-[0_0_14px_rgba(15,23,42,0.28)]"
+                    }`}
                 >
                   {room.isPaused ? (
                     <svg viewBox="0 0 24 24" className="h-5.5 w-5.5 fill-[#ECFDF5]" aria-hidden="true">

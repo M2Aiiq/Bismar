@@ -6,6 +6,7 @@ export type TurnPhase = "Clue" | "Guess";
 export type TeamCount = 2 | 3 | 4;
 export type WordCategory = "General" | "Cities" | "Animals";
 export type Winner = Exclude<Team, "Unassigned"> | null;
+export type Difficulty = "Normal" | "Medium" | "Hard";
 
 export interface RoomSettings {
   teamCount: TeamCount;
@@ -13,6 +14,7 @@ export interface RoomSettings {
   lossCardCount: 1 | 2 | 3 | 4;
   wordCategory: WordCategory;
   extraRows: 0 | 1 | 2 | 3;
+  difficulty: Difficulty;
 }
 
 export interface Player {

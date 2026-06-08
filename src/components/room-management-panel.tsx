@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useGameRoom } from "../context/game-room-context";
 import { WORD_CATEGORY_LABELS } from "../lib/words";
 import { getActiveTeams, isActiveTeam, teamBadgeClass, teamCardClass, teamLabel } from "../lib/teams";
-import type { Role, TeamCount, WordCategory } from "../types/game";
+import type { Difficulty, Role, TeamCount, WordCategory } from "../types/game";
 
 const ROLE_OPTIONS: Role[] = ["Spymaster", "Operative"];
 const TEAM_COUNT_OPTIONS: TeamCount[] = [2, 3, 4];
@@ -45,6 +45,7 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
     roundTimerSeconds: string;
     lossCardCount: (typeof LOSS_CARD_OPTIONS)[number];
     extraRows: 0 | 1 | 2 | 3;
+    difficulty: Difficulty;
   } | null>(null);
   const origin = typeof window !== "undefined" ? window.location.origin : "";
 
@@ -78,6 +79,7 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
       roundTimerSeconds: String(room.settings.roundTimerSeconds),
       lossCardCount: room.settings.lossCardCount,
       extraRows: room.settings.extraRows ?? 0,
+      difficulty: room.settings.difficulty ?? "Normal",
     });
   }, [
     room.settings.lossCardCount,
@@ -85,6 +87,7 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
     room.settings.teamCount,
     room.settings.wordCategory,
     room.settings.extraRows,
+    room.settings.difficulty,
   ]);
 
   const activeTeams = getActiveTeams(room.settings.teamCount);
@@ -108,6 +111,7 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
       roundTimerSeconds: Number(draftSettings.roundTimerSeconds),
       lossCardCount: draftSettings.lossCardCount,
       extraRows: draftSettings.extraRows,
+      difficulty: draftSettings.difficulty,
     }).then(() => {
       if (mode === "modal") {
         onClose?.();
@@ -347,6 +351,33 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                     } disabled:cursor-not-allowed disabled:opacity-60`}
                   >
                     {count}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-bold text-[#F8FAFC]">مستوى الصعوبة</p>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {(["Normal", "Medium", "Hard"] as const).map((level) => (
+                  <button
+                    key={level}
+                    type="button"
+                    onClick={() =>
+                      setDraftSettings((currentValue) => (currentValue ? { ...currentValue, difficulty: level } : currentValue))
+                    }
+                    disabled={isBusy || !player.isHost}
+                    className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${
+                      (draftSettings?.difficulty ?? "Normal") === level
+                        ? level === "Hard"
+                          ? "bg-[#DC2626] text-[#F8FAFC]"
+                          : level === "Medium"
+                          ? "bg-[#D97706] text-[#F8FAFC]"
+                          : "bg-[#2563EB] text-[#F8FAFC]"
+                        : "border border-white/15 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-[#111d34]"
+                    } disabled:cursor-not-allowed disabled:opacity-60`}
+                  >
+                    {level === "Normal" ? "عادي" : level === "Medium" ? "متوسط" : "صعب"}
                   </button>
                 ))}
               </div>
@@ -627,6 +658,33 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                       } disabled:cursor-not-allowed disabled:opacity-60`}
                     >
                       {count}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm font-bold text-[#F8FAFC]">مستوى الصعوبة</p>
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  {(["Normal", "Medium", "Hard"] as const).map((level) => (
+                    <button
+                      key={level}
+                      type="button"
+                      onClick={() =>
+                        setDraftSettings((currentValue) => (currentValue ? { ...currentValue, difficulty: level } : currentValue))
+                      }
+                      disabled={isBusy || !player.isHost}
+                      className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${
+                        (draftSettings?.difficulty ?? "Normal") === level
+                          ? level === "Hard"
+                            ? "bg-[#DC2626] text-[#F8FAFC]"
+                            : level === "Medium"
+                            ? "bg-[#D97706] text-[#F8FAFC]"
+                            : "bg-[#2563EB] text-[#F8FAFC]"
+                          : "border border-white/15 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-[#111d34]"
+                      } disabled:cursor-not-allowed disabled:opacity-60`}
+                    >
+                      {level === "Normal" ? "عادي" : level === "Medium" ? "متوسط" : "صعب"}
                     </button>
                   ))}
                 </div>
