@@ -41,7 +41,16 @@ const FLOATING_WORDS = [
 
 export function HomeScreen() {
   const searchParams = useSearchParams();
-  const { createRoom, joinRoom, playerName, isBusy, firebaseReady, savePlayerName } = useGameRoom();
+  const {
+    createRoom,
+    joinRoom,
+    playerName,
+    isBusy,
+    firebaseReady,
+    savePlayerName,
+    playerStats,
+    resetPlayerStats,
+  } = useGameRoom();
   const inviteRoomCode = normalizeRoomCode(searchParams.get("room"));
   const autoJoinAttemptRef = useRef<string | null>(null);
   const joinInputRef = useRef<HTMLInputElement | null>(null);
@@ -50,6 +59,7 @@ export function HomeScreen() {
   const [isNameDialogOpen, setIsNameDialogOpen] = useState(!playerName);
   const [isJoinExpanded, setIsJoinExpanded] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
+  const [isConfirmingReset, setIsConfirmingReset] = useState(false);
 
   const nameHint = useMemo(() => {
     if (!playerName) {
@@ -216,6 +226,65 @@ export function HomeScreen() {
           </div>
         </div>
       </div>
+
+      {playerStats ? (
+        <div className="relative z-10 w-full rounded-3xl border border-white/10 bg-[#1E293B]/60 p-5 backdrop-blur-md shadow-xl transition duration-300 hover:border-white/15">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-sm font-black text-[#F8FAFC]/90">إحصائيات اللاعب</h3>
+            <button
+              type="button"
+              onClick={() => {
+                if (isConfirmingReset) {
+                  resetPlayerStats();
+                  setIsConfirmingReset(false);
+                } else {
+                  setIsConfirmingReset(true);
+                }
+              }}
+              onMouseLeave={() => {
+                if (isConfirmingReset) {
+                  setTimeout(() => setIsConfirmingReset(false), 2000);
+                }
+              }}
+              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all duration-200 ${
+                isConfirmingReset
+                  ? "bg-[#EF4444] text-[#F8FAFC] animate-pulse"
+                  : "bg-white/5 text-[#94A3B8] hover:bg-[#EF4444]/10 hover:text-[#F87171]"
+              }`}
+            >
+              {isConfirmingReset ? "تأكيد؟" : "تصفير"}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {/* لعبت */}
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-[#0F172A]/50 p-4 transition duration-200 hover:scale-[1.02] hover:bg-[#0F172A]/70">
+              <span className="text-3xl font-black tracking-tight text-[#60A5FA]">{playerStats.played}</span>
+              <span className="mt-1.5 text-xs font-semibold text-[#94A3B8]">لعبت</span>
+            </div>
+
+            {/* فزت */}
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-[#0F172A]/50 p-4 transition duration-200 hover:scale-[1.02] hover:bg-[#0F172A]/70">
+              <span className="text-3xl font-black tracking-tight text-[#34D399]">{playerStats.won}</span>
+              <span className="mt-1.5 text-xs font-semibold text-[#94A3B8]">فزت</span>
+            </div>
+
+            {/* خسرت */}
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-[#0F172A]/50 p-4 transition duration-200 hover:scale-[1.02] hover:bg-[#0F172A]/70">
+              <span className="text-3xl font-black tracking-tight text-[#F87171]">{playerStats.lost}</span>
+              <span className="mt-1.5 text-xs font-semibold text-[#94A3B8]">خسرت</span>
+            </div>
+
+            {/* نسبة الفوز */}
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-[#0F172A]/50 p-4 transition duration-200 hover:scale-[1.02] hover:bg-[#0F172A]/70">
+              <span className="text-3xl font-black tracking-tight text-[#FBBF24]">
+                {playerStats.played > 0 ? Math.round((playerStats.won / playerStats.played) * 100) : 0}%
+              </span>
+              <span className="mt-1.5 text-xs font-semibold text-[#94A3B8]">نسبة الفوز</span>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {isNameDialogOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/80 px-4 backdrop-blur-sm">

@@ -254,6 +254,8 @@ interface GameRoomContextValue {
   resetGame: () => Promise<void>;
   shuffleBoardWords: () => Promise<void>;
   shuffleTeams: () => Promise<void>;
+  playerStats: { played: number; won: number; lost: number } | null;
+  resetPlayerStats: () => void;
 }
 
 interface SessionState {
@@ -413,6 +415,93 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
   const [isReady, setIsReady] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [playerStats, setPlayerStats] = useState<{ played: number; won: number; lost: number } | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const STATS_KEY = "iraqi-codenames-stats";
+      const raw = localStorage.getItem(STATS_KEY);
+      try {
+        if (raw) {
+          setPlayerStats(JSON.parse(raw));
+        } else {
+          setPlayerStats({ played: 0, won: 0, lost: 0 });
+        }
+      } catch {
+        setPlayerStats({ played: 0, won: 0, lost: 0 });
+      }
+    }
+  }, []);
+
+  const resetPlayerStats = useCallback(() => {
+    if (typeof window !== "undefined") {
+      const STATS_KEY = "iraqi-codenames-stats";
+      const PROCESSED_GAMES_KEY = "iraqi-codenames-processed-games";
+      localStorage.removeItem(STATS_KEY);
+      localStorage.removeItem(PROCESSED_GAMES_KEY);
+      setPlayerStats({ played: 0, won: 0, lost: 0 });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!room || room.gameState !== "GameOver" || !room.winner) {
+      return;
+    }
+
+    const playerInRoom = room.players.find((p) => p.id === playerId);
+    if (!playerInRoom || playerInRoom.team === "Unassigned") {
+      return;
+    }
+
+    // Generate unique board fingerprint based on card texts
+    const fingerprint = room.board.map((card) => card.text).join(",");
+    if (!fingerprint) {
+      return;
+    }
+
+    const STATS_KEY = "iraqi-codenames-stats";
+    const PROCESSED_GAMES_KEY = "iraqi-codenames-processed-games";
+
+    const rawProcessed = localStorage.getItem(PROCESSED_GAMES_KEY);
+    let processed: string[] = [];
+    try {
+      processed = rawProcessed ? JSON.parse(rawProcessed) : [];
+    } catch {
+      processed = [];
+    }
+
+    if (processed.includes(fingerprint)) {
+      return;
+    }
+
+    // Update local stats
+    const rawStats = localStorage.getItem(STATS_KEY);
+    let stats = { played: 0, won: 0, lost: 0 };
+    try {
+      if (rawStats) {
+        stats = JSON.parse(rawStats);
+      }
+    } catch {
+      // Default stats
+    }
+
+    stats.played += 1;
+    if (playerInRoom.team === room.winner) {
+      stats.won += 1;
+    } else {
+      stats.lost += 1;
+    }
+
+    processed.push(fingerprint);
+    if (processed.length > 50) {
+      processed.shift();
+    }
+
+    localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+    localStorage.setItem(PROCESSED_GAMES_KEY, JSON.stringify(processed));
+
+    setPlayerStats(stats);
+  }, [room?.gameState, room?.winner, room?.board, playerId]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -1532,6 +1621,8 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       resetGame,
       shuffleBoardWords,
       shuffleTeams,
+      playerStats,
+      resetPlayerStats,
     }),
     [
       chooseRole,
@@ -1561,6 +1652,8 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       resolvePendingReveal,
       shuffleBoardWords,
       shuffleTeams,
+      playerStats,
+      resetPlayerStats,
     ],
   );
 
