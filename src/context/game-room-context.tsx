@@ -535,13 +535,15 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
     return onValue(
       roomRef,
       (snapshot) => {
+        if (isLeavingRef.current) {
+          return;
+        }
+
         if (!snapshot.exists()) {
           setRoom(null);
           setRoomId("");
           saveSessionRoom(null, playerId, playerName);
-          if (!isLeavingRef.current) {
-            setError("الغرفة غير موجودة أو انتهت.");
-          }
+          setError("الغرفة غير موجودة أو انتهت.");
           return;
         }
 
@@ -559,9 +561,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           setRoom(null);
           setRoomId("");
           saveSessionRoom(null, playerId, playerName);
-          if (!isLeavingRef.current) {
-            setError("تم إخراجك من الغرفة.");
-          }
+          setError("تم إخراجك من الغرفة.");
           return;
         }
 
@@ -597,13 +597,24 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
 
       void onDisconnect(presenceRef)
         .set(false)
-        .then(() => set(presenceRef, true));
+        .then(() => {
+          if (!isCleanedUp) {
+            set(presenceRef, true).catch(() => {
+              // Ignore presence write failures
+            });
+          }
+        })
+        .catch(() => {
+          // Ignore onDisconnect failures
+        });
     });
 
     return () => {
       isCleanedUp = true;
       unsubscribe();
-      void set(presenceRef, false);
+      set(presenceRef, false).catch(() => {
+        // Ignore presence write failures during cleanup
+      });
     };
   }, [isReady, playerId, roomId]);
 
