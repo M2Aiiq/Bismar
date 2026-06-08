@@ -61,13 +61,7 @@ export function HomeScreen() {
   const [nameError, setNameError] = useState<string | null>(null);
   const [isConfirmingReset, setIsConfirmingReset] = useState(false);
 
-  const nameHint = useMemo(() => {
-    if (!playerName) {
-      return "احفظ اسمك أولاً للمتابعة.";
-    }
 
-    return `مرحباً ${playerName}`;
-  }, [playerName]);
 
   async function handleSaveName() {
     try {
@@ -135,18 +129,95 @@ export function HomeScreen() {
       <div className="relative z-10 w-full">
         <h1 className="bismar-brand text-5xl font-black tracking-[0.08em] md:text-6xl">Bismar</h1>
         <p className="mt-3 text-base font-bold tracking-[0.3em] text-[#F8FAFC]/80">لمح . خمن . فوز</p>
-        <p className="mt-3 text-sm leading-6 text-[#F8FAFC]/75">{nameHint}</p>
-        <button
-          type="button"
-          onClick={() => {
-            setDraftName(playerName);
-            setNameError(null);
-            setIsNameDialogOpen(true);
-          }}
-          className="mt-4 rounded-2xl border border-white/15 bg-[#1E293B]/70 px-4 py-2 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#1E293B]"
-        >
-          تعديل الاسم
-        </button>
+      </div>
+
+      {/* بطاقة اللاعب والإحصائيات المدمجة والاحترافية */}
+      <div className="relative z-10 w-full rounded-3xl border border-white/10 bg-[#1E293B]/50 p-5 backdrop-blur-md shadow-xl text-right">
+        {/* الجزء العلوي: الترحيب وتعديل الاسم */}
+        <div className="flex items-center justify-between pb-3">
+          <div className="flex flex-col">
+            <span className="text-xs text-[#94A3B8]">مرحباً بعودتك،</span>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xl font-bold text-[#F8FAFC]">{playerName || "لاعب جديد"}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setDraftName(playerName);
+                  setNameError(null);
+                  setIsNameDialogOpen(true);
+                }}
+                className="text-[#94A3B8] hover:text-[#F8FAFC] transition"
+                title="تعديل الاسم"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.83 20.824a4.5 4.5 0 0 1-1.89 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* خط فاصل */}
+        <div className="border-t border-white/5 my-1"></div>
+
+        {/* الجزء الأوسط: الإحصائيات بشكل أفقي مع فواصل عمودية */}
+        <div className="grid grid-cols-4 gap-1 text-center py-3">
+          {/* لعبت */}
+          <div className="flex flex-col items-center">
+            <span className="text-lg font-black text-[#F8FAFC]">{playerStats?.played ?? 0}</span>
+            <span className="text-[10px] font-bold text-[#94A3B8] mt-1">لعبت</span>
+          </div>
+
+          {/* فزت */}
+          <div className="flex flex-col items-center border-r border-white/5">
+            <span className="text-lg font-black text-[#34D399]">{playerStats?.won ?? 0}</span>
+            <span className="text-[10px] font-bold text-[#94A3B8] mt-1">فوز</span>
+          </div>
+
+          {/* خسرت */}
+          <div className="flex flex-col items-center border-r border-white/5">
+            <span className="text-lg font-black text-[#F87171]">{playerStats?.lost ?? 0}</span>
+            <span className="text-[10px] font-bold text-[#94A3B8] mt-1">خسارة</span>
+          </div>
+
+          {/* نسبة الفوز */}
+          <div className="flex flex-col items-center border-r border-white/5">
+            <span className="text-lg font-black text-[#FBBF24]">
+              {playerStats && playerStats.played > 0 ? Math.round((playerStats.won / playerStats.played) * 100) : 0}%
+            </span>
+            <span className="text-[10px] font-bold text-[#94A3B8] mt-1">نسبة الفوز</span>
+          </div>
+        </div>
+
+        {/* خط فاصل */}
+        <div className="border-t border-white/5 my-1"></div>
+
+        {/* الجزء السفلي: زر إعادة تعيين الإحصائيات */}
+        <div className="flex justify-center pt-2.5">
+          <button
+            type="button"
+            onClick={() => {
+              if (isConfirmingReset) {
+                resetPlayerStats();
+                setIsConfirmingReset(false);
+              } else {
+                setIsConfirmingReset(true);
+              }
+            }}
+            onMouseLeave={() => {
+              if (isConfirmingReset) {
+                setTimeout(() => setIsConfirmingReset(false), 2000);
+              }
+            }}
+            className={`text-xs font-semibold transition-all duration-200 ${
+              isConfirmingReset
+                ? "text-[#EF4444] animate-pulse"
+                : "text-[#94A3B8]/60 hover:text-[#EF4444]"
+            }`}
+          >
+            {isConfirmingReset ? "تأكيد إعادة تعيين الإحصائيات؟" : "إعادة تعيين الإحصائيات"}
+          </button>
+        </div>
       </div>
 
       {!firebaseReady ? (
@@ -227,64 +298,7 @@ export function HomeScreen() {
         </div>
       </div>
 
-      {playerStats ? (
-        <div className="relative z-10 w-full rounded-3xl border border-white/10 bg-[#1E293B]/60 p-5 backdrop-blur-md shadow-xl transition duration-300 hover:border-white/15">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-sm font-black text-[#F8FAFC]/90">إحصائيات اللاعب</h3>
-            <button
-              type="button"
-              onClick={() => {
-                if (isConfirmingReset) {
-                  resetPlayerStats();
-                  setIsConfirmingReset(false);
-                } else {
-                  setIsConfirmingReset(true);
-                }
-              }}
-              onMouseLeave={() => {
-                if (isConfirmingReset) {
-                  setTimeout(() => setIsConfirmingReset(false), 2000);
-                }
-              }}
-              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all duration-200 ${
-                isConfirmingReset
-                  ? "bg-[#EF4444] text-[#F8FAFC] animate-pulse"
-                  : "bg-white/5 text-[#94A3B8] hover:bg-[#EF4444]/10 hover:text-[#F87171]"
-              }`}
-            >
-              {isConfirmingReset ? "تأكيد؟" : "تصفير"}
-            </button>
-          </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            {/* لعبت */}
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-[#0F172A]/50 p-4 transition duration-200 hover:scale-[1.02] hover:bg-[#0F172A]/70">
-              <span className="text-3xl font-black tracking-tight text-[#60A5FA]">{playerStats.played}</span>
-              <span className="mt-1.5 text-xs font-semibold text-[#94A3B8]">لعبت</span>
-            </div>
-
-            {/* فزت */}
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-[#0F172A]/50 p-4 transition duration-200 hover:scale-[1.02] hover:bg-[#0F172A]/70">
-              <span className="text-3xl font-black tracking-tight text-[#34D399]">{playerStats.won}</span>
-              <span className="mt-1.5 text-xs font-semibold text-[#94A3B8]">فزت</span>
-            </div>
-
-            {/* خسرت */}
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-[#0F172A]/50 p-4 transition duration-200 hover:scale-[1.02] hover:bg-[#0F172A]/70">
-              <span className="text-3xl font-black tracking-tight text-[#F87171]">{playerStats.lost}</span>
-              <span className="mt-1.5 text-xs font-semibold text-[#94A3B8]">خسرت</span>
-            </div>
-
-            {/* نسبة الفوز */}
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-[#0F172A]/50 p-4 transition duration-200 hover:scale-[1.02] hover:bg-[#0F172A]/70">
-              <span className="text-3xl font-black tracking-tight text-[#FBBF24]">
-                {playerStats.played > 0 ? Math.round((playerStats.won / playerStats.played) * 100) : 0}%
-              </span>
-              <span className="mt-1.5 text-xs font-semibold text-[#94A3B8]">نسبة الفوز</span>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       {isNameDialogOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/80 px-4 backdrop-blur-sm">
