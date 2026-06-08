@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -416,6 +417,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [playerStats, setPlayerStats] = useState<{ played: number; won: number; lost: number } | null>(null);
+  const isLeavingRef = useRef(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -537,13 +539,18 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           setRoom(null);
           setRoomId("");
           saveSessionRoom(null, playerId, playerName);
-          setError("الغرفة غير موجودة أو انتهت.");
+          if (!isLeavingRef.current) {
+            setError("الغرفة غير موجودة أو انتهت.");
+          }
           return;
         }
 
         const nextRoom = normalizeRoom(snapshot.val());
 
         if (!nextRoom) {
+          setRoom(null);
+          setRoomId("");
+          saveSessionRoom(null, playerId, playerName);
           setError("تعذر قراءة بيانات الغرفة.");
           return;
         }
@@ -552,14 +559,18 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           setRoom(null);
           setRoomId("");
           saveSessionRoom(null, playerId, playerName);
-          setError("تم إخراجك من الغرفة.");
+          if (!isLeavingRef.current) {
+            setError("تم إخراجك من الغرفة.");
+          }
           return;
         }
 
         setRoom(nextRoom);
       },
       () => {
-        setError("فشل الاتصال اللحظي بقاعدة البيانات.");
+        if (!isLeavingRef.current) {
+          setError("فشل الاتصال اللحظي بقاعدة البيانات.");
+        }
       },
     );
   }, [isReady, playerId, playerName, roomId]);
@@ -740,46 +751,51 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        const roomRef = ref(database, getRoomPath(roomId));
+        isLeavingRef.current = true;
+        try {
+          const roomRef = ref(database, getRoomPath(roomId));
 
-        await runTransaction(roomRef, (currentValue) => {
-          const currentRoom = normalizeRoom(currentValue);
+          await runTransaction(roomRef, (currentValue) => {
+            const currentRoom = normalizeRoom(currentValue);
 
-          if (!currentRoom) {
-            return currentValue;
-          }
+            if (!currentRoom) {
+              return currentValue;
+            }
 
-          const leavingPlayer = currentRoom.players.find((currentPlayer) => currentPlayer.id === playerId);
+            const leavingPlayer = currentRoom.players.find((currentPlayer) => currentPlayer.id === playerId);
 
-          if (!leavingPlayer) {
-            return currentValue;
-          }
+            if (!leavingPlayer) {
+              return currentValue;
+            }
 
-          const remainingPlayers = currentRoom.players.filter((currentPlayer) => currentPlayer.id !== playerId);
+            const remainingPlayers = currentRoom.players.filter((currentPlayer) => currentPlayer.id !== playerId);
 
-          if (!remainingPlayers.length) {
-            return null;
-          }
+            if (!remainingPlayers.length) {
+              return null;
+            }
 
-          if (leavingPlayer.isHost && !remainingPlayers.some((currentPlayer) => currentPlayer.isHost)) {
-            remainingPlayers[0] = {
-              ...remainingPlayers[0],
-              isHost: true,
+            if (leavingPlayer.isHost && !remainingPlayers.some((currentPlayer) => currentPlayer.isHost)) {
+              remainingPlayers[0] = {
+                ...remainingPlayers[0],
+                isHost: true,
+              };
+            }
+
+            return {
+              ...currentRoom,
+              presence: Object.fromEntries(
+                Object.entries(currentRoom.presence ?? {}).filter(([currentPresencePlayerId]) => currentPresencePlayerId !== playerId),
+              ),
+              players: remainingPlayers,
             };
-          }
+          });
 
-          return {
-            ...currentRoom,
-            presence: Object.fromEntries(
-              Object.entries(currentRoom.presence ?? {}).filter(([currentPresencePlayerId]) => currentPresencePlayerId !== playerId),
-            ),
-            players: remainingPlayers,
-          };
-        });
-
-        setRoom(null);
-        setRoomId("");
-        saveSessionRoom(null, playerId, playerName);
+          setRoom(null);
+          setRoomId("");
+          saveSessionRoom(null, playerId, playerName);
+        } finally {
+          isLeavingRef.current = false;
+        }
       }, "تعذر مغادرة الغرفة."),
     [playerId, playerName, roomId, runAction],
   );

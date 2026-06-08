@@ -377,14 +377,30 @@ function sanitizeClues(value: unknown): Clue[] {
     .slice(0, 24);
 }
 
+function parseFirebaseArray<T>(value: unknown): T[] {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is T => item !== null && item !== undefined);
+  }
+  if (value && typeof value === "object") {
+    const keys = Object.keys(value).filter((key) => !Number.isNaN(Number(key)));
+    return keys
+      .sort((a, b) => Number(a) - Number(b))
+      .map((key) => (value as Record<string, T>)[key])
+      .filter((item): item is T => item !== null && item !== undefined);
+  }
+  return [];
+}
+
 export function normalizeRoom(value: unknown): Room | null {
   if (!value || typeof value !== "object") {
     return null;
   }
 
   const room = value as Room;
+  const players = parseFirebaseArray<Player>(room.players);
+  const board = parseFirebaseArray<Card>(room.board);
 
-  if (!room.roomId || !Array.isArray(room.players) || !Array.isArray(room.board)) {
+  if (!room.roomId || players.length === 0 || board.length === 0) {
     return null;
   }
 
@@ -399,7 +415,7 @@ export function normalizeRoom(value: unknown): Room | null {
     difficulty: sanitizeDifficulty(settings.difficulty),
   };
   const activeTeams = getActiveTeams(teamCount);
-  const eliminatedTeams = sanitizeEliminatedTeams((room as Partial<Room>).eliminatedTeams, activeTeams);
+  const eliminatedTeams = sanitizeEliminatedTeams(parseFirebaseArray((room as Partial<Room>).eliminatedTeams), activeTeams);
   const remainingTeams = activeTeams.filter((team) => !eliminatedTeams.includes(team));
   const fallbackTurn = activeTeams[0];
   const fallbackAliveTurn = remainingTeams[0] ?? fallbackTurn;
@@ -411,18 +427,20 @@ export function normalizeRoom(value: unknown): Room | null {
     room.winner && activeTeams.includes(room.winner as ActiveTeam) ? (room.winner as ActiveTeam) : null;
   const operativeSelections = pruneOperativeSelections(
     sanitizeOperativeSelections((room as Partial<Room>).operativeSelections),
-    room.board,
-    room.players,
+    board,
+    players,
     normalizedTurn,
   );
-  const presence = prunePresence(sanitizePresence((room as Partial<Room>).presence), room.players);
+  const presence = prunePresence(sanitizePresence((room as Partial<Room>).presence), players);
 
   return {
     ...room,
+    players,
+    board,
     presence,
     settings: normalizedSettings,
-    recentWords: sanitizeRecentWords((room as Partial<Room>).recentWords, normalizedSettings.wordCategory),
-    clues: sanitizeClues(room.clues),
+    recentWords: sanitizeRecentWords(parseFirebaseArray((room as Partial<Room>).recentWords), normalizedSettings.wordCategory),
+    clues: sanitizeClues(parseFirebaseArray(room.clues)),
     eliminatedTeams,
     operativeSelections,
     isPaused: Boolean((room as Partial<Room>).isPaused),
