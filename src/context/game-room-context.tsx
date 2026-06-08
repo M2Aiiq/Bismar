@@ -258,6 +258,7 @@ interface GameRoomContextValue {
   playerStats: { played: number; won: number; lost: number } | null;
   resetPlayerStats: () => void;
   leftRoomCode: string | null;
+  clearLeftRoomCode: () => void;
 }
 
 interface SessionState {
@@ -420,6 +421,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
   const [playerStats, setPlayerStats] = useState<{ played: number; won: number; lost: number } | null>(null);
   const isLeavingRef = useRef(false);
   const [leftRoomCode, setLeftRoomCode] = useState<string | null>(null);
+  const clearLeftRoomCode = useCallback(() => setLeftRoomCode(null), []);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -538,6 +540,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       roomRef,
       (snapshot) => {
         if (!snapshot.exists()) {
+          setLeftRoomCode(roomId);
           setRoom(null);
           setRoomId("");
           saveSessionRoom(null, playerId, playerName);
@@ -550,6 +553,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         const nextRoom = normalizeRoom(snapshot.val());
 
         if (!nextRoom) {
+          setLeftRoomCode(roomId);
           setRoom(null);
           setRoomId("");
           saveSessionRoom(null, playerId, playerName);
@@ -558,6 +562,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         }
 
         if (!nextRoom.players.some((currentPlayer) => currentPlayer.id === playerId)) {
+          setLeftRoomCode(roomId);
           setRoom(null);
           setRoomId("");
           saveSessionRoom(null, playerId, playerName);
@@ -756,6 +761,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         }
 
         const leavingRoomId = roomId;
+        setLeftRoomCode(leavingRoomId);
         isLeavingRef.current = true;
         try {
           const roomRef = ref(database, getRoomPath(leavingRoomId));
@@ -798,7 +804,6 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           setRoom(null);
           setRoomId("");
           saveSessionRoom(null, playerId, playerName);
-          setLeftRoomCode(leavingRoomId);
 
           // تنظيف بارامتر الدعوة من URL لمنع إعادة الانضمام التلقائي
           if (typeof window !== "undefined") {
@@ -1655,6 +1660,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       playerStats,
       resetPlayerStats,
       leftRoomCode,
+      clearLeftRoomCode,
     }),
     [
       chooseRole,
@@ -1687,6 +1693,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       playerStats,
       resetPlayerStats,
       leftRoomCode,
+      clearLeftRoomCode,
     ],
   );
 

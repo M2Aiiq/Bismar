@@ -53,6 +53,7 @@ export function HomeScreen() {
     playerStats,
     resetPlayerStats,
     leftRoomCode,
+    clearLeftRoomCode,
   } = useGameRoom();
   const inviteRoomCode = normalizeRoomCode(searchParams.get("room"));
   const autoJoinAttemptRef = useRef<string | null>(null);
@@ -105,6 +106,13 @@ export function HomeScreen() {
       autoJoinAttemptRef.current = null;
     });
   }, [firebaseReady, inviteRoomCode, isNameDialogOpen, joinRoom, playerName, leftRoomCode, router]);
+
+  // في حال خلو العنوان من معامل الغرفة، نقوم بتصفير كود الغرفة المغادَرة لتمكين الدخول إليها مجدداً عند الطلب
+  useEffect(() => {
+    if (!inviteRoomCode && leftRoomCode) {
+      clearLeftRoomCode();
+    }
+  }, [inviteRoomCode, leftRoomCode, clearLeftRoomCode]);
 
   useEffect(() => {
     if (!isJoinExpanded) {
