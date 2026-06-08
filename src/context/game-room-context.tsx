@@ -10,7 +10,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useRouter } from "next/navigation";
 import { get, onDisconnect, onValue, ref, runTransaction, set } from "firebase/database";
 
 import {
@@ -316,18 +315,6 @@ function saveSessionRoom(roomId: string | null, playerId: string, playerName: st
     playerName,
     roomId: roomId || undefined,
   });
-
-  if (typeof window !== "undefined" && !roomId) {
-    try {
-      const url = new URL(window.location.href);
-      if (url.searchParams.has("room")) {
-        url.searchParams.delete("room");
-        window.history.replaceState(null, "", url.pathname + url.search);
-      }
-    } catch {
-      // Ignored
-    }
-  }
 }
 
 function buildMessage(error: unknown, fallback: string) {
@@ -431,14 +418,6 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [playerStats, setPlayerStats] = useState<{ played: number; won: number; lost: number } | null>(null);
   const isLeavingRef = useRef(false);
-  const router = useRouter();
-
-  const handleClearRoomSession = useCallback(() => {
-    setRoom(null);
-    setRoomId("");
-    saveSessionRoom(null, playerId, playerName);
-    router.replace("/");
-  }, [playerId, playerName, router]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -557,7 +536,9 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       roomRef,
       (snapshot) => {
         if (!snapshot.exists()) {
-          handleClearRoomSession();
+          setRoom(null);
+          setRoomId("");
+          saveSessionRoom(null, playerId, playerName);
           if (!isLeavingRef.current) {
             setError("الغرفة غير موجودة أو انتهت.");
           }
@@ -567,13 +548,17 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         const nextRoom = normalizeRoom(snapshot.val());
 
         if (!nextRoom) {
-          handleClearRoomSession();
+          setRoom(null);
+          setRoomId("");
+          saveSessionRoom(null, playerId, playerName);
           setError("تعذر قراءة بيانات الغرفة.");
           return;
         }
 
         if (!nextRoom.players.some((currentPlayer) => currentPlayer.id === playerId)) {
-          handleClearRoomSession();
+          setRoom(null);
+          setRoomId("");
+          saveSessionRoom(null, playerId, playerName);
           if (!isLeavingRef.current) {
             setError("تم إخراجك من الغرفة.");
           }
@@ -805,7 +790,18 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             };
           });
 
-          handleClearRoomSession();
+          setRoom(null);
+          setRoomId("");
+          saveSessionRoom(null, playerId, playerName);
+
+          // تنظيف بارامتر الدعوة من URL لمنع إعادة الانضمام التلقائي
+          if (typeof window !== "undefined") {
+            const url = new URL(window.location.href);
+            if (url.searchParams.has("room")) {
+              url.searchParams.delete("room");
+              window.history.replaceState({}, "", url.pathname + url.search);
+            }
+          }
         } finally {
           isLeavingRef.current = false;
         }

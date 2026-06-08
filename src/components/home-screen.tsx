@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { useGameRoom } from "../context/game-room-context";
 
@@ -41,9 +41,11 @@ const FLOATING_WORDS = [
 
 export function HomeScreen() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const {
     createRoom,
     joinRoom,
+    leaveRoom,
     playerName,
     isBusy,
     firebaseReady,
@@ -53,6 +55,7 @@ export function HomeScreen() {
   } = useGameRoom();
   const inviteRoomCode = normalizeRoomCode(searchParams.get("room"));
   const autoJoinAttemptRef = useRef<string | null>(null);
+  const hasLeftRoomRef = useRef(false);
   const joinInputRef = useRef<HTMLInputElement | null>(null);
   const [roomCode, setRoomCode] = useState(inviteRoomCode);
   const [draftName, setDraftName] = useState(playerName);
@@ -79,6 +82,10 @@ export function HomeScreen() {
 
   useEffect(() => {
     if (!inviteRoomCode || !playerName || !firebaseReady || isNameDialogOpen) {
+      return;
+    }
+
+    if (hasLeftRoomRef.current) {
       return;
     }
 
