@@ -132,13 +132,13 @@ export function HomeScreen() {
       </div>
 
       {/* بطاقة اللاعب والإحصائيات المدمجة والاحترافية */}
-      <div className="relative z-10 w-full rounded-3xl border border-white/10 bg-[#1E293B]/50 p-5 backdrop-blur-md shadow-xl text-right">
+      <div className="relative z-10 w-full max-w-sm mx-auto rounded-2xl border border-white/10 bg-[#1E293B]/50 p-3 px-4 backdrop-blur-md shadow-xl text-right">
         {/* الجزء العلوي: الترحيب وتعديل الاسم */}
-        <div className="flex items-center justify-between pb-3">
+        <div className="flex items-center justify-between pb-2">
           <div className="flex flex-col">
-            <span className="text-xs text-[#94A3B8]">مرحباً بعودتك،</span>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-xl font-bold text-[#F8FAFC]">{playerName || "لاعب جديد"}</span>
+            <span className="text-[10px] text-[#94A3B8]">مرحباً بعودتك،</span>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-base font-bold text-[#F8FAFC]">{playerName || "لاعب جديد"}</span>
               <button
                 type="button"
                 onClick={() => {
@@ -146,10 +146,10 @@ export function HomeScreen() {
                   setNameError(null);
                   setIsNameDialogOpen(true);
                 }}
-                className="text-[#94A3B8] hover:text-[#F8FAFC] transition"
+                className="text-[#94A3B8] hover:text-[#F8FAFC] transition p-0.5"
                 title="تعديل الاسم"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.83 20.824a4.5 4.5 0 0 1-1.89 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
                 </svg>
               </button>
@@ -158,42 +158,42 @@ export function HomeScreen() {
         </div>
 
         {/* خط فاصل */}
-        <div className="border-t border-white/5 my-1"></div>
+        <div className="border-t border-white/5"></div>
 
         {/* الجزء الأوسط: الإحصائيات بشكل أفقي مع فواصل عمودية */}
-        <div className="grid grid-cols-4 gap-1 text-center py-3">
+        <div className="grid grid-cols-4 gap-1 text-center py-2">
           {/* لعبت */}
           <div className="flex flex-col items-center">
-            <span className="text-lg font-black text-[#F8FAFC]">{playerStats?.played ?? 0}</span>
-            <span className="text-[10px] font-bold text-[#94A3B8] mt-1">لعبت</span>
+            <span className="text-base font-black text-[#F8FAFC]">{playerStats?.played ?? 0}</span>
+            <span className="text-[10px] font-bold text-[#94A3B8] mt-0.5">لعبت</span>
           </div>
 
           {/* فزت */}
           <div className="flex flex-col items-center border-r border-white/5">
-            <span className="text-lg font-black text-[#34D399]">{playerStats?.won ?? 0}</span>
-            <span className="text-[10px] font-bold text-[#94A3B8] mt-1">فوز</span>
+            <span className="text-base font-black text-[#34D399]">{playerStats?.won ?? 0}</span>
+            <span className="text-[10px] font-bold text-[#94A3B8] mt-0.5">فوز</span>
           </div>
 
           {/* خسرت */}
           <div className="flex flex-col items-center border-r border-white/5">
-            <span className="text-lg font-black text-[#F87171]">{playerStats?.lost ?? 0}</span>
-            <span className="text-[10px] font-bold text-[#94A3B8] mt-1">خسارة</span>
+            <span className="text-base font-black text-[#F87171]">{playerStats?.lost ?? 0}</span>
+            <span className="text-[10px] font-bold text-[#94A3B8] mt-0.5">خسارة</span>
           </div>
 
           {/* نسبة الفوز */}
           <div className="flex flex-col items-center border-r border-white/5">
-            <span className="text-lg font-black text-[#FBBF24]">
+            <span className="text-base font-black text-[#FBBF24]">
               {playerStats && playerStats.played > 0 ? Math.round((playerStats.won / playerStats.played) * 100) : 0}%
             </span>
-            <span className="text-[10px] font-bold text-[#94A3B8] mt-1">نسبة الفوز</span>
+            <span className="text-[10px] font-bold text-[#94A3B8] mt-0.5">نسبة الفوز</span>
           </div>
         </div>
 
         {/* خط فاصل */}
-        <div className="border-t border-white/5 my-1"></div>
+        <div className="border-t border-white/5"></div>
 
         {/* الجزء السفلي: زر إعادة تعيين الإحصائيات */}
-        <div className="flex justify-center pt-2.5">
+        <div className="flex justify-center pt-2">
           <button
             type="button"
             onClick={() => {
@@ -209,10 +209,10 @@ export function HomeScreen() {
                 setTimeout(() => setIsConfirmingReset(false), 2000);
               }
             }}
-            className={`text-xs font-semibold transition-all duration-200 ${
+            className={`text-[10px] font-semibold transition-all duration-200 ${
               isConfirmingReset
                 ? "text-[#EF4444] animate-pulse"
-                : "text-[#94A3B8]/60 hover:text-[#EF4444]"
+                : "text-[#94A3B8]/50 hover:text-[#EF4444]"
             }`}
           >
             {isConfirmingReset ? "تأكيد إعادة تعيين الإحصائيات؟" : "إعادة تعيين الإحصائيات"}
