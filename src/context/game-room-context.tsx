@@ -315,6 +315,18 @@ function saveSessionRoom(roomId: string | null, playerId: string, playerName: st
     playerName,
     roomId: roomId || undefined,
   });
+
+  if (typeof window !== "undefined" && !roomId) {
+    try {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("room")) {
+        url.searchParams.delete("room");
+        window.history.replaceState(null, "", url.pathname + url.search);
+      }
+    } catch {
+      // Ignored
+    }
+  }
 }
 
 function buildMessage(error: unknown, fallback: string) {
@@ -535,15 +547,13 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
     return onValue(
       roomRef,
       (snapshot) => {
-        if (isLeavingRef.current) {
-          return;
-        }
-
         if (!snapshot.exists()) {
           setRoom(null);
           setRoomId("");
           saveSessionRoom(null, playerId, playerName);
-          setError("الغرفة غير موجودة أو انتهت.");
+          if (!isLeavingRef.current) {
+            setError("الغرفة غير موجودة أو انتهت.");
+          }
           return;
         }
 
@@ -561,7 +571,9 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
           setRoom(null);
           setRoomId("");
           saveSessionRoom(null, playerId, playerName);
-          setError("تم إخراجك من الغرفة.");
+          if (!isLeavingRef.current) {
+            setError("تم إخراجك من الغرفة.");
+          }
           return;
         }
 
@@ -597,24 +609,13 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
 
       void onDisconnect(presenceRef)
         .set(false)
-        .then(() => {
-          if (!isCleanedUp) {
-            set(presenceRef, true).catch(() => {
-              // Ignore presence write failures
-            });
-          }
-        })
-        .catch(() => {
-          // Ignore onDisconnect failures
-        });
+        .then(() => set(presenceRef, true));
     });
 
     return () => {
       isCleanedUp = true;
       unsubscribe();
-      set(presenceRef, false).catch(() => {
-        // Ignore presence write failures during cleanup
-      });
+      void set(presenceRef, false);
     };
   }, [isReady, playerId, roomId]);
 
