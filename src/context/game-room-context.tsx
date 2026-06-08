@@ -10,6 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useRouter } from "next/navigation";
 import { get, onDisconnect, onValue, ref, runTransaction, set } from "firebase/database";
 
 import {
@@ -257,7 +258,6 @@ interface GameRoomContextValue {
   shuffleTeams: () => Promise<void>;
   playerStats: { played: number; won: number; lost: number } | null;
   resetPlayerStats: () => void;
-  hasJustLeft: boolean;
 }
 
 interface SessionState {
@@ -316,6 +316,18 @@ function saveSessionRoom(roomId: string | null, playerId: string, playerName: st
     playerName,
     roomId: roomId || undefined,
   });
+
+  if (typeof window !== "undefined" && !roomId) {
+    try {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("room")) {
+        url.searchParams.delete("room");
+        window.history.replaceState(null, "", url.pathname + url.search);
+      }
+    } catch {
+      // Ignored
+    }
+  }
 }
 
 function buildMessage(error: unknown, fallback: string) {
@@ -418,8 +430,15 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [playerStats, setPlayerStats] = useState<{ played: number; won: number; lost: number } | null>(null);
-  const [hasJustLeft, setHasJustLeft] = useState(false);
   const isLeavingRef = useRef(false);
+  const router = useRouter();
+
+  const handleClearRoomSession = useCallback(() => {
+    setRoom(null);
+    setRoomId("");
+    saveSessionRoom(null, playerId, playerName);
+    router.replace("/");
+  }, [playerId, playerName, router]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -538,9 +557,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       roomRef,
       (snapshot) => {
         if (!snapshot.exists()) {
-          setRoom(null);
-          setRoomId("");
-          saveSessionRoom(null, playerId, playerName);
+          handleClearRoomSession();
           if (!isLeavingRef.current) {
             setError("الغرفة غير موجودة أو انتهت.");
           }
@@ -550,17 +567,13 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         const nextRoom = normalizeRoom(snapshot.val());
 
         if (!nextRoom) {
-          setRoom(null);
-          setRoomId("");
-          saveSessionRoom(null, playerId, playerName);
+          handleClearRoomSession();
           setError("تعذر قراءة بيانات الغرفة.");
           return;
         }
 
         if (!nextRoom.players.some((currentPlayer) => currentPlayer.id === playerId)) {
-          setRoom(null);
-          setRoomId("");
-          saveSessionRoom(null, playerId, playerName);
+          handleClearRoomSession();
           if (!isLeavingRef.current) {
             setError("تم إخراجك من الغرفة.");
           }
@@ -683,7 +696,6 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
 
         setPlayerName(sanitizedName);
         setRoomId(nextRoomId);
-        setHasJustLeft(false);
         saveSessionRoom(nextRoomId, playerId, sanitizedName);
       }, "تعذر إنشاء الغرفة."),
     [playerId, runAction],
@@ -736,7 +748,6 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
 
         setPlayerName(sanitizedName);
         setRoomId(normalizedRoomCode);
-        setHasJustLeft(false);
         saveSessionRoom(normalizedRoomCode, playerId, sanitizedName);
       }, "تعذر الانضمام إلى الغرفة."),
     [playerId, runAction],
@@ -794,10 +805,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
             };
           });
 
-          setRoom(null);
-          setRoomId("");
-          setHasJustLeft(true);
-          saveSessionRoom(null, playerId, playerName);
+          handleClearRoomSession();
         } finally {
           isLeavingRef.current = false;
         }
@@ -1644,7 +1652,6 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       shuffleTeams,
       playerStats,
       resetPlayerStats,
-      hasJustLeft,
     }),
     [
       chooseRole,
@@ -1676,7 +1683,6 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       shuffleTeams,
       playerStats,
       resetPlayerStats,
-      hasJustLeft,
     ],
   );
 

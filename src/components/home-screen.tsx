@@ -50,7 +50,6 @@ export function HomeScreen() {
     savePlayerName,
     playerStats,
     resetPlayerStats,
-    hasJustLeft,
   } = useGameRoom();
   const inviteRoomCode = normalizeRoomCode(searchParams.get("room"));
   const autoJoinAttemptRef = useRef<string | null>(null);
@@ -79,7 +78,7 @@ export function HomeScreen() {
   }
 
   useEffect(() => {
-    if (!inviteRoomCode || !playerName || !firebaseReady || isNameDialogOpen || hasJustLeft) {
+    if (!inviteRoomCode || !playerName || !firebaseReady || isNameDialogOpen) {
       return;
     }
 
@@ -91,7 +90,7 @@ export function HomeScreen() {
     void joinRoom(inviteRoomCode, playerName).catch(() => {
       autoJoinAttemptRef.current = null;
     });
-  }, [firebaseReady, inviteRoomCode, isNameDialogOpen, joinRoom, playerName, hasJustLeft]);
+  }, [firebaseReady, inviteRoomCode, isNameDialogOpen, joinRoom, playerName]);
 
   useEffect(() => {
     if (!isJoinExpanded) {
