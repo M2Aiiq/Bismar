@@ -86,7 +86,7 @@ function resolveTruthPreviewTone(card: Card) {
     case "Gold":
       return "border-[#EAB308] bg-gradient-to-b from-[#FACC15] to-[#EAB308] text-[#0F172A] shadow-[inset_0_2.5px_0px_rgba(255,255,255,0.55),_0_4px_6px_-1px_rgba(234,179,8,0.28)]";
     case "Neutral":
-      return "border-[#D6D0C5] bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] text-slate-500 shadow-[inset_0_2.5px_0px_rgba(255,255,255,0.8),_0_4px_6px_-1px_rgba(0,0,0,0.15)]";
+      return "border-[#D6D0C5] bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] text-[#0F172A] shadow-[inset_0_2.5px_0px_rgba(255,255,255,0.8),_0_4px_6px_-1px_rgba(0,0,0,0.15)]";
     case "Control":
       return "border-[#111827] bg-gradient-to-b from-[#242F41] to-[#090D16] text-[#EF4444] shadow-[inset_0_2px_0px_rgba(255,255,255,0.1),_0_5px_8px_rgba(0,0,0,0.5)] [text-shadow:0_0_8px_rgba(239,68,68,0.28)]";
     default:
