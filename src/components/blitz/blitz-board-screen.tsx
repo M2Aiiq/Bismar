@@ -249,7 +249,6 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
   const [nameDraft, setNameDraft] = useState(playerName || "");
   const [nameError, setNameError] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isFirstOpen, setIsFirstOpen] = useState(false);
   const [isLargeFont, setIsLargeFont] = useState(false);
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [copiedValue, setCopiedValue] = useState<"code" | "link" | null>(null);
@@ -258,7 +257,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
   const [draftTimer, setDraftTimer] = useState(30);
   const [draftScoreLimit, setDraftScoreLimit] = useState(15);
   const [draftPool, setDraftPool] = useState("all");
-  const [draftTeamCount, setDraftTeamCount] = useState(3);
+  const [draftTeamCount, setDraftTeamCount] = useState(2);
   const [draftDifficultyLines, setDraftDifficultyLines] = useState(0);
 
   // مرجع لضمان فتح الإعدادات تلقائياً للمضيف مرة واحدة فقط عند الإنشاء
@@ -427,7 +426,6 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
       const isPlayerHost = activePlayer?.isHost;
       if (isPlayerHost && !hasAutoOpenedRef.current) {
         setIsSettingsOpen(true);
-        setIsFirstOpen(true);
         hasAutoOpenedRef.current = true;
       }
     }
@@ -782,9 +780,9 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                   void startBlitzGame(finalSettings);
                 }}
                 disabled={
-                  redPlayers.length === 0 ||
-                  bluePlayers.length === 0 ||
-                  (draftTeamCount === 3 && greenPlayers.length === 0)
+                  redPlayers.length === 0 &&
+                  bluePlayers.length === 0 &&
+                  (draftTeamCount === 2 ? false : greenPlayers.length === 0)
                 }
                 className="h-7 rounded-full border border-emerald-500/35 bg-emerald-600/18 px-4 text-xs font-bold text-emerald-400 transition active:scale-95 disabled:opacity-40 hover:bg-emerald-600/35"
               >
@@ -818,10 +816,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
 
             <button
               type="button"
-              onClick={() => {
-                setIsFirstOpen(false);
-                setIsSettingsOpen(true);
-              }}
+              onClick={() => setIsSettingsOpen(true)}
               className="h-7 rounded-full border border-white/25 bg-black/10 px-4 text-xs font-bold text-slate-200 transition active:scale-95"
             >
               إعدادات
@@ -847,7 +842,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
           <div className="flex h-full w-full items-start justify-center px-4 py-8">
             <div className="max-h-full w-full max-w-md overflow-y-auto overscroll-contain rounded-[2rem] border border-white/10 bg-[#1E293B] shadow-2xl">
               <div className="bg-[#0F172A] px-5 pb-5 pt-3 text-center relative">
-                {!isFirstOpen && (
+                {room.status !== "lobby" && (
                   <button
                     type="button"
                     onClick={() => setIsSettingsOpen(false)}
@@ -1045,9 +1040,9 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                           setIsSettingsOpen(false);
                         }}
                         disabled={
-                          redPlayers.length === 0 ||
-                          bluePlayers.length === 0 ||
-                          (draftTeamCount === 3 && greenPlayers.length === 0)
+                          redPlayers.length === 0 &&
+                          bluePlayers.length === 0 &&
+                          (draftTeamCount === 2 ? false : greenPlayers.length === 0)
                         }
                         className="w-full rounded-2xl bg-emerald-600 py-3 text-sm font-black text-white transition hover:bg-emerald-500 disabled:opacity-40"
                       >

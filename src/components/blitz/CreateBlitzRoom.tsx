@@ -29,7 +29,7 @@ export function CreateBlitzRoomButton() {
       const roundTimer = 30;
       const scoreLimit = 15;
       const selectedPool = "all";
-      const teamCount = 3;
+      const teamCount = 2;
 
       // 1. جلب فئات الكلمات وتحديد واحدة عشوائية
       const categories = getBlitzCategoriesByPool(selectedPool);
