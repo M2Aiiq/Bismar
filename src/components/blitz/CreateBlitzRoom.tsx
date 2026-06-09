@@ -122,7 +122,7 @@ export function CreateBlitzRoomButton() {
         disabled={disabled}
         className="w-full rounded-2xl border border-[#EF4444]/30 bg-[#7F1D1D]/20 px-5 py-4 text-base font-black text-[#FCA5A5] transition hover:bg-[#7F1D1D]/45 hover:border-[#EF4444] disabled:cursor-not-allowed disabled:bg-[#7F1D1D]/10 disabled:text-[#FCA5A5]/40"
       >
-        العب Blitz
+        العب بليتز
       </button>
 
       {isOpen && (

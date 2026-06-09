@@ -249,11 +249,10 @@ export function HomeScreen() {
                 setTimeout(() => setIsConfirmingReset(false), 2000);
               }
             }}
-            className={`text-[10px] font-semibold transition-all duration-200 ${
-              isConfirmingReset
+            className={`text-[10px] font-semibold transition-all duration-200 ${isConfirmingReset
                 ? "text-[#EF4444] animate-pulse"
                 : "text-[#94A3B8]/50 hover:text-[#EF4444]"
-            }`}
+              }`}
           >
             {isConfirmingReset ? "تأكيد إعادة تعيين الإحصائيات؟" : "إعادة تعيين الإحصائيات"}
           </button>
@@ -273,7 +272,7 @@ export function HomeScreen() {
           disabled={isBusy || !firebaseReady || !playerName}
           className="rounded-2xl bg-[#2563EB] px-5 py-4 text-base font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
         >
-          إنشاء لعبة (كود نيمز)
+          العب الان
         </button>
 
         <CreateBlitzRoomButton />
@@ -288,19 +287,17 @@ export function HomeScreen() {
               setIsJoinExpanded(true);
             }}
             disabled={isBusy || !firebaseReady || !playerName || isJoinExpanded}
-            className={`absolute inset-0 flex items-center justify-center px-5 text-base font-black text-[#F8FAFC] transition-all duration-300 ${
-              isJoinExpanded
+            className={`absolute inset-0 flex items-center justify-center px-5 text-base font-black text-[#F8FAFC] transition-all duration-300 ${isJoinExpanded
                 ? "pointer-events-none translate-y-5 opacity-0"
                 : "translate-y-0 opacity-100 hover:border-[#2563EB] hover:bg-[#1E40AF]/25"
-            } disabled:cursor-not-allowed disabled:text-[#F8FAFC]/40`}
+              } disabled:cursor-not-allowed disabled:text-[#F8FAFC]/40`}
           >
             الانضمام الى لعبة
           </button>
 
           <div
-            className={`absolute inset-0 transition-all duration-300 ${
-              isJoinExpanded ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0"
-            }`}
+            className={`absolute inset-0 transition-all duration-300 ${isJoinExpanded ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0"
+              }`}
           >
             <div className="relative h-full">
               <button

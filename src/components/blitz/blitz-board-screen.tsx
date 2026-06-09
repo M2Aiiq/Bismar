@@ -24,6 +24,20 @@ function blitzBackgroundClass(bgTheme: string | null | undefined) {
   }
 }
 
+// دالة لتحديد كلاسات ألوان بطاقة الفئة المستهدفة بناءً على ثييم اللعبة الحالي
+function categoryCardClass(bgTheme: string | null | undefined) {
+  switch (bgTheme) {
+    case "red":
+      return "border-[#EF4444]/45 bg-[#7F1D1D]/80 shadow-[0_0_12px_rgba(239,68,68,0.3)] text-white";
+    case "blue":
+      return "border-[#3B82F6]/45 bg-[#1E3A8A]/80 shadow-[0_0_12px_rgba(59,130,246,0.3)] text-white";
+    case "green":
+      return "border-[#10B981]/45 bg-[#064E3B]/80 shadow-[0_0_12px_rgba(16,185,129,0.3)] text-white";
+    default:
+      return "border-white/20 bg-slate-800/80 shadow-[0_0_12px_rgba(255,255,255,0.05)] text-white";
+  }
+}
+
 // دالة تحديد ألوان الفريق في لوحة الفريق
 function teamPanelClass(team: string) {
   switch (team) {
@@ -617,9 +631,8 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
             </div>
           ) : (
             <div className="flex justify-center py-0">
-              <div className="flex items-center gap-1.5 rounded-full border border-[#EF4444]/35 bg-[#7F1D1D]/55 px-3 py-0.5 text-[#F8FAFC] shadow-md backdrop-blur-sm">
-                <span className="text-[9px] font-bold text-slate-400">الفئة المستهدفة:</span>
-                <span className="text-xs font-black text-white drop-shadow-[0_1px_3px_rgba(239,68,68,0.4)]">
+              <div className={`flex items-center rounded-full border px-5 py-1.5 shadow-md backdrop-blur-sm transition-all duration-500 ${categoryCardClass(currentBgTheme)}`}>
+                <span className="text-sm sm:text-base font-black tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
                   {room.currentCategory}
                 </span>
               </div>
