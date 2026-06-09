@@ -249,6 +249,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
   const [nameDraft, setNameDraft] = useState(playerName || "");
   const [nameError, setNameError] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isFirstOpen, setIsFirstOpen] = useState(false);
   const [isLargeFont, setIsLargeFont] = useState(false);
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [copiedValue, setCopiedValue] = useState<"code" | "link" | null>(null);
@@ -275,7 +276,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
       const { cardId, timestamp } = room.lastWrongClick;
       const elapsed = Date.now() - timestamp;
       const duration = 800; // إجمالي مدة التأثير 800ms
-      
+
       if (elapsed < duration) {
         setLocalWrongCardId(cardId);
         const timer = setTimeout(() => {
@@ -426,6 +427,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
       const isPlayerHost = activePlayer?.isHost;
       if (isPlayerHost && !hasAutoOpenedRef.current) {
         setIsSettingsOpen(true);
+        setIsFirstOpen(true);
         hasAutoOpenedRef.current = true;
       }
     }
@@ -780,9 +782,9 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                   void startBlitzGame(finalSettings);
                 }}
                 disabled={
-                  redPlayers.length === 0 &&
-                  bluePlayers.length === 0 &&
-                  (draftTeamCount === 2 ? false : greenPlayers.length === 0)
+                  redPlayers.length === 0 ||
+                  bluePlayers.length === 0 ||
+                  (draftTeamCount === 3 && greenPlayers.length === 0)
                 }
                 className="h-7 rounded-full border border-emerald-500/35 bg-emerald-600/18 px-4 text-xs font-bold text-emerald-400 transition active:scale-95 disabled:opacity-40 hover:bg-emerald-600/35"
               >
@@ -816,7 +818,10 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
 
             <button
               type="button"
-              onClick={() => setIsSettingsOpen(true)}
+              onClick={() => {
+                setIsFirstOpen(false);
+                setIsSettingsOpen(true);
+              }}
               className="h-7 rounded-full border border-white/25 bg-black/10 px-4 text-xs font-bold text-slate-200 transition active:scale-95"
             >
               إعدادات
@@ -842,14 +847,16 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
           <div className="flex h-full w-full items-start justify-center px-4 py-8">
             <div className="max-h-full w-full max-w-md overflow-y-auto overscroll-contain rounded-[2rem] border border-white/10 bg-[#1E293B] shadow-2xl">
               <div className="bg-[#0F172A] px-5 pb-5 pt-3 text-center relative">
-                <button
-                  type="button"
-                  onClick={() => setIsSettingsOpen(false)}
-                  aria-label="إغلاق الإعدادات"
-                  className="absolute right-5 top-3 flex h-10 w-10 items-center justify-center rounded-2xl border border-white/15 bg-[#152033] text-xl font-black text-[#F8FAFC] transition hover:bg-[#17233a]"
-                >
-                  ×
-                </button>
+                {!isFirstOpen && (
+                  <button
+                    type="button"
+                    onClick={() => setIsSettingsOpen(false)}
+                    aria-label="إغلاق الإعدادات"
+                    className="absolute right-5 top-3 flex h-10 w-10 items-center justify-center rounded-2xl border border-white/15 bg-[#152033] text-xl font-black text-[#F8FAFC] transition hover:bg-[#17233a]"
+                  >
+                    ×
+                  </button>
+                )}
                 <p className="text-sm font-bold tracking-[0.24em] text-[#F8FAFC]/60">رمز الدعوة</p>
                 <p className="mt-3 text-4xl font-black tracking-[0.35em] text-[#EF4444]">{roomId}</p>
 
@@ -988,10 +995,10 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                         {draftDifficultyLines === 1
                           ? "عادي (سطر إضافي)"
                           : draftDifficultyLines === 2
-                          ? "متوسط (سطران إضافيان)"
-                          : draftDifficultyLines === 3
-                          ? "صعب (3 أسطر إضافية)"
-                          : "بدون (شبكة 5×5)"}
+                            ? "متوسط (سطران إضافيان)"
+                            : draftDifficultyLines === 3
+                              ? "صعب (3 أسطر إضافية)"
+                              : "بدون (شبكة 5×5)"}
                       </span>
                     </label>
                     <input
@@ -1038,13 +1045,13 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                           setIsSettingsOpen(false);
                         }}
                         disabled={
-                          redPlayers.length === 0 &&
-                          bluePlayers.length === 0 &&
-                          (draftTeamCount === 2 ? false : greenPlayers.length === 0)
+                          redPlayers.length === 0 ||
+                          bluePlayers.length === 0 ||
+                          (draftTeamCount === 3 && greenPlayers.length === 0)
                         }
                         className="w-full rounded-2xl bg-emerald-600 py-3 text-sm font-black text-white transition hover:bg-emerald-500 disabled:opacity-40"
                       >
-                        حفظ وبدء اللعب السريع ⚡
+                        بدء اللعب
                       </button>
                     ) : (
                       <>
