@@ -216,7 +216,7 @@ export function CreateBlitzRoomButton() {
                 disabled={creating}
                 className="flex-1 rounded-2xl bg-[#EF4444] px-5 py-3.5 text-sm font-black text-[#F8FAFC] transition hover:bg-[#DC2626] disabled:cursor-not-allowed disabled:bg-[#EF4444]/40"
               >
-                {creating ? "جاري إنشاء الغرفة..." : "بدء اللوبي 🚀"}
+                {creating ? "جاري إنشاء الغرفة..." : "بدء اللعب"}
               </button>
               <button
                 type="button"

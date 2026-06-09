@@ -527,20 +527,13 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
 
           {nameError && <p className="mt-2 text-sm text-[#EF4444] text-right">{nameError}</p>}
 
-          <div className="mt-6 flex gap-3">
+          <div className="mt-6 flex">
             <button
               type="button"
               onClick={handleSaveName}
-              className="flex-1 rounded-2xl bg-[#EF4444] px-5 py-3 text-sm font-bold text-[#F8FAFC] transition hover:bg-red-600"
+              className="w-full rounded-2xl bg-[#EF4444] px-5 py-3 text-sm font-bold text-[#F8FAFC] transition hover:bg-red-600"
             >
               دخول اللوبي 🚀
-            </button>
-            <button
-              type="button"
-              onClick={() => window.location.replace("/")}
-              className="rounded-2xl border border-white/15 px-5 py-3 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#0F172A]"
-            >
-              إلغاء
             </button>
           </div>
         </div>
