@@ -278,6 +278,15 @@ export function useBlitzRoom(roomId: string) {
             currentRoom.currentCategory = nextRound.currentCategory;
             currentRoom.grid = nextRound.grid;
             currentRoom.timer = nextRound.timer;
+
+            // إذا تم تغيير عدد الفرق إلى 2، يتم إرجاع أي لاعب في الفريق الأخضر إلى الحالة unassigned
+            if (newSettings.teamCount === 2 && currentRoom.players) {
+              Object.values(currentRoom.players).forEach((p) => {
+                if (p.team === "green") {
+                  p.team = "unassigned";
+                }
+              });
+            }
           }
           currentRoom.status = "playing";
           currentRoom.scores = { red: 0, blue: 0, green: 0 };
@@ -401,6 +410,15 @@ export function useBlitzRoom(roomId: string) {
           currentRoom.scores = { red: 0, blue: 0, green: 0 };
           currentRoom.winner = null;
           currentRoom.settings = settingsToUse;
+
+          // إذا تم تغيير عدد الفرق إلى 2، يتم إرجاع أي لاعب في الفريق الأخضر إلى الحالة unassigned
+          if (settingsToUse.teamCount === 2 && currentRoom.players) {
+            Object.values(currentRoom.players).forEach((p) => {
+              if (p.team === "green") {
+                p.team = "unassigned";
+              }
+            });
+          }
         } catch (err) {
           console.error("Error resetting Blitz game:", err);
         }

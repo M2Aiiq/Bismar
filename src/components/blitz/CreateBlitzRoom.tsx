@@ -17,6 +17,7 @@ export function CreateBlitzRoomButton() {
   const [roundTimer, setRoundTimer] = useState(30);
   const [scoreLimit, setScoreLimit] = useState(15);
   const [selectedPool, setSelectedPool] = useState("all");
+  const [teamCount, setTeamCount] = useState(3);
   const [creating, setCreating] = useState(false);
 
   const disabled = isBusy || !firebaseReady || !playerName || creating;
@@ -88,7 +89,8 @@ export function CreateBlitzRoomButton() {
         settings: {
           roundTimerSeconds: roundTimer,
           scoreLimit,
-          categoryPools: [selectedPool]
+          categoryPools: [selectedPool],
+          teamCount
         },
         players: {
           [playerId]: host
@@ -168,6 +170,27 @@ export function CreateBlitzRoomButton() {
                 onChange={(e) => setScoreLimit(Number(e.target.value))}
                 className="mt-2 w-full accent-[#EF4444] bg-[#0F172A] h-2 rounded-lg appearance-none cursor-pointer"
               />
+            </div>
+
+            {/* إعداد عدد الفرق */}
+            <div className="mt-5 text-right">
+              <p className="text-sm font-bold text-[#F8FAFC]">عدد الفرق</p>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {[2, 3].map((count) => (
+                  <button
+                    key={count}
+                    type="button"
+                    onClick={() => setTeamCount(count)}
+                    className={`rounded-2xl py-3 text-sm font-bold transition ${
+                      teamCount === count
+                        ? "bg-[#EF4444] text-[#F8FAFC]"
+                        : "border border-white/10 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-white/5"
+                    }`}
+                  >
+                    {count} فرق
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* مجمع الفئات */}

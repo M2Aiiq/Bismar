@@ -88,6 +88,7 @@ export interface BlitzRoomSettings {
   roundTimerSeconds: number;
   scoreLimit: number;
   categoryPools: string[];
+  teamCount: number;
 }
 
 export interface BlitzRoomState {

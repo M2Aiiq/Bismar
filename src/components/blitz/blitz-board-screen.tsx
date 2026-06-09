@@ -241,6 +241,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
   const [draftTimer, setDraftTimer] = useState(30);
   const [draftScoreLimit, setDraftScoreLimit] = useState(15);
   const [draftPool, setDraftPool] = useState("all");
+  const [draftTeamCount, setDraftTeamCount] = useState(3);
 
   // مزامنة المسودات مع إعدادات الغرفة الفعلية من Firebase
   useEffect(() => {
@@ -248,6 +249,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
       setDraftTimer(room.settings.roundTimerSeconds);
       setDraftScoreLimit(room.settings.scoreLimit);
       setDraftPool(room.settings.categoryPools?.[0] || "all");
+      setDraftTeamCount(room.settings.teamCount ?? 3);
     }
   }, [room?.settings]);
 
@@ -391,6 +393,13 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
 
   const boardFontScale = isLargeFont ? "comfortable" : "compact";
 
+  // حساب الارتفاعات ديناميكياً بناءً على عدد الفرق المختار في اللعبة
+  const teamCount = room.settings?.teamCount ?? 3;
+  const usesMultiRowTeamGrid = teamCount > 2;
+  const teamGridHeightClass = usesMultiRowTeamGrid ? "h-[25vh]" : "h-[22vh]";
+  const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[62vh]" : "h-[65vh]";
+  const gameBoardMaxHeight = usesMultiRowTeamGrid ? 62 : 65;
+
   return (
     <section
       className={`flex h-full w-full max-h-screen flex-col overflow-hidden text-[#F8FAFC] ${blitzBackgroundClass(
@@ -398,8 +407,8 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
       )}`}
       dir="rtl"
     >
-      {/* 1. شبكة الفرق في الأعلى (2x2 تماماً كشاشة كود نيم المعتادة، الخلية الرابعة فارغة) */}
-      <div className="grid min-h-0 grid-cols-2 grid-rows-2 gap-0 h-[25vh] shrink-0">
+      {/* 1. شبكة الفرق في الأعلى (تتطابق ديناميكياً مع عدد الفرق 2 أو 3) */}
+      <div className={`grid min-h-0 grid-cols-2 gap-0 ${teamGridHeightClass} ${usesMultiRowTeamGrid ? "grid-rows-2" : ""}`}>
         <BlitzTeamPanel
           team="red"
           players={redPlayers}
@@ -420,18 +429,22 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
           onJoin={selectBlitzTeam}
           onKickPlayer={kickBlitzPlayer}
         />
-        <BlitzTeamPanel
-          team="green"
-          players={greenPlayers}
-          presence={room.presence}
-          currentPlayer={player}
-          score={room.scores?.green ?? 0}
-          isBusy={false}
-          onJoin={selectBlitzTeam}
-          onKickPlayer={kickBlitzPlayer}
-        />
-        {/* الخلية الرابعة فارغة تماماً لمطابقة كود نيم 100% */}
-        <div aria-hidden="true" className="border border-transparent opacity-0 bg-transparent" />
+        {usesMultiRowTeamGrid && (
+          <>
+            <BlitzTeamPanel
+              team="green"
+              players={greenPlayers}
+              presence={room.presence}
+              currentPlayer={player}
+              score={room.scores?.green ?? 0}
+              isBusy={false}
+              onJoin={selectBlitzTeam}
+              onKickPlayer={kickBlitzPlayer}
+            />
+            {/* الخلية الرابعة فارغة تماماً لمطابقة كود نيم 100% */}
+            <div aria-hidden="true" className="border border-transparent opacity-0 bg-transparent" />
+          </>
+        )}
       </div>
 
       {/* شريط المشاهدين في حال وجود لاعبين غير محددين */}
@@ -486,13 +499,13 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
       </div>
 
       {/* 4. لوحة البطاقات 5x5 الأصلية من كود نيم لضمان مطابقة التصميم تماماً */}
-      <div className="mt-1 flex min-h-0 items-start overflow-hidden px-1.5 sm:px-2 h-[62vh]">
+      <div className={`mt-1 flex min-h-0 items-start overflow-hidden px-1.5 sm:px-2 ${boardSectionHeightClass}`}>
         <div className="mx-auto flex h-full w-full flex-col max-w-md md:max-w-[48rem] lg:max-w-[60rem] xl:max-w-[70rem] items-center justify-start overflow-visible">
           <div className="flex min-h-0 w-full items-start justify-center overflow-visible pt-2 pb-1">
             <GameBoard
               board={mappedBoard}
               columns={5}
-              maxHeightVh={62}
+              maxHeightVh={gameBoardMaxHeight}
               showTruth={false}
               canReveal={room.status === "playing" && playerTeam !== "unassigned"}
               onReveal={(cardId: number) => tapBlitzCard(cardId)}
@@ -627,6 +640,27 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                 <div className="p-6 flex flex-col gap-5 border-t border-white/5 text-right">
                   <h3 className="text-base font-black text-[#F8FAFC]">إعدادات الغرفة (للمضيف)</h3>
                   
+                  {/* إعداد عدد الفرق كمسودة */}
+                  <div className="text-right">
+                    <p className="text-xs font-bold text-slate-300">عدد الفرق</p>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      {[2, 3].map((count) => (
+                        <button
+                          key={count}
+                          type="button"
+                          onClick={() => setDraftTeamCount(count)}
+                          className={`rounded-2xl py-2 text-xs font-bold transition ${
+                            draftTeamCount === count
+                              ? "bg-[#EF4444] text-[#F8FAFC]"
+                              : "border border-white/10 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-white/5"
+                          }`}
+                        >
+                          {count} فرق
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* إعداد مؤقت الجولة كمسودة */}
                   <div className="text-right">
                     <label className="flex items-center justify-between text-xs font-bold text-slate-300">
@@ -687,10 +721,15 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                             roundTimerSeconds: draftTimer,
                             scoreLimit: draftScoreLimit,
                             categoryPools: [draftPool],
+                            teamCount: draftTeamCount,
                           };
                           void startBlitzGame(finalSettings);
                         }}
-                        disabled={redPlayers.length === 0 && bluePlayers.length === 0 && greenPlayers.length === 0}
+                        disabled={
+                          redPlayers.length === 0 &&
+                          bluePlayers.length === 0 &&
+                          (draftTeamCount === 2 ? false : greenPlayers.length === 0)
+                        }
                         className="w-full rounded-2xl bg-emerald-600 py-3 text-sm font-black text-white transition hover:bg-emerald-500 disabled:opacity-40"
                       >
                         حفظ وبدء اللعب السريع ⚡
@@ -704,6 +743,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                               roundTimerSeconds: draftTimer,
                               scoreLimit: draftScoreLimit,
                               categoryPools: [draftPool],
+                              teamCount: draftTeamCount,
                             };
                             void startBlitzGame(finalSettings);
                           }}
@@ -743,6 +783,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
               roundTimerSeconds: draftTimer,
               scoreLimit: draftScoreLimit,
               categoryPools: [draftPool],
+              teamCount: draftTeamCount,
             };
             void resetBlitzGame(finalSettings);
           }}
