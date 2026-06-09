@@ -311,7 +311,7 @@ export function useBlitzRoom(roomId: string) {
           currentRoom.status = "playing";
           currentRoom.scores = { red: 0, blue: 0, green: 0 };
           currentRoom.winner = null;
-          currentRoom.isPaused = false;
+          currentRoom.isPaused = true;
           currentRoom.lastWrongClick = null;
           currentRoom.bgTheme = "default";
         } catch (err) {
