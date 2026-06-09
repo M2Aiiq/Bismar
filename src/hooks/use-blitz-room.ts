@@ -80,6 +80,14 @@ export function useBlitzRoom(roomId: string) {
         if (!data.presence) data.presence = {};
         if (!data.scores) data.scores = { red: 0, blue: 0, green: 0 };
 
+        // تطبيع بيانات الشبكة: Firebase يحذف القيم null تلقائياً، فيصبح clickedBy هو undefined بدلاً من null
+        if (data.grid) {
+          data.grid = data.grid.map((c) => ({
+            ...c,
+            clickedBy: c.clickedBy ?? null,
+          }));
+        }
+
         setRoom(data);
       },
       (err) => {
@@ -321,7 +329,8 @@ export function useBlitzRoom(roomId: string) {
 
         const card = currentRoom.grid?.[cardId];
         // إذا تم النقر عليه بالفعل من قبل أي لاعب، تجاهل الطلب
-        if (!card || card.clickedBy !== null) {
+        // نستخدم فحص truthy لأن Firebase يحذف القيم null فتصبح undefined
+        if (!card || card.clickedBy) {
           return currentRoom;
         }
 
@@ -346,7 +355,7 @@ export function useBlitzRoom(roomId: string) {
 
         // 4. التحقق من النقر على جميع الإجابات الصحيحة في هذه الجولة
         const allCorrectClicked = currentRoom.grid.every(
-          (c) => !c.isCorrect || c.clickedBy !== null
+          (c) => !c.isCorrect || !!c.clickedBy
         );
 
         if (allCorrectClicked) {

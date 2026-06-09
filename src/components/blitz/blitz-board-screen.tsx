@@ -353,7 +353,8 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
 
   // تحويل شبكة كروت البليتز لمطابقة بنية كروت كود نيم لكي يقرأها مكون GameBoard الأصلي
   const mappedBoard: Card[] = room.grid.map((card) => {
-    const isClicked = card.clickedBy !== null;
+    // نستخدم فحص truthy لأن Firebase يحذف القيم null تلقائياً فيصبح clickedBy هو undefined بدلاً من null
+    const isClicked = !!card.clickedBy;
     let type: CardType = "Neutral";
 
     if (isClicked) {
