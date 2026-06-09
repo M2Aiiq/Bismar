@@ -262,6 +262,9 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
   // مرجع لضمان فتح الإعدادات تلقائياً للمضيف مرة واحدة فقط عند الإنشاء
   const hasAutoOpenedRef = useRef(false);
 
+  // حالة لتتبع عملية الانضمام التلقائي بالاسم المسجل مسبقاً
+  const [isAutoJoining, setIsAutoJoining] = useState(false);
+
   // حالة البطاقة الخاطئة التي يجب أن تنقلب بالخطأ حالياً
   const [localWrongCardId, setLocalWrongCardId] = useState<number | null>(null);
 
@@ -426,6 +429,20 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
     }
   }, [room?.status, room?.players, playerId]);
 
+  // انضمام تلقائي للغرفة إذا كان الاسم محفوظاً في الجلسة مسبقاً
+  useEffect(() => {
+    if (isReady && room && playerId && playerName && !room.players?.[playerId] && !isAutoJoining) {
+      setIsAutoJoining(true);
+      joinBlitzRoom(playerName)
+        .catch((err) => {
+          console.error("Auto join blitz room failed:", err);
+        })
+        .finally(() => {
+          setIsAutoJoining(false);
+        });
+    }
+  }, [isReady, room, playerId, playerName, joinBlitzRoom, isAutoJoining]);
+
   // تحديث إحصائيات اللاعب عند انتهاء لعبة بليتز
   useEffect(() => {
     if (!room || room.status !== "ended" || !room.winner || !playerId) {
@@ -514,6 +531,15 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
 
   const player = room.players?.[playerId];
   if (!player) {
+    // إذا كان هناك اسم مسجل مسبقاً في الجلسة أو جاري الانضمام تلقائياً، نعرض شاشة تحميل خفيفة لمنع الوميض البصري
+    if (isAutoJoining || playerName) {
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-[#0F172A] text-[#F8FAFC]">
+          <div className="text-center font-bold">جاري تسجيل دخولك للغرفة...</div>
+        </div>
+      );
+    }
+
     const handleSaveName = async () => {
       try {
         await joinBlitzRoom(nameDraft);
