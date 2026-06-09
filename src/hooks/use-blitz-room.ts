@@ -234,6 +234,20 @@ export function useBlitzRoom(roomId: string) {
     }
   }, [roomId, playerId, router]);
 
+  // 6. طرد لاعب (للمضيف فقط)
+  const kickBlitzPlayer = useCallback(
+    async (targetPlayerId: string) => {
+      if (!roomId || !playerId) return;
+
+      const database = getRealtimeDatabase() || getDatabase();
+      const playerRef = ref(database, `blitzRooms/${roomId}/players/${targetPlayerId}`);
+      const presenceRef = ref(database, `blitzRooms/${roomId}/presence/${targetPlayerId}`);
+      await set(playerRef, null);
+      await set(presenceRef, null);
+    },
+    [roomId, playerId]
+  );
+
   // 6. اختيار الفريق
   const selectBlitzTeam = useCallback(
     async (team: BlitzTeam) => {
@@ -416,7 +430,8 @@ export function useBlitzRoom(roomId: string) {
     startBlitzGame,
     tapBlitzCard,
     nextBlitzRound,
-    resetBlitzGame
+    resetBlitzGame,
+    kickBlitzPlayer
   };
 }
 
