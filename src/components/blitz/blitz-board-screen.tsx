@@ -637,7 +637,10 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
     }
   };
 
-  const boardFontScale = isLargeFont ? "comfortable" : "compact";
+  const difficultyLines = room.settings?.difficultyLines ?? 0;
+  const boardFontScale = isLargeFont
+    ? (difficultyLines === 3 ? "expanded" : "comfortable")
+    : "compact";
 
   // حساب الارتفاعات ديناميكياً بناءً على عدد الفرق المختار في اللعبة
   const teamCount = room.settings?.teamCount ?? 3;
