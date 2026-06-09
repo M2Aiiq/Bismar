@@ -2,20 +2,22 @@
 
 import React, { useEffect, useState } from "react";
 import { useBlitzRoom } from "../../hooks/use-blitz-room";
-import type { BlitzCard, BlitzRoomPlayer, BlitzTeam } from "../../types/game";
+import { GameBoard } from "../game-board";
+import type { BlitzRoomPlayer, BlitzTeam, Card, CardType } from "../../types/game";
 
 interface BlitzBoardScreenProps {
   roomId: string;
 }
 
-// دالة لتحديد الخلفية التفاعلية للغرفة بناءً على الفريق المتصدر
+// دالة لتحديد الخلفية التفاعلية للغرفة بناءً على الفريق المتصدر (تطابق درجات ألوان كود نيم)
 function blitzBackgroundClass(scores: { red: number; blue: number; green: number }) {
   const red = scores?.red ?? 0;
   const blue = scores?.blue ?? 0;
   const green = scores?.green ?? 0;
 
   if (red === 0 && blue === 0 && green === 0) {
-    return "bg-[linear-gradient(180deg,_#1E293B_0%,_#0F172A_100%)]";
+    // الخلفية الافتراضية عند البدء هي تدرج اللون الأزرق من كود نيم
+    return "bg-[linear-gradient(180deg,_#2563EB_0%,_#1D4ED8_38%,_#1E3A8A_100%)]";
   }
 
   const maxScore = Math.max(red, blue, green);
@@ -24,19 +26,18 @@ function blitzBackgroundClass(scores: { red: number; blue: number; green: number
   if (blue === maxScore) leadingTeams.push("blue");
   if (green === maxScore) leadingTeams.push("green");
 
-  // في حال تعادل أكثر من فريق، نستخدم خلفية محايدة داكنة
   if (leadingTeams.length > 1) {
-    return "bg-[linear-gradient(180deg,_#1E293B_0%,_#0F172A_100%)]";
+    return "bg-[linear-gradient(180deg,_#2563EB_0%,_#1D4ED8_38%,_#1E3A8A_100%)]";
   }
 
   const leader = leadingTeams[0];
   if (leader === "red") {
-    return "bg-[linear-gradient(180deg,_#7F1D1D_0%,_#450A0A_40%,_#0F172A_100%)] transition-all duration-1000";
+    return "bg-[linear-gradient(180deg,_#DC2626_0%,_#B91C1C_38%,_#7F1D1D_100%)] transition-all duration-1000";
   }
   if (leader === "blue") {
-    return "bg-[linear-gradient(180deg,_#1E3A8A_0%,_#172554_40%,_#0F172A_100%)] transition-all duration-1000";
+    return "bg-[linear-gradient(180deg,_#2563EB_0%,_#1D4ED8_38%,_#1E3A8A_100%)] transition-all duration-1000";
   }
-  return "bg-[linear-gradient(180deg,_#064E3B_0%,_#022C22_40%,_#0F172A_100%)] transition-all duration-1000";
+  return "bg-[linear-gradient(180deg,_#059669_0%,_#047857_38%,_#064E3B_100%)] transition-all duration-1000";
 }
 
 // دالة تحديد ألوان الفريق في لوحة الفريق
@@ -98,32 +99,30 @@ const BlitzTeamPanel = React.memo(
         {/* الرقم الكبير في الخلفية يمثل النقاط الحالية للفريق */}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           {team !== "unassigned" && (
-            <span className="select-none text-[5rem] font-black leading-none text-white/16">
+            <span className="select-none text-[5.5rem] font-black leading-none text-white/16">
               {score}
             </span>
           )}
         </div>
 
         <div className="relative z-10 flex w-full flex-col items-end text-right">
-          <div className="-mx-2 -mt-1 w-[calc(100%+1rem)] bg-black/20 px-2 pb-2 pt-1 text-right flex items-center justify-between">
+          <div className="-mx-2 -mt-1 w-[calc(100%+1rem)] bg-black/20 px-2 pb-2 pt-1 text-right">
+            <span className="text-[11px] font-black tracking-wide text-white">{label}</span>
+          </div>
+          <div className="h-px w-full bg-white/40" />
+          
+          {/* قائمة اللاعبين كأعضاء فقط مع زر الانضمام بنفس ترتيب وتصميم كود نيم */}
+          <div className="mt-1 flex w-full flex-col items-start gap-1 overflow-y-auto max-h-[14vh] w-full [scrollbar-width:none] text-left text-xs font-bold text-[#F8FAFC]/95">
             {canJoin ? (
               <button
                 type="button"
                 onClick={() => onJoin(team as BlitzTeam)}
                 disabled={isBusy}
-                className="shrink-0 rounded-full border border-white/20 bg-white/15 px-1.5 py-px text-[9px] font-bold text-[#F8FAFC] transition active:scale-95 disabled:opacity-60"
+                className="mb-1 self-start rounded-full border border-white/20 bg-white/10 px-2 py-1 text-[10px] font-bold text-[#F8FAFC] transition active:scale-95 disabled:opacity-60"
               >
                 انضم للفريق
               </button>
-            ) : (
-              <div />
-            )}
-            <span className="text-[11px] font-black tracking-wide text-white">{label}</span>
-          </div>
-          <div className="h-px w-full bg-white/40" />
-          
-          {/* قائمة اللاعبين كأعضاء فقط */}
-          <div className="mt-1 flex w-full flex-col items-start gap-1 overflow-y-auto max-h-[14vh] w-full [scrollbar-width:none] text-right text-xs font-bold text-[#F8FAFC]/95">
+            ) : null}
             {players.map((currentPlayerEntry) => (
               <div
                 key={currentPlayerEntry.id}
@@ -138,7 +137,7 @@ const BlitzTeamPanel = React.memo(
                   />
                   <span className="truncate text-right">{currentPlayerEntry.name}</span>
                   {currentPlayerEntry.isHost && (
-                    <span className="text-[8px] bg-red-600 px-1 rounded text-white shrink-0 font-bold">
+                    <span className="text-[8px] bg-red-600 px-1.5 py-0.5 rounded text-white shrink-0 font-bold mr-1">
                       مضيف
                     </span>
                   )}
@@ -164,74 +163,6 @@ const BlitzTeamPanel = React.memo(
 );
 
 BlitzTeamPanel.displayName = "BlitzTeamPanel";
-
-// 2. مكون البطاقات المتطابق مع كود نيم (BlitzGameBoard)
-interface BlitzGameBoardProps {
-  grid: BlitzCard[];
-  onReveal: (cardId: number) => void;
-  playerTeam: string;
-}
-
-const BlitzGameBoard = React.memo(({ grid, onReveal, playerTeam }: BlitzGameBoardProps) => {
-  return (
-    <div className="grid h-full w-full grid-cols-5 gap-1.5 sm:gap-2">
-      {grid.map((card) => {
-        const isFlipped = card.clickedBy !== null;
-
-        let backBgClass = "bg-slate-700 border-slate-600";
-        if (card.clickedBy === "red") {
-          backBgClass =
-            "bg-gradient-to-b from-[#EF4444] to-[#B91C1C] border-[#EF4444] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14),inset_0_10px_20px_rgba(15,23,42,0.2)]";
-        } else if (card.clickedBy === "blue") {
-          backBgClass =
-            "bg-gradient-to-b from-[#3B82F6] to-[#1D4ED8] border-[#3B82F6] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14),inset_0_10px_20px_rgba(15,23,42,0.2)]";
-        } else if (card.clickedBy === "green") {
-          backBgClass =
-            "bg-gradient-to-b from-[#10B981] to-[#047857] border-[#10B981] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.14),inset_0_10px_20px_rgba(15,23,42,0.2)]";
-        }
-
-        const handleClick = () => {
-          if (!isFlipped && playerTeam !== "unassigned") {
-            onReveal(card.id);
-          }
-        };
-
-        return (
-          <button
-            key={card.id}
-            type="button"
-            disabled={isFlipped || playerTeam === "unassigned"}
-            onClick={handleClick}
-            className="card-perspective relative h-full w-full select-none bg-transparent border-0 p-0 text-center outline-none rounded-xl active:scale-95 aspect-square"
-          >
-            <div className={`card-inner h-full w-full ${isFlipped ? "card-flipped" : ""}`}>
-              {/* الوجه الأمامي: الكلمة غير مكشوفة (تطابق كود نيم) */}
-              <div className="card-front absolute inset-0 z-0 flex items-center justify-center border border-[#D6D0C5] bg-gradient-to-b from-[#F9F8F6] to-[#E2DDD3] text-[#0F172A] shadow-[inset_0_2.5px_0px_rgba(255,255,255,0.8),_0_4px_6px_-1px_rgba(0,0,0,0.15)] hover:border-[#C7BFB1] rounded-xl p-1">
-                <span className="text-[10px] sm:text-xs md:text-sm font-black leading-tight break-all text-center">
-                  {card.word}
-                </span>
-              </div>
-
-              {/* الوجه الخلفي: كرت بلون وتأثير كود نيم تماماً (لا يعرض الكلمة، بل أشكال كود نيم الهندسية) */}
-              <div
-                aria-hidden="true"
-                className={`card-back absolute inset-0 z-10 border overflow-hidden rounded-xl border-slate-900/15 ${backBgClass}`}
-              >
-                <div className="absolute inset-0 opacity-20">
-                  <div className="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-white/30" />
-                  <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-white/15" />
-                  <div className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-white/10" />
-                </div>
-              </div>
-            </div>
-          </button>
-        );
-      })}
-    </div>
-  );
-});
-
-BlitzGameBoard.displayName = "BlitzGameBoard";
 
 // 3. شاشة إعلان الفائز المنبثقة
 interface WinnerModalProps {
@@ -417,6 +348,27 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
   const maxTimer = room.settings?.roundTimerSeconds || 30;
   const timerProgress = maxTimer <= 0 ? 0 : Math.min(1, Math.max(0, room.timer / maxTimer));
 
+  // تحويل شبكة كروت البليتز لمطابقة بنية كروت كود نيم لكي يقرأها مكون GameBoard الأصلي
+  const mappedBoard: Card[] = room.grid.map((card) => {
+    const isClicked = card.clickedBy !== null;
+    let type: CardType = "Neutral";
+
+    if (isClicked) {
+      if (card.clickedBy === "red") type = "Red";
+      else if (card.clickedBy === "blue") type = "Blue";
+      else if (card.clickedBy === "green") type = "Green";
+    } else if (room.status === "ended") {
+      type = card.isCorrect ? "Gold" : "Neutral";
+    }
+
+    return {
+      id: card.id,
+      text: card.word,
+      type,
+      isRevealed: isClicked || room.status === "ended",
+    };
+  });
+
   const handleCopyLink = () => {
     const inviteLink = window.location.href;
     void navigator.clipboard.writeText(inviteLink).then(() => {
@@ -432,8 +384,8 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
       )}`}
       dir="rtl"
     >
-      {/* 1. شبكة الفرق في الأعلى (مطابقة تماماً لتصميم كود نيم) */}
-      <div className="grid min-h-0 grid-cols-4 gap-0 h-[22vh] shrink-0">
+      {/* 1. شبكة الفرق في الأعلى (2x2 تماماً كشاشة كود نيم المعتادة) */}
+      <div className="grid min-h-0 grid-cols-2 grid-rows-2 gap-0 h-[25vh] shrink-0">
         <BlitzTeamPanel
           team="red"
           label="الفريق الأحمر"
@@ -485,7 +437,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
         <div className="flex h-full w-full justify-end">
           <div
             className={`h-full transition-[width,background-color] duration-1000 ${
-              room.timer <= 6 ? "bg-[#EF4444] animate-pulse" : "bg-[#2563EB]"
+              room.timer <= 6 ? "bg-[#EF4444] animate-pulse" : "bg-[#F8FAFC]"
             }`}
             style={{ width: `${timerProgress * 100}%` }}
           />
@@ -521,14 +473,22 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
         </div>
       </div>
 
-      {/* 4. لوحة البطاقات 5x5 */}
-      <div className="mt-2 flex min-h-0 items-start overflow-hidden px-1.5 sm:px-2 flex-1 pb-4">
+      {/* 4. لوحة البطاقات 5x5 الأصلية من كود نيم لضمان مطابقة التصميم تماماً */}
+      <div className="mt-1 flex min-h-0 items-start overflow-hidden px-1.5 sm:px-2 flex-1 pb-4">
         <div className="mx-auto flex h-full w-full flex-col max-w-md md:max-w-[48rem] lg:max-w-[60rem] xl:max-w-[70rem] items-center justify-start overflow-visible">
           <div className="flex min-h-0 w-full items-start justify-center overflow-visible pt-1 pb-1 flex-1">
-            <BlitzGameBoard
-              grid={room.grid}
-              onReveal={tapBlitzCard}
-              playerTeam={playerTeam}
+            <GameBoard
+              board={mappedBoard}
+              columns={5}
+              maxHeightVh={62}
+              showTruth={false}
+              canReveal={room.status === "playing" && playerTeam !== "unassigned"}
+              onReveal={(cardId: number) => tapBlitzCard(cardId)}
+              revealAll={room.status === "ended"}
+              compact
+              fontScale="comfortable"
+              difficulty="Normal"
+              playerTeam={playerTeam !== "unassigned" ? (playerTeam === "red" ? "Red" : playerTeam === "blue" ? "Blue" : "Green") : undefined}
             />
           </div>
 
