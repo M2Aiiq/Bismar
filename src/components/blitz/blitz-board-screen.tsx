@@ -261,6 +261,32 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
     }
   }, [room?.status]);
 
+  // قفل جسم الصفحة لمنع التمرير وتثبيت أبعاد الشاشة تماماً مثل كود نيم
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    const previousPosition = document.body.style.position;
+    const previousTop = document.body.style.top;
+    const previousWidth = document.body.style.width;
+    const previousTouchAction = document.body.style.touchAction;
+    const scrollY = window.scrollY;
+
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+    document.body.style.touchAction = "none";
+    window.scrollTo(0, 0);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.position = previousPosition;
+      document.body.style.top = previousTop;
+      document.body.style.width = previousWidth;
+      document.body.style.touchAction = previousTouchAction;
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
+
   if (!isReady) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0F172A] text-[#F8FAFC]">
@@ -411,7 +437,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
 
   return (
     <section
-      className={`flex h-full w-full max-h-screen flex-col overflow-hidden text-[#F8FAFC] ${blitzBackgroundClass(
+      className={`flex h-screen w-screen max-h-screen flex-col overflow-hidden text-[#F8FAFC] ${blitzBackgroundClass(
         playerTeam
       )}`}
       dir="rtl"
