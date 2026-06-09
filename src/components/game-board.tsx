@@ -253,6 +253,7 @@ export function GameBoard({
         return (
           <button
             key={card.id}
+            id={`blitz-card-${card.id}`}
             type="button"
             disabled={!onReveal && !card.isRevealed}
             onClick={(event) => handleCardClick(card, event)}

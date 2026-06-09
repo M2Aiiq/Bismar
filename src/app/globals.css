@@ -120,6 +120,23 @@ input::placeholder {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
+@keyframes scoreBump {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+    filter: brightness(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.score-bump {
+  animation: scoreBump 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
 /* Print protection: hides the body when printing or exporting to PDF */
 @media print {
   body {

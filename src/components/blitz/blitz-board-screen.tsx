@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useBlitzRoom } from "../../hooks/use-blitz-room";
 import { GameBoard } from "../game-board";
 import { BLITZ_POOL_LABELS } from "../../lib/blitz-categories";
@@ -74,7 +74,8 @@ const BlitzTeamPanel = React.memo(
 
     return (
       <div
-        className={`relative flex min-h-0 flex-col justify-start overflow-hidden border px-2 pb-2 pt-1 text-[#F8FAFC] ${teamPanelClass(
+        id={`blitz-team-panel-${team}`}
+        className={`relative flex min-h-0 flex-col justify-start overflow-hidden border px-2 pb-2 pt-1 text-[#F8FAFC] transition-transform duration-300 ${teamPanelClass(
           team
         )}`}
       >
@@ -265,6 +266,119 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
       setLocalWrongCardId(null);
     }
   }, [room?.lastWrongClick?.timestamp, room?.lastWrongClick?.cardId]);
+
+  // تتبع شبكة الكروت السابقة لمقارنتها بالجديدة وتحديد النقرات الصحيحة
+  const prevGridRef = useRef<any>(null);
+
+  // دالة لإنشاء وتسيير الجسيم الطائر (Fly Particle Effect)
+  const createFlyingParticle = (startX: number, startY: number, endX: number, endY: number, team: string) => {
+    if (typeof window === "undefined") return;
+
+    const particle = document.createElement("div");
+
+    let color = "#EF4444"; // أحمر
+    let shadowColor = "rgba(239, 68, 68, 0.6)";
+    if (team === "blue") {
+      color = "#2563EB";
+      shadowColor = "rgba(37, 99, 235, 0.6)";
+    } else if (team === "green") {
+      color = "#059669";
+      shadowColor = "rgba(5, 150, 105, 0.6)";
+    }
+
+    // إعداد تنسيقات الجسيم
+    particle.style.position = "fixed";
+    particle.style.left = `${startX}px`;
+    particle.style.top = `${startY}px`;
+    particle.style.width = "28px";
+    particle.style.height = "28px";
+    particle.style.borderRadius = "50%";
+    particle.style.backgroundColor = color;
+    particle.style.boxShadow = `0 0 14px ${shadowColor}, 0 0 5px ${color}`;
+    particle.style.zIndex = "9999";
+    particle.style.display = "flex";
+    particle.style.alignItems = "center";
+    particle.style.justifyContent = "center";
+    particle.style.color = "white";
+    particle.style.fontSize = "14px";
+    particle.style.fontWeight = "900";
+    particle.innerText = "+1";
+    particle.style.pointerEvents = "none";
+
+    // البداية
+    particle.style.transform = "translate(-50%, -50%) scale(0.3)";
+    particle.style.opacity = "0";
+    particle.style.transition = "all 0.8s cubic-bezier(0.16, 1, 0.3, 1)";
+
+    document.body.appendChild(particle);
+
+    // تفعيل الحركة
+    requestAnimationFrame(() => {
+      particle.style.transform = `translate(${endX - startX}px, ${endY - startY}px) scale(1.6)`;
+      particle.style.opacity = "1";
+    });
+
+    // عند الوصول: نبض وتلاشي الجسيم
+    setTimeout(() => {
+      particle.style.opacity = "0";
+      particle.style.transform = `translate(${endX - startX}px, ${endY - startY}px) scale(0.1)`;
+
+      // تطبيق نبض بصري (bump) على لوحة نقاط الفريق
+      const panelEl = document.getElementById(`blitz-team-panel-${team}`);
+      if (panelEl) {
+        panelEl.classList.add("score-bump");
+        setTimeout(() => {
+          panelEl.classList.remove("score-bump");
+        }, 300);
+      }
+
+      setTimeout(() => {
+        particle.remove();
+      }, 200);
+    }, 800);
+  };
+
+  // مراقبة شبكة الكروت لتشغيل تأثير تحليق النقاط عند الإجابة الصحيحة للفرق
+  useEffect(() => {
+    if (!room || room.status !== "playing") {
+      prevGridRef.current = room?.grid || null;
+      return;
+    }
+
+    const prevGrid = prevGridRef.current;
+    const currentGrid = room.grid;
+
+    if (prevGrid && currentGrid && prevGrid.length === currentGrid.length) {
+      // نتحقق مما إذا كنا في نفس الجولة
+      const isSameRound = prevGrid.every((c: any, idx: number) => c.word === currentGrid[idx].word);
+
+      if (isSameRound) {
+        currentGrid.forEach((card: any, idx: number) => {
+          const prevCard = prevGrid[idx];
+          if (!prevCard.clickedBy && card.clickedBy) {
+            // كارت تم نقره بنجاح للتو!
+            const cardEl = document.getElementById(`blitz-card-${card.id}`);
+            const panelEl = document.getElementById(`blitz-team-panel-${card.clickedBy}`);
+
+            if (cardEl && panelEl) {
+              const cardRect = cardEl.getBoundingClientRect();
+              const panelRect = panelEl.getBoundingClientRect();
+
+              const startX = cardRect.left + cardRect.width / 2;
+              const startY = cardRect.top + cardRect.height / 2;
+
+              const endX = panelRect.left + panelRect.width / 2;
+              const endY = panelRect.top + panelRect.height / 2;
+
+              createFlyingParticle(startX, startY, endX, endY, card.clickedBy);
+            }
+          }
+        });
+      }
+    }
+
+    prevGridRef.current = currentGrid;
+  }, [room?.grid, room?.status]);
 
   // مزامنة المسودات مع إعدادات الغرفة الفعلية من Firebase
   useEffect(() => {
