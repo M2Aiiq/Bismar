@@ -229,6 +229,7 @@ interface GameRoomContextValue {
   room: Room | null;
   player: Player | null;
   roomId: string;
+  playerId: string;
   playerName: string;
   isReady: boolean;
   isBusy: boolean;
@@ -1661,6 +1662,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       resetPlayerStats,
       leftRoomCode,
       clearLeftRoomCode,
+      playerId,
     }),
     [
       chooseRole,
@@ -1694,6 +1696,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
       resetPlayerStats,
       leftRoomCode,
       clearLeftRoomCode,
+      playerId,
     ],
   );
 

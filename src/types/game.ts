@@ -59,3 +59,50 @@ export interface Room {
   turnEndsAt: number | null;
   winner: Winner;
 }
+
+// Blitz Mode (طور البسامير السريعة) types
+export type BlitzTeam = "red" | "blue" | "green" | "unassigned";
+
+export interface BlitzCategory {
+  category_id: string;
+  target_word: string;
+  correct_words: string[];
+  blacklist: string[];
+}
+
+export interface BlitzCard {
+  id: number;
+  word: string;
+  isCorrect: boolean;
+  clickedBy: "red" | "blue" | "green" | null;
+}
+
+export interface BlitzRoomPlayer {
+  id: string;
+  name: string;
+  team: BlitzTeam;
+  isHost: boolean;
+}
+
+export interface BlitzRoomSettings {
+  roundTimerSeconds: number;
+  scoreLimit: number;
+  categoryPools: string[];
+}
+
+export interface BlitzRoomState {
+  roomId: string;
+  status: "lobby" | "playing" | "ended";
+  currentCategory: string;
+  timer: number;
+  scores: {
+    red: number;
+    blue: number;
+    green: number;
+  };
+  grid: BlitzCard[];
+  settings: BlitzRoomSettings;
+  players: Record<string, BlitzRoomPlayer>;
+  presence: Record<string, boolean>;
+  winner: "red" | "blue" | "green" | null;
+}

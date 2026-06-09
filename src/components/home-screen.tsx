@@ -4,6 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { useGameRoom } from "../context/game-room-context";
+import { getRealtimeDatabase } from "../lib/firebase";
+import { ref, get } from "firebase/database";
+import { CreateBlitzRoomButton } from "./blitz/CreateBlitzRoom";
 
 function normalizeRoomCode(value: string | null) {
   return (value ?? "").replace(/\D/g, "").slice(0, 5);
@@ -123,6 +126,21 @@ export function HomeScreen() {
   }, [isJoinExpanded]);
 
   async function handleJoinRoom() {
+    try {
+      const database = getRealtimeDatabase();
+      if (database) {
+        // التحقق أولاً من وجود غرفة بليتز بهذا الرمز
+        const blitzSnapshot = await get(ref(database, `blitzRooms/${roomCode}`));
+        if (blitzSnapshot.exists()) {
+          router.push(`/blitz/${roomCode}`);
+          setIsJoinExpanded(false);
+          return;
+        }
+      }
+    } catch (err) {
+      console.error("Error checking blitz room:", err);
+    }
+
     await joinRoom(roomCode, playerName);
     setIsJoinExpanded(false);
   }
@@ -255,8 +273,10 @@ export function HomeScreen() {
           disabled={isBusy || !firebaseReady || !playerName}
           className="rounded-2xl bg-[#2563EB] px-5 py-4 text-base font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
         >
-          إنشاء لعبة
+          إنشاء لعبة (كود نيمز)
         </button>
+
+        <CreateBlitzRoomButton />
 
         <div
           className="relative h-14 overflow-hidden rounded-2xl border border-white/15 bg-[#1E293B] transition-all duration-300"
