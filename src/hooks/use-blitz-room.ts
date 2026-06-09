@@ -7,7 +7,7 @@ import { getRealtimeDatabase } from "../lib/firebase";
 import { shuffleList } from "../lib/game";
 import { IRAQI_WORDS_BY_CATEGORY } from "../lib/words";
 import { getBlitzCategoriesByPool } from "../lib/blitz-categories";
-import type { BlitzCard, BlitzRoomPlayer, BlitzRoomState, BlitzTeam } from "../types/game";
+import type { BlitzCard, BlitzRoomPlayer, BlitzRoomState, BlitzTeam, BlitzRoomSettings } from "../types/game";
 
 const SESSION_STORAGE_KEY = "iraqi-codenames-session";
 
@@ -261,13 +261,36 @@ export function useBlitzRoom(roomId: string) {
   );
 
   // 7. بدء اللعبة
-  const startBlitzGame = useCallback(async () => {
-    if (!roomId || !room) return;
+  const startBlitzGame = useCallback(
+    async (newSettings?: BlitzRoomSettings) => {
+      if (!roomId || !room) return;
 
-    const database = getRealtimeDatabase() || getDatabase();
-    const statusRef = ref(database, `blitzRooms/${roomId}/status`);
-    await set(statusRef, "playing");
-  }, [roomId, room]);
+      const database = getRealtimeDatabase() || getDatabase();
+      const roomPathRef = ref(database, `blitzRooms/${roomId}`);
+
+      await runTransaction(roomPathRef, (currentRoom: BlitzRoomState | null) => {
+        if (!currentRoom) return currentRoom;
+
+        try {
+          if (newSettings) {
+            currentRoom.settings = newSettings;
+            const nextRound = generateRoundData(newSettings);
+            currentRoom.currentCategory = nextRound.currentCategory;
+            currentRoom.grid = nextRound.grid;
+            currentRoom.timer = nextRound.timer;
+          }
+          currentRoom.status = "playing";
+          currentRoom.scores = { red: 0, blue: 0, green: 0 };
+          currentRoom.winner = null;
+        } catch (err) {
+          console.error("Error starting Blitz game with settings:", err);
+        }
+
+        return currentRoom;
+      });
+    },
+    [roomId, room, generateRoundData]
+  );
 
   // 8. النقر التنافسي المتزامن (Firebase Transactions)
   const tapBlitzCard = useCallback(
@@ -358,30 +381,35 @@ export function useBlitzRoom(roomId: string) {
   }, [roomId, room, generateRoundData]);
 
   // 10. إعادة تعيين اللعبة (العودة للوبي لبدء لعبة جديدة)
-  const resetBlitzGame = useCallback(async () => {
-    if (!roomId || !room) return;
+  const resetBlitzGame = useCallback(
+    async (newSettings?: BlitzRoomSettings) => {
+      if (!roomId || !room) return;
 
-    const database = getRealtimeDatabase() || getDatabase();
-    const roomPathRef = ref(database, `blitzRooms/${roomId}`);
+      const database = getRealtimeDatabase() || getDatabase();
+      const roomPathRef = ref(database, `blitzRooms/${roomId}`);
 
-    await runTransaction(roomPathRef, (currentRoom: BlitzRoomState | null) => {
-      if (!currentRoom) return currentRoom;
+      await runTransaction(roomPathRef, (currentRoom: BlitzRoomState | null) => {
+        if (!currentRoom) return currentRoom;
 
-      try {
-        const nextRound = generateRoundData(currentRoom.settings);
-        currentRoom.status = "lobby";
-        currentRoom.currentCategory = nextRound.currentCategory;
-        currentRoom.grid = nextRound.grid;
-        currentRoom.timer = nextRound.timer;
-        currentRoom.scores = { red: 0, blue: 0, green: 0 };
-        currentRoom.winner = null;
-      } catch (err) {
-        console.error("Error resetting Blitz game:", err);
-      }
+        try {
+          const settingsToUse = newSettings || currentRoom.settings;
+          const nextRound = generateRoundData(settingsToUse);
+          currentRoom.status = "lobby";
+          currentRoom.currentCategory = nextRound.currentCategory;
+          currentRoom.grid = nextRound.grid;
+          currentRoom.timer = nextRound.timer;
+          currentRoom.scores = { red: 0, blue: 0, green: 0 };
+          currentRoom.winner = null;
+          currentRoom.settings = settingsToUse;
+        } catch (err) {
+          console.error("Error resetting Blitz game:", err);
+        }
 
-      return currentRoom;
-    });
-  }, [roomId, room, generateRoundData]);
+        return currentRoom;
+      });
+    },
+    [roomId, room, generateRoundData]
+  );
 
   // 11. إدارة وقت اللعبة التنافسي (المضيف فقط يقوم بخصم الوقت)
   useEffect(() => {

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useBlitzRoom } from "../../hooks/use-blitz-room";
 import { GameBoard } from "../game-board";
+import { BLITZ_POOL_LABELS } from "../../lib/blitz-categories";
 import type { BlitzRoomPlayer, BlitzTeam, Card, CardType } from "../../types/game";
 
 interface BlitzBoardScreenProps {
@@ -235,6 +236,20 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
   const [isLargeFont, setIsLargeFont] = useState(false);
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [copiedValue, setCopiedValue] = useState<"code" | "link" | null>(null);
+
+  // حالات المسودة (Draft Settings)
+  const [draftTimer, setDraftTimer] = useState(30);
+  const [draftScoreLimit, setDraftScoreLimit] = useState(15);
+  const [draftPool, setDraftPool] = useState("all");
+
+  // مزامنة المسودات مع إعدادات الغرفة الفعلية من Firebase
+  useEffect(() => {
+    if (room?.settings) {
+      setDraftTimer(room.settings.roundTimerSeconds);
+      setDraftScoreLimit(room.settings.scoreLimit);
+      setDraftPool(room.settings.categoryPools?.[0] || "all");
+    }
+  }, [room?.settings]);
 
   // إغلاق مودال الإعدادات تلقائياً عند بدء اللعب
   useEffect(() => {
@@ -607,34 +622,109 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                 )}
               </div>
 
-              {/* عناصر التحكم للمضيف فقط */}
+              {/* عناصر التحكم للمضيف فقط (إعدادات الغرفة وتطبيقها عند بدء اللعب) */}
               {isHost && (
-                <div className="p-6 flex flex-col gap-4 border-t border-white/5">
-                  <h3 className="text-sm font-bold text-[#F8FAFC]">خيارات المضيف (لإدارة اللعبة)</h3>
+                <div className="p-6 flex flex-col gap-5 border-t border-white/5 text-right">
+                  <h3 className="text-base font-black text-[#F8FAFC]">إعدادات الغرفة (للمضيف)</h3>
                   
-                  {room.status === "lobby" && (
-                    <button
-                      type="button"
-                      onClick={startBlitzGame}
-                      disabled={redPlayers.length === 0 && bluePlayers.length === 0 && greenPlayers.length === 0}
-                      className="w-full rounded-2xl bg-emerald-600 py-3 text-sm font-black text-white transition hover:bg-emerald-500 disabled:opacity-40"
-                    >
-                      ابدأ اللعب السريع ⚡
-                    </button>
-                  )}
+                  {/* إعداد مؤقت الجولة كمسودة */}
+                  <div className="text-right">
+                    <label className="flex items-center justify-between text-xs font-bold text-slate-300">
+                      <span>وقت الجولة</span>
+                      <span className="text-[#EF4444] font-black">{draftTimer} ثانية</span>
+                    </label>
+                    <input
+                      type="range"
+                      min="15"
+                      max="60"
+                      step="5"
+                      value={draftTimer}
+                      onChange={(e) => setDraftTimer(Number(e.target.value))}
+                      className="mt-2 w-full accent-[#EF4444] bg-[#0F172A] h-2 rounded-lg appearance-none cursor-pointer"
+                    />
+                  </div>
 
-                  {room.status === "playing" && (
-                    <button
-                      type="button"
-                      onClick={nextBlitzRound}
-                      className="w-full rounded-2xl bg-[#EF4444] py-3 text-sm font-black text-white transition hover:bg-red-600"
+                  {/* إعداد حد النقاط للفوز كمسودة */}
+                  <div className="text-right">
+                    <label className="flex items-center justify-between text-xs font-bold text-slate-300">
+                      <span>نقاط الفوز (الهدف)</span>
+                      <span className="text-[#EF4444] font-black">{draftScoreLimit} نقطة</span>
+                    </label>
+                    <input
+                      type="range"
+                      min="5"
+                      max="30"
+                      step="5"
+                      value={draftScoreLimit}
+                      onChange={(e) => setDraftScoreLimit(Number(e.target.value))}
+                      className="mt-2 w-full accent-[#EF4444] bg-[#0F172A] h-2 rounded-lg appearance-none cursor-pointer"
+                    />
+                  </div>
+
+                  {/* مجمع الفئات كمسودة */}
+                  <div className="text-right">
+                    <label className="text-xs font-bold text-slate-300">مجمع الفئات المستهدفة</label>
+                    <select
+                      value={draftPool}
+                      onChange={(e) => setDraftPool(e.target.value)}
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0F172A] px-4 py-2.5 text-xs text-[#F8FAFC] outline-none transition focus:border-[#EF4444]"
                     >
-                      تخطي الفئة الحالية ⏭️
-                    </button>
-                  )}
+                      {Object.entries(BLITZ_POOL_LABELS).map(([key, label]) => (
+                        <option key={key} value={key} className="bg-[#1E293B]">
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* أزرار الإجراءات */}
+                  <div className="mt-4 flex flex-col gap-2">
+                    {room.status === "lobby" ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const finalSettings = {
+                            roundTimerSeconds: draftTimer,
+                            scoreLimit: draftScoreLimit,
+                            categoryPools: [draftPool],
+                          };
+                          void startBlitzGame(finalSettings);
+                        }}
+                        disabled={redPlayers.length === 0 && bluePlayers.length === 0 && greenPlayers.length === 0}
+                        className="w-full rounded-2xl bg-emerald-600 py-3 text-sm font-black text-white transition hover:bg-emerald-500 disabled:opacity-40"
+                      >
+                        حفظ وبدء اللعب السريع ⚡
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const finalSettings = {
+                              roundTimerSeconds: draftTimer,
+                              scoreLimit: draftScoreLimit,
+                              categoryPools: [draftPool],
+                            };
+                            void startBlitzGame(finalSettings);
+                          }}
+                          className="w-full rounded-2xl bg-[#EF4444] py-3 text-sm font-black text-white transition hover:bg-red-600 animate-pulse"
+                        >
+                          بدء لعبة جديدة وتطبيق الإعدادات 🔄
+                        </button>
+                        
+                        <button
+                          type="button"
+                          onClick={nextBlitzRound}
+                          className="w-full rounded-2xl border border-white/10 py-2.5 text-xs font-black text-[#F8FAFC] transition hover:bg-white/5"
+                        >
+                          تخطي الفئة الحالية ⏭️
+                        </button>
+                      </>
+                    )}
+                  </div>
 
                   <p className="text-[11px] text-[#94A3B8] text-center mt-1">
-                    يمكن للمضيف بدء اللعبة عند انضمام لاعب واحد على الأقل لأي من الفرق.
+                    التغييرات على الإعدادات لن تُطبق إلا بعد الضغط على زر بدء اللعب أو بدء لعبة جديدة.
                   </p>
                 </div>
               )}
@@ -648,7 +738,14 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
         <BlitzWinnerModal
           winner={room.winner}
           scores={room.scores}
-          onReset={resetBlitzGame}
+          onReset={() => {
+            const finalSettings = {
+              roundTimerSeconds: draftTimer,
+              scoreLimit: draftScoreLimit,
+              categoryPools: [draftPool],
+            };
+            void resetBlitzGame(finalSettings);
+          }}
           isHost={isHost}
         />
       )}
