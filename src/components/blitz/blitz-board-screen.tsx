@@ -261,32 +261,6 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
     }
   }, [room?.status]);
 
-  // قفل جسم الصفحة لمنع التمرير وتثبيت أبعاد الشاشة تماماً مثل كود نيم
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    const previousPosition = document.body.style.position;
-    const previousTop = document.body.style.top;
-    const previousWidth = document.body.style.width;
-    const previousTouchAction = document.body.style.touchAction;
-    const scrollY = window.scrollY;
-
-    document.body.style.overflow = "hidden";
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = "100%";
-    document.body.style.touchAction = "none";
-    window.scrollTo(0, 0);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.body.style.position = previousPosition;
-      document.body.style.top = previousTop;
-      document.body.style.width = previousWidth;
-      document.body.style.touchAction = previousTouchAction;
-      window.scrollTo(0, scrollY);
-    };
-  }, []);
-
   if (!isReady) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0F172A] text-[#F8FAFC]">
@@ -408,14 +382,6 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
     window.setTimeout(() => setCopiedValue((current) => (current === type ? null : current)), 2000);
   };
 
-  const handlePauseToggle = () => {
-    if (!player.isHost) {
-      alert("متاح للمضيف فقط");
-      return;
-    }
-    void togglePauseBlitzGame();
-  };
-
   const handleNameSave = async () => {
     try {
       await joinBlitzRoom(nameDraft);
@@ -437,7 +403,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
 
   return (
     <section
-      className={`flex h-screen w-screen max-h-screen flex-col overflow-hidden text-[#F8FAFC] ${blitzBackgroundClass(
+      className={`flex h-full w-full max-h-screen flex-col overflow-hidden text-[#F8FAFC] ${blitzBackgroundClass(
         playerTeam
       )}`}
       dir="rtl"
@@ -504,7 +470,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
         <div className="flex h-full w-full justify-end">
           <div
             className={`h-full transition-[width,background-color] duration-1000 ${
-              room.timer <= 6 ? "bg-[#EF4444] animate-pulse" : "bg-[#F8FAFC]"
+              room.isPaused ? "bg-white/55" : room.timer <= 6 ? "bg-[#EF4444] animate-pulse" : "bg-[#F8FAFC]"
             }`}
             style={{ width: `${timerProgress * 100}%` }}
           />
@@ -515,8 +481,8 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
       <div className="mx-2 mt-2 shrink-0">
         <div className="mx-auto w-full max-w-[44rem] flex flex-col justify-center">
           {room.status === "lobby" ? (
-            <div className="flex justify-center py-1">
-              <span className="rounded-full border border-[#EF4444]/30 bg-[#7F1D1D]/35 px-6 py-1.5 text-xs font-black text-[#FCA5A5]">
+            <div className="flex flex-wrap justify-center gap-2 py-1">
+              <span className="rounded-full border border-[#EF4444]/30 bg-[#7F1D1D]/35 px-4 py-1 text-xs font-black text-[#FCA5A5]">
                 بانتظار بدء اللعبة من المضيف...
               </span>
             </div>
@@ -542,7 +508,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
               columns={5}
               maxHeightVh={gameBoardMaxHeight}
               showTruth={false}
-              canReveal={room.status === "playing" && playerTeam !== "unassigned" && !room.isPaused}
+              canReveal={room.status === "playing" && !room.isPaused && playerTeam !== "unassigned"}
               onReveal={(cardId: number) => tapBlitzCard(cardId)}
               revealAll={room.status === "ended"}
               compact
@@ -560,8 +526,33 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
             />
           </div>
 
-          {/* أزرار التحكم باللعبة متطابقة مع كود نيم */}
+          {/* أزرار التحكم باللعبة متطابقة مع كود نيم، مع إضافة زر الإيقاف والتشغيل */}
           <div className="mt-2 flex w-full shrink-0 items-center justify-center gap-2">
+            {room.status === "playing" && (
+              <button
+                type="button"
+                onClick={togglePauseBlitzGame}
+                disabled={!isHost}
+                aria-label={room.isPaused ? "تشغيل اللعب" : "إيقاف اللعب مؤقتاً"}
+                className={`h-7 w-7 rounded-full border flex items-center justify-center transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
+                  room.isPaused
+                    ? "border-[#86EFAC]/45 bg-[#064E3B]/90 shadow-[0_0_10px_rgba(16,185,129,0.24)] animate-pulse"
+                    : "border-white/25 bg-black/10 text-slate-200 hover:bg-black/20"
+                }`}
+              >
+                {room.isPaused ? (
+                  <svg viewBox="0 0 24 24" className="h-4 w-4 fill-[#ECFDF5]" aria-hidden="true">
+                    <path d="M8 5.5v13l10-6.5L8 5.5Z" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" className="h-4 w-4 fill-[#F8FAFC]" aria-hidden="true">
+                    <rect x="6" y="5" width="4" height="14" rx="1.2" />
+                    <rect x="14" y="5" width="4" height="14" rx="1.2" />
+                  </svg>
+                )}
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => setIsSettingsOpen(true)}
@@ -582,35 +573,6 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
               خط
             </button>
           </div>
-
-          {/* زر بدء وإيقاف اللعب متطابق مع كود نيم */}
-          {room.status === "playing" ? (
-            <div className="mt-2 flex w-full shrink-0 justify-start overflow-visible">
-              <div className="-mr-2">
-                <button
-                  type="button"
-                  onClick={handlePauseToggle}
-                  aria-label={room.isPaused ? "تشغيل اللعبة" : "إيقاف اللعبة"}
-                  className={`flex h-11 w-12 items-center justify-center rounded-l-[1.15rem] border border-r-0 backdrop-blur-md transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
-                    room.isPaused
-                      ? "border-[#86EFAC]/45 bg-[#064E3B]/90 shadow-[0_0_14px_rgba(16,185,129,0.24)]"
-                      : "border-white/20 bg-[#0F172A]/88 shadow-[0_0_14px_rgba(15,23,42,0.28)]"
-                  }`}
-                >
-                  {room.isPaused ? (
-                    <svg viewBox="0 0 24 24" className="h-5.5 w-5.5 fill-[#ECFDF5]" aria-hidden="true">
-                      <path d="M8 5.5v13l10-6.5L8 5.5Z" />
-                    </svg>
-                  ) : (
-                    <svg viewBox="0 0 24 24" className="h-5.5 w-5.5 fill-[#F8FAFC]" aria-hidden="true">
-                      <rect x="6" y="5" width="4" height="14" rx="1.2" />
-                      <rect x="14" y="5" width="4" height="14" rx="1.2" />
-                    </svg>
-                  )}
-                </button>
-              </div>
-            </div>
-          ) : null}
         </div>
       </div>
 
