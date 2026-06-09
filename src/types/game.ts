@@ -68,6 +68,7 @@ export interface BlitzCategory {
   category_id: string;
   target_word: string;
   correct_words: string[];
+  trick_words: string[];
   blacklist: string[];
 }
 

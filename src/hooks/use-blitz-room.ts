@@ -135,22 +135,29 @@ export function useBlitzRoom(roomId: string) {
     const category = categories[Math.floor(Math.random() * categories.length)];
 
     const correctWords = [...category.correct_words];
+    const trickWords = [...(category.trick_words || [])];
     const blacklist = new Set(category.blacklist || []);
     const correctSet = new Set(correctWords);
+    const trickSet = new Set(trickWords);
 
     const generalBank = IRAQI_WORDS_BY_CATEGORY.General || [];
     const safeDistractors = generalBank.filter(
-      (word) => !correctSet.has(word) && !blacklist.has(word)
+      (word) => !correctSet.has(word) && !trickSet.has(word) && !blacklist.has(word)
     );
 
     const difficultyLines = settings.difficultyLines ?? 0;
     const totalCardsCount = 25 + (difficultyLines * 5); // 5 أعمدة × (5 صفوف + أسطر إضافية)
 
-    const distractorsCount = Math.max(0, totalCardsCount - correctWords.length);
-    const chosenDistractors = shuffleList(safeDistractors).slice(0, distractorsCount);
+    const injectedWords = [
+      ...correctWords.map((word) => ({ word, isCorrect: true })),
+      ...trickWords.map((word) => ({ word, isCorrect: false }))
+    ];
+
+    const remainingCount = Math.max(0, totalCardsCount - injectedWords.length);
+    const chosenDistractors = shuffleList(safeDistractors).slice(0, remainingCount);
 
     const finalWordsList = [
-      ...correctWords.map((word) => ({ word, isCorrect: true })),
+      ...injectedWords,
       ...chosenDistractors.map((word) => ({ word, isCorrect: false }))
     ];
 
