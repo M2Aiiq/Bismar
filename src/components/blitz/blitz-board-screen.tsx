@@ -87,7 +87,7 @@ const BlitzTeamPanel = React.memo(
 
         <div className="relative z-10 flex w-full flex-col items-end text-right">
           {/* تم إزالة اسم الفريق من الجزء العلوي بالكامل */}
-          
+
           {/* قائمة اللاعبين كأعضاء فقط مع زر الانضمام بنفس ترتيب وتصميم كود نيم */}
           <div className="mt-1 flex w-full flex-col items-start gap-1 overflow-y-auto max-h-[18vh] w-full [scrollbar-width:none] text-left text-xs font-bold text-[#F8FAFC]/95">
             {canJoin ? (
@@ -469,9 +469,8 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
       <div className="h-1.5 w-full overflow-hidden bg-black/25 shrink-0">
         <div className="flex h-full w-full justify-end">
           <div
-            className={`h-full transition-[width,background-color] duration-1000 ${
-              room.isPaused ? "bg-white/55" : room.timer <= 6 ? "bg-[#EF4444] animate-pulse" : "bg-[#F8FAFC]"
-            }`}
+            className={`h-full transition-[width,background-color] duration-1000 ${room.isPaused ? "bg-white/55" : room.timer <= 6 ? "bg-[#EF4444] animate-pulse" : "bg-[#F8FAFC]"
+              }`}
             style={{ width: `${timerProgress * 100}%` }}
           />
         </div>
@@ -486,9 +485,15 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                 بانتظار بدء اللعبة من المضيف...
               </span>
             </div>
+          ) : room.isPaused ? (
+            <div className="flex flex-wrap justify-center gap-2 py-1 animate-pulse">
+              <span className="rounded-full border border-[#EF4444]/30 bg-[#7F1D1D]/35 px-4 py-1 text-xs font-black text-[#FCA5A5]">
+                تم إيقاف اللعبة مؤقتاً
+              </span>
+            </div>
           ) : (
             <div className="flex justify-center py-1">
-              <div className="flex items-center gap-3 rounded-full border border-[#EF4444]/35 bg-[#7F1D1D]/55 px-6 py-2 text-[#F8FAFC] shadow-lg backdrop-blur-md animate-pulse">
+              <div className="flex items-center gap-3 rounded-full border border-[#EF4444]/35 bg-[#7F1D1D]/55 px-6 py-2 text-[#F8FAFC] shadow-lg backdrop-blur-md">
                 <span className="text-xs font-bold text-slate-400">الفئة المستهدفة:</span>
                 <span className="text-base font-black text-white drop-shadow-[0_2px_8px_rgba(239,68,68,0.4)]">
                   {room.currentCategory}
@@ -519,8 +524,8 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                   ? playerTeam === "red"
                     ? "Red"
                     : playerTeam === "blue"
-                    ? "Blue"
-                    : "Green"
+                      ? "Blue"
+                      : "Green"
                   : undefined
               }
             />
@@ -547,7 +552,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                 }
                 className="h-7 rounded-full border border-emerald-500/35 bg-emerald-600/18 px-4 text-xs font-bold text-emerald-400 transition active:scale-95 disabled:opacity-40 hover:bg-emerald-600/35"
               >
-                ابدأ اللعب السريع ⚡
+                بدء اللعب
               </button>
             )}
 
@@ -557,11 +562,10 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                 onClick={togglePauseBlitzGame}
                 disabled={!isHost}
                 aria-label={room.isPaused ? "تشغيل اللعب" : "إيقاف اللعب مؤقتاً"}
-                className={`h-7 w-7 rounded-full border flex items-center justify-center transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
-                  room.isPaused
+                className={`h-7 w-7 rounded-full border flex items-center justify-center transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${room.isPaused
                     ? "border-[#86EFAC]/45 bg-[#064E3B]/90 shadow-[0_0_10px_rgba(16,185,129,0.24)] animate-pulse"
                     : "border-white/25 bg-black/10 text-slate-200 hover:bg-black/20"
-                }`}
+                  }`}
               >
                 {room.isPaused ? (
                   <svg viewBox="0 0 24 24" className="h-4 w-4 fill-[#ECFDF5]" aria-hidden="true">
@@ -587,11 +591,10 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
               type="button"
               onClick={() => setIsLargeFont((curr) => !curr)}
               aria-pressed={isLargeFont}
-              className={`h-7 rounded-full border px-4 text-xs font-bold transition active:scale-95 ${
-                isLargeFont
+              className={`h-7 rounded-full border px-4 text-xs font-bold transition active:scale-95 ${isLargeFont
                   ? "border-white/55 bg-white/20 text-[#F8FAFC]"
                   : "border-white/25 bg-black/10 text-slate-200"
-              }`}
+                }`}
             >
               خط
             </button>
@@ -615,7 +618,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                 </button>
                 <p className="text-sm font-bold tracking-[0.24em] text-[#F8FAFC]/60">رمز الدعوة</p>
                 <p className="mt-3 text-4xl font-black tracking-[0.35em] text-[#EF4444]">{roomId}</p>
-                
+
                 <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
                   <button
                     type="button"
@@ -688,7 +691,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
               {isHost && (
                 <div className="p-6 flex flex-col gap-5 border-t border-white/5 text-right">
                   <h3 className="text-base font-black text-[#F8FAFC]">إعدادات الغرفة (للمضيف)</h3>
-                  
+
                   {/* إعداد عدد الفرق كمسودة */}
                   <div className="text-right">
                     <p className="text-xs font-bold text-slate-300">عدد الفرق</p>
@@ -698,11 +701,10 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                           key={count}
                           type="button"
                           onClick={() => setDraftTeamCount(count)}
-                          className={`rounded-2xl py-2 text-xs font-bold transition ${
-                            draftTeamCount === count
+                          className={`rounded-2xl py-2 text-xs font-bold transition ${draftTeamCount === count
                               ? "bg-[#EF4444] text-[#F8FAFC]"
                               : "border border-white/10 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-white/5"
-                          }`}
+                            }`}
                         >
                           {count} فرق
                         </button>
@@ -800,7 +802,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                         >
                           بدء لعبة جديدة وتطبيق الإعدادات 🔄
                         </button>
-                        
+
                         <button
                           type="button"
                           onClick={nextBlitzRound}
