@@ -411,6 +411,63 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
     }
   }, [room?.status]);
 
+  // تحديث إحصائيات اللاعب عند انتهاء لعبة بليتز
+  useEffect(() => {
+    if (!room || room.status !== "ended" || !room.winner || !playerId) {
+      return;
+    }
+
+    const activePlayer = room.players?.[playerId];
+    if (!activePlayer || activePlayer.team === "unassigned") {
+      return;
+    }
+
+    const pTeam = activePlayer.team;
+    // توليد بصمة فريدة للعبة بليتز المنتهية لمنع تكرار الاحتساب
+    const fingerprint = `blitz-${roomId}-${room.grid.map((card) => card.word).join(",")}`;
+
+    const STATS_KEY = "iraqi-codenames-stats";
+    const PROCESSED_GAMES_KEY = "iraqi-codenames-processed-games";
+
+    const rawProcessed = localStorage.getItem(PROCESSED_GAMES_KEY);
+    let processed: string[] = [];
+    try {
+      processed = rawProcessed ? JSON.parse(rawProcessed) : [];
+    } catch {
+      processed = [];
+    }
+
+    if (processed.includes(fingerprint)) {
+      return;
+    }
+
+    // تحديث الإحصائيات المحلية
+    const rawStats = localStorage.getItem(STATS_KEY);
+    let stats = { played: 0, won: 0, lost: 0 };
+    try {
+      if (rawStats) {
+        stats = JSON.parse(rawStats);
+      }
+    } catch {
+      // افتراضي
+    }
+
+    stats.played += 1;
+    if (pTeam === room.winner) {
+      stats.won += 1;
+    } else {
+      stats.lost += 1;
+    }
+
+    processed.push(fingerprint);
+    if (processed.length > 50) {
+      processed.shift();
+    }
+
+    localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+    localStorage.setItem(PROCESSED_GAMES_KEY, JSON.stringify(processed));
+  }, [room?.status, room?.winner, room?.grid, room?.players, playerId, roomId]);
+
   if (!isReady) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0F172A] text-[#F8FAFC]">
