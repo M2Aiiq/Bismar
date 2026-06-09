@@ -448,23 +448,6 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
         )}
       </div>
 
-      {/* شريط المشاهدين في حال وجود لاعبين غير محددين */}
-      {unassignedPlayers.length > 0 && (
-        <div className="bg-black/20 border-b border-white/10 px-4 py-1.5 text-xs flex items-center justify-between gap-2 shrink-0">
-          <div className="flex items-center gap-1.5">
-            <span className="text-slate-400 font-bold">المشاهدون:</span>
-            <span className="text-white font-semibold">
-              {unassignedPlayers.map((p) => p.name).join("، ")}
-            </span>
-          </div>
-          {playerTeam === "unassigned" && (
-            <span className="text-[10px] bg-slate-700/50 text-slate-300 px-2 py-0.5 rounded-full font-bold">
-              أنت تشاهد اللعبة الآن
-            </span>
-          )}
-        </div>
-      )}
-
       {/* 2. مؤقت اللعب كخط فاصل متحرك */}
       <div className="h-1.5 w-full overflow-hidden bg-black/25 shrink-0">
         <div className="flex h-full w-full justify-end">
@@ -477,25 +460,25 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
       </div>
 
       {/* 3. شريط السؤال النشط (الفئة المستهدفة في مكان التلميحات تماماً) */}
-      <div className="mx-2 mt-2 shrink-0">
+      <div className="mx-2 mt-1 shrink-0">
         <div className="mx-auto w-full max-w-[44rem] flex flex-col justify-center">
           {room.status === "lobby" ? (
-            <div className="flex flex-wrap justify-center gap-2 py-1">
-              <span className="rounded-full border border-[#EF4444]/30 bg-[#7F1D1D]/35 px-4 py-1 text-xs font-black text-[#FCA5A5]">
+            <div className="flex flex-wrap justify-center gap-2 py-0.5">
+              <span className="rounded-full border border-[#EF4444]/30 bg-[#7F1D1D]/35 px-3 py-0.5 text-xs font-black text-[#FCA5A5]">
                 بانتظار بدء اللعبة من المضيف...
               </span>
             </div>
           ) : room.isPaused ? (
-            <div className="flex flex-wrap justify-center gap-2 py-1 animate-pulse">
-              <span className="rounded-full border border-[#EF4444]/30 bg-[#7F1D1D]/35 px-4 py-1 text-xs font-black text-[#FCA5A5]">
+            <div className="flex flex-wrap justify-center gap-2 py-0.5 animate-pulse">
+              <span className="rounded-full border border-[#EF4444]/30 bg-[#7F1D1D]/35 px-3 py-0.5 text-xs font-black text-[#FCA5A5]">
                 تم إيقاف اللعبة مؤقتاً
               </span>
             </div>
           ) : (
-            <div className="flex justify-center py-1">
-              <div className="flex items-center gap-3 rounded-full border border-[#EF4444]/35 bg-[#7F1D1D]/55 px-6 py-2 text-[#F8FAFC] shadow-lg backdrop-blur-md">
-                <span className="text-xs font-bold text-slate-400">الفئة المستهدفة:</span>
-                <span className="text-base font-black text-white drop-shadow-[0_2px_8px_rgba(239,68,68,0.4)]">
+            <div className="flex justify-center py-0.5">
+              <div className="flex items-center gap-2 rounded-full border border-[#EF4444]/35 bg-[#7F1D1D]/55 px-4 py-1 text-[#F8FAFC] shadow-lg backdrop-blur-md">
+                <span className="text-[10px] font-bold text-slate-400">الفئة المستهدفة:</span>
+                <span className="text-sm font-black text-white drop-shadow-[0_1.5px_6px_rgba(239,68,68,0.4)]">
                   {room.currentCategory}
                 </span>
               </div>
@@ -563,8 +546,8 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                 disabled={!isHost}
                 aria-label={room.isPaused ? "تشغيل اللعب" : "إيقاف اللعب مؤقتاً"}
                 className={`h-7 w-7 rounded-full border flex items-center justify-center transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${room.isPaused
-                    ? "border-[#86EFAC]/45 bg-[#064E3B]/90 shadow-[0_0_10px_rgba(16,185,129,0.24)] animate-pulse"
-                    : "border-white/25 bg-black/10 text-slate-200 hover:bg-black/20"
+                  ? "border-[#86EFAC]/45 bg-[#064E3B]/90 shadow-[0_0_10px_rgba(16,185,129,0.24)] animate-pulse"
+                  : "border-white/25 bg-black/10 text-slate-200 hover:bg-black/20"
                   }`}
               >
                 {room.isPaused ? (
@@ -592,8 +575,8 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
               onClick={() => setIsLargeFont((curr) => !curr)}
               aria-pressed={isLargeFont}
               className={`h-7 rounded-full border px-4 text-xs font-bold transition active:scale-95 ${isLargeFont
-                  ? "border-white/55 bg-white/20 text-[#F8FAFC]"
-                  : "border-white/25 bg-black/10 text-slate-200"
+                ? "border-white/55 bg-white/20 text-[#F8FAFC]"
+                : "border-white/25 bg-black/10 text-slate-200"
                 }`}
             >
               خط
@@ -702,8 +685,8 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                           type="button"
                           onClick={() => setDraftTeamCount(count)}
                           className={`rounded-2xl py-2 text-xs font-bold transition ${draftTeamCount === count
-                              ? "bg-[#EF4444] text-[#F8FAFC]"
-                              : "border border-white/10 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-white/5"
+                            ? "bg-[#EF4444] text-[#F8FAFC]"
+                            : "border border-white/10 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-white/5"
                             }`}
                         >
                           {count} فرق
@@ -800,7 +783,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                           }}
                           className="w-full rounded-2xl bg-[#EF4444] py-3 text-sm font-black text-white transition hover:bg-red-600 animate-pulse"
                         >
-                          بدء لعبة جديدة وتطبيق الإعدادات 🔄
+                          بدء لعبة جديدة
                         </button>
 
                         <button
@@ -808,7 +791,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                           onClick={nextBlitzRound}
                           className="w-full rounded-2xl border border-white/10 py-2.5 text-xs font-black text-[#F8FAFC] transition hover:bg-white/5"
                         >
-                          تخطي الفئة الحالية ⏭️
+                          تخطي الفئة الحالية
                         </button>
                       </>
                     )}
