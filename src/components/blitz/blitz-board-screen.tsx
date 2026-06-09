@@ -9,35 +9,18 @@ interface BlitzBoardScreenProps {
   roomId: string;
 }
 
-// دالة لتحديد الخلفية التفاعلية للغرفة بناءً على الفريق المتصدر (تطابق درجات ألوان كود نيم)
-function blitzBackgroundClass(scores: { red: number; blue: number; green: number }) {
-  const red = scores?.red ?? 0;
-  const blue = scores?.blue ?? 0;
-  const green = scores?.green ?? 0;
-
-  if (red === 0 && blue === 0 && green === 0) {
-    // الخلفية الافتراضية عند البدء هي تدرج اللون الأزرق من كود نيم
-    return "bg-[linear-gradient(180deg,_#2563EB_0%,_#1D4ED8_38%,_#1E3A8A_100%)]";
+// دالة لتحديد الخلفية التفاعلية للغرفة بناءً على فريق اللاعب الحالي
+function blitzBackgroundClass(team: string) {
+  switch (team) {
+    case "red":
+      return "bg-[linear-gradient(180deg,_#DC2626_0%,_#B91C1C_38%,_#7F1D1D_100%)]";
+    case "blue":
+      return "bg-[linear-gradient(180deg,_#2563EB_0%,_#1D4ED8_38%,_#1E3A8A_100%)]";
+    case "green":
+      return "bg-[linear-gradient(180deg,_#059669_0%,_#047857_38%,_#064E3B_100%)]";
+    default:
+      return "bg-[linear-gradient(180deg,_#1E293B_0%,_#0F172A_100%)]"; // تدرج داكن هادئ للمشاهدين
   }
-
-  const maxScore = Math.max(red, blue, green);
-  const leadingTeams: string[] = [];
-  if (red === maxScore) leadingTeams.push("red");
-  if (blue === maxScore) leadingTeams.push("blue");
-  if (green === maxScore) leadingTeams.push("green");
-
-  if (leadingTeams.length > 1) {
-    return "bg-[linear-gradient(180deg,_#2563EB_0%,_#1D4ED8_38%,_#1E3A8A_100%)]";
-  }
-
-  const leader = leadingTeams[0];
-  if (leader === "red") {
-    return "bg-[linear-gradient(180deg,_#DC2626_0%,_#B91C1C_38%,_#7F1D1D_100%)] transition-all duration-1000";
-  }
-  if (leader === "blue") {
-    return "bg-[linear-gradient(180deg,_#2563EB_0%,_#1D4ED8_38%,_#1E3A8A_100%)] transition-all duration-1000";
-  }
-  return "bg-[linear-gradient(180deg,_#059669_0%,_#047857_38%,_#064E3B_100%)] transition-all duration-1000";
 }
 
 // دالة تحديد ألوان الفريق في لوحة الفريق
@@ -50,7 +33,7 @@ function teamPanelClass(team: string) {
     case "green":
       return "border-[#059669] bg-[#059669]";
     default:
-      return "border-white/10 bg-white/5";
+      return "border-transparent bg-transparent";
   }
 }
 
@@ -63,7 +46,6 @@ function presenceDotClass(isOnline: boolean) {
 // 1. مكون لوحة الفريق المتطابقة مع كود نيم (لا يوجد قائد، فقط أعضاء)
 interface BlitzTeamPanelProps {
   team: string;
-  label: string;
   players: BlitzRoomPlayer[];
   presence: Record<string, boolean>;
   currentPlayer: BlitzRoomPlayer;
@@ -76,7 +58,6 @@ interface BlitzTeamPanelProps {
 const BlitzTeamPanel = React.memo(
   ({
     team,
-    label,
     players,
     presence,
     currentPlayer,
@@ -98,21 +79,16 @@ const BlitzTeamPanel = React.memo(
       >
         {/* الرقم الكبير في الخلفية يمثل النقاط الحالية للفريق */}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          {team !== "unassigned" && (
-            <span className="select-none text-[5.5rem] font-black leading-none text-white/16">
-              {score}
-            </span>
-          )}
+          <span className="select-none text-[5.5rem] font-black leading-none text-white/16">
+            {score}
+          </span>
         </div>
 
         <div className="relative z-10 flex w-full flex-col items-end text-right">
-          <div className="-mx-2 -mt-1 w-[calc(100%+1rem)] bg-black/20 px-2 pb-2 pt-1 text-right">
-            <span className="text-[11px] font-black tracking-wide text-white">{label}</span>
-          </div>
-          <div className="h-px w-full bg-white/40" />
+          {/* تم إزالة اسم الفريق من الجزء العلوي بالكامل */}
           
           {/* قائمة اللاعبين كأعضاء فقط مع زر الانضمام بنفس ترتيب وتصميم كود نيم */}
-          <div className="mt-1 flex w-full flex-col items-start gap-1 overflow-y-auto max-h-[14vh] w-full [scrollbar-width:none] text-left text-xs font-bold text-[#F8FAFC]/95">
+          <div className="mt-1 flex w-full flex-col items-start gap-1 overflow-y-auto max-h-[18vh] w-full [scrollbar-width:none] text-left text-xs font-bold text-[#F8FAFC]/95">
             {canJoin ? (
               <button
                 type="button"
@@ -255,7 +231,17 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
 
   const [nameDraft, setNameDraft] = useState(playerName || "");
   const [nameError, setNameError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isLargeFont, setIsLargeFont] = useState(false);
+  const [isRenameOpen, setIsRenameOpen] = useState(false);
+  const [copiedValue, setCopiedValue] = useState<"code" | "link" | null>(null);
+
+  // إغلاق مودال الإعدادات تلقائياً عند بدء اللعب
+  useEffect(() => {
+    if (room?.status === "playing") {
+      setIsSettingsOpen(false);
+    }
+  }, [room?.status]);
 
   if (!isReady) {
     return (
@@ -369,26 +355,38 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
     };
   });
 
-  const handleCopyLink = () => {
-    const inviteLink = window.location.href;
-    void navigator.clipboard.writeText(inviteLink).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const inviteLink = `${origin}/blitz/${roomId}`;
+
+  const copyValue = async (value: string, type: "code" | "link") => {
+    await navigator.clipboard.writeText(value);
+    setCopiedValue(type);
+    window.setTimeout(() => setCopiedValue((current) => (current === type ? null : current)), 2000);
   };
+
+  const handleNameSave = async () => {
+    try {
+      await joinBlitzRoom(nameDraft);
+      setNameError(null);
+      setIsRenameOpen(false);
+    } catch (error) {
+      setNameError(error instanceof Error ? error.message : "تعذر تحديث الاسم.");
+    }
+  };
+
+  const boardFontScale = isLargeFont ? "comfortable" : "compact";
 
   return (
     <section
       className={`flex h-full w-full max-h-screen flex-col overflow-hidden text-[#F8FAFC] ${blitzBackgroundClass(
-        room.scores
+        playerTeam
       )}`}
       dir="rtl"
     >
-      {/* 1. شبكة الفرق في الأعلى (2x2 تماماً كشاشة كود نيم المعتادة) */}
+      {/* 1. شبكة الفرق في الأعلى (2x2 تماماً كشاشة كود نيم المعتادة، الخلية الرابعة فارغة) */}
       <div className="grid min-h-0 grid-cols-2 grid-rows-2 gap-0 h-[25vh] shrink-0">
         <BlitzTeamPanel
           team="red"
-          label="الفريق الأحمر"
           players={redPlayers}
           presence={room.presence}
           currentPlayer={player}
@@ -399,7 +397,6 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
         />
         <BlitzTeamPanel
           team="blue"
-          label="الفريق الأزرق"
           players={bluePlayers}
           presence={room.presence}
           currentPlayer={player}
@@ -410,7 +407,6 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
         />
         <BlitzTeamPanel
           team="green"
-          label="الفريق الأخضر"
           players={greenPlayers}
           presence={room.presence}
           currentPlayer={player}
@@ -419,18 +415,26 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
           onJoin={selectBlitzTeam}
           onKickPlayer={kickBlitzPlayer}
         />
-        <BlitzTeamPanel
-          team="unassigned"
-          label="المشاهدين"
-          players={unassignedPlayers}
-          presence={room.presence}
-          currentPlayer={player}
-          score={0}
-          isBusy={false}
-          onJoin={selectBlitzTeam}
-          onKickPlayer={kickBlitzPlayer}
-        />
+        {/* الخلية الرابعة فارغة تماماً لمطابقة كود نيم 100% */}
+        <div aria-hidden="true" className="border border-transparent opacity-0 bg-transparent" />
       </div>
+
+      {/* شريط المشاهدين في حال وجود لاعبين غير محددين */}
+      {unassignedPlayers.length > 0 && (
+        <div className="bg-black/20 border-b border-white/10 px-4 py-1.5 text-xs flex items-center justify-between gap-2 shrink-0">
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-400 font-bold">المشاهدون:</span>
+            <span className="text-white font-semibold">
+              {unassignedPlayers.map((p) => p.name).join("، ")}
+            </span>
+          </div>
+          {playerTeam === "unassigned" && (
+            <span className="text-[10px] bg-slate-700/50 text-slate-300 px-2 py-0.5 rounded-full font-bold">
+              أنت تشاهد اللعبة الآن
+            </span>
+          )}
+        </div>
+      )}
 
       {/* 2. مؤقت اللعب كخط فاصل متحرك */}
       <div className="h-1.5 w-full overflow-hidden bg-black/25 shrink-0">
@@ -449,15 +453,8 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
         <div className="mx-auto w-full max-w-[44rem] flex flex-col justify-center">
           {room.status === "lobby" ? (
             <div className="flex flex-wrap justify-center gap-2 py-1">
-              <button
-                type="button"
-                onClick={handleCopyLink}
-                className="rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-bold text-white hover:bg-white/25 transition active:scale-95"
-              >
-                {copied ? "تم نسخ الرابط! ✓" : "نسخ رابط الدعوة 🔗"}
-              </button>
               <span className="rounded-full border border-[#EF4444]/30 bg-[#7F1D1D]/35 px-4 py-1 text-xs font-black text-[#FCA5A5]">
-                رمز الغرفة: {roomId}
+                بانتظار بدء اللعبة من المضيف... رمز الغرفة: {roomId}
               </span>
             </div>
           ) : (
@@ -474,9 +471,9 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
       </div>
 
       {/* 4. لوحة البطاقات 5x5 الأصلية من كود نيم لضمان مطابقة التصميم تماماً */}
-      <div className="mt-1 flex min-h-0 items-start overflow-hidden px-1.5 sm:px-2 flex-1 pb-4">
+      <div className="mt-1 flex min-h-0 items-start overflow-hidden px-1.5 sm:px-2 h-[62vh]">
         <div className="mx-auto flex h-full w-full flex-col max-w-md md:max-w-[48rem] lg:max-w-[60rem] xl:max-w-[70rem] items-center justify-start overflow-visible">
-          <div className="flex min-h-0 w-full items-start justify-center overflow-visible pt-1 pb-1 flex-1">
+          <div className="flex min-h-0 w-full items-start justify-center overflow-visible pt-2 pb-1">
             <GameBoard
               board={mappedBoard}
               columns={5}
@@ -486,45 +483,165 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
               onReveal={(cardId: number) => tapBlitzCard(cardId)}
               revealAll={room.status === "ended"}
               compact
-              fontScale="comfortable"
+              fontScale={boardFontScale}
               difficulty="Normal"
-              playerTeam={playerTeam !== "unassigned" ? (playerTeam === "red" ? "Red" : playerTeam === "blue" ? "Blue" : "Green") : undefined}
+              playerTeam={
+                playerTeam !== "unassigned"
+                  ? playerTeam === "red"
+                    ? "Red"
+                    : playerTeam === "blue"
+                    ? "Blue"
+                    : "Green"
+                  : undefined
+              }
             />
           </div>
 
-          {/* أزرار التحكم باللعبة */}
-          <div className="mt-3 flex w-full shrink-0 items-center justify-center gap-2">
+          {/* أزرار التحكم باللعبة متطابقة مع كود نيم */}
+          <div className="mt-2 flex w-full shrink-0 items-center justify-center gap-2">
             <button
               type="button"
-              onClick={leaveBlitzRoom}
-              className="h-8 rounded-full border border-white/25 bg-black/20 px-5 text-xs font-black text-[#F8FAFC] transition active:scale-95 hover:bg-black/45"
+              onClick={() => setIsSettingsOpen(true)}
+              className="h-7 rounded-full border border-white/25 bg-black/10 px-4 text-xs font-bold text-slate-200 transition active:scale-95"
             >
-              انسحاب ومغادرة الغرفة
+              إعدادات
             </button>
-
-            {isHost && room.status === "playing" && (
-              <button
-                type="button"
-                onClick={nextBlitzRound}
-                className="h-8 rounded-full border border-[#EF4444]/35 bg-[#7F1D1D]/18 px-5 text-xs font-black text-[#FCA5A5] transition active:scale-95 hover:bg-[#7F1D1D]/35"
-              >
-                تخطي الفئة ⏭️
-              </button>
-            )}
-
-            {isHost && room.status === "lobby" && (
-              <button
-                type="button"
-                onClick={startBlitzGame}
-                disabled={redPlayers.length === 0 && bluePlayers.length === 0 && greenPlayers.length === 0}
-                className="h-8 rounded-full border border-emerald-500/35 bg-emerald-600/18 px-5 text-xs font-black text-emerald-400 transition active:scale-95 disabled:opacity-50 hover:bg-emerald-600/35"
-              >
-                ابدأ اللعب السريع ⚡
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setIsLargeFont((curr) => !curr)}
+              aria-pressed={isLargeFont}
+              className={`h-7 rounded-full border px-4 text-xs font-bold transition active:scale-95 ${
+                isLargeFont
+                  ? "border-white/55 bg-white/20 text-[#F8FAFC]"
+                  : "border-white/25 bg-black/10 text-slate-200"
+              }`}
+            >
+              خط
+            </button>
           </div>
         </div>
       </div>
+
+      {/* 5. مودال الإعدادات المخصص للبليتز */}
+      {isSettingsOpen && (
+        <div className="fixed inset-0 z-50 overflow-hidden bg-[#0F172A]/88 backdrop-blur-sm" dir="rtl">
+          <div className="flex h-full w-full items-start justify-center px-4 py-8">
+            <div className="max-h-full w-full max-w-md overflow-y-auto overscroll-contain rounded-[2rem] border border-white/10 bg-[#1E293B] shadow-2xl">
+              <div className="bg-[#0F172A] px-5 pb-5 pt-3 text-center relative">
+                <button
+                  type="button"
+                  onClick={() => setIsSettingsOpen(false)}
+                  aria-label="إغلاق الإعدادات"
+                  className="absolute right-5 top-3 flex h-10 w-10 items-center justify-center rounded-2xl border border-white/15 bg-[#152033] text-xl font-black text-[#F8FAFC] transition hover:bg-[#17233a]"
+                >
+                  ×
+                </button>
+                <p className="text-sm font-bold tracking-[0.24em] text-[#F8FAFC]/60">رمز الدعوة</p>
+                <p className="mt-3 text-4xl font-black tracking-[0.35em] text-[#EF4444]">{roomId}</p>
+                
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => void copyValue(roomId, "code")}
+                    className="rounded-2xl border border-white/15 px-4 py-2 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#EF4444]/15"
+                  >
+                    {copiedValue === "code" ? "تم نسخ الرمز" : "نسخ الرمز"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void copyValue(inviteLink, "link")}
+                    className="rounded-2xl border border-white/15 px-4 py-2 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#EF4444]/15"
+                  >
+                    {copiedValue === "link" ? "تم نسخ الرابط" : "نسخ الرابط"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNameDraft(player.name);
+                      setNameError(null);
+                      setIsRenameOpen((curr) => !curr);
+                    }}
+                    className="rounded-2xl border border-white/15 px-4 py-2 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#EF4444]/15"
+                  >
+                    تغيير الاسم
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void leaveBlitzRoom()}
+                    className="rounded-2xl border border-[#DC2626]/50 px-4 py-2 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#DC2626]/15"
+                  >
+                    مغادرة الغرفة
+                  </button>
+                </div>
+
+                {isRenameOpen && (
+                  <div className="mx-auto mt-4 max-w-sm rounded-3xl border border-white/10 bg-[#152033] p-3">
+                    <input
+                      type="text"
+                      value={nameDraft}
+                      onChange={(event) => setNameDraft(event.target.value.slice(0, 24))}
+                      placeholder="اسمك داخل اللعبة"
+                      className="h-11 w-full rounded-2xl border border-white/15 bg-[#0F172A] px-4 text-base font-bold text-[#F8FAFC] outline-none transition focus:border-[#EF4444]"
+                    />
+                    {nameError && <p className="mt-2 text-xs font-bold text-[#FCA5A5]">{nameError}</p>}
+                    <div className="mt-3 flex justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleNameSave}
+                        className="rounded-2xl bg-[#EF4444] px-4 py-2 text-sm font-black text-[#F8FAFC] transition hover:bg-red-600"
+                      >
+                        حفظ الاسم
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsRenameOpen(false);
+                          setNameError(null);
+                        }}
+                        className="rounded-2xl border border-white/15 px-4 py-2 text-sm font-bold text-[#F8FAFC]/85 transition hover:bg-white/5"
+                      >
+                        إلغاء
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* عناصر التحكم للمضيف فقط */}
+              {isHost && (
+                <div className="p-6 flex flex-col gap-4 border-t border-white/5">
+                  <h3 className="text-sm font-bold text-[#F8FAFC]">خيارات المضيف (لإدارة اللعبة)</h3>
+                  
+                  {room.status === "lobby" && (
+                    <button
+                      type="button"
+                      onClick={startBlitzGame}
+                      disabled={redPlayers.length === 0 && bluePlayers.length === 0 && greenPlayers.length === 0}
+                      className="w-full rounded-2xl bg-emerald-600 py-3 text-sm font-black text-white transition hover:bg-emerald-500 disabled:opacity-40"
+                    >
+                      ابدأ اللعب السريع ⚡
+                    </button>
+                  )}
+
+                  {room.status === "playing" && (
+                    <button
+                      type="button"
+                      onClick={nextBlitzRound}
+                      className="w-full rounded-2xl bg-[#EF4444] py-3 text-sm font-black text-white transition hover:bg-red-600"
+                    >
+                      تخطي الفئة الحالية ⏭️
+                    </button>
+                  )}
+
+                  <p className="text-[11px] text-[#94A3B8] text-center mt-1">
+                    يمكن للمضيف بدء اللعبة عند انضمام لاعب واحد على الأقل لأي من الفرق.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* شاشة النهاية */}
       {room.status === "ended" && (
