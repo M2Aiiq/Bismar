@@ -528,6 +528,29 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
 
           {/* أزرار التحكم باللعبة متطابقة مع كود نيم، مع إضافة زر الإيقاف والتشغيل */}
           <div className="mt-2 flex w-full shrink-0 items-center justify-center gap-2">
+            {isHost && room.status === "lobby" && (
+              <button
+                type="button"
+                onClick={() => {
+                  const finalSettings = {
+                    roundTimerSeconds: draftTimer,
+                    scoreLimit: draftScoreLimit,
+                    categoryPools: [draftPool],
+                    teamCount: draftTeamCount,
+                  };
+                  void startBlitzGame(finalSettings);
+                }}
+                disabled={
+                  redPlayers.length === 0 &&
+                  bluePlayers.length === 0 &&
+                  (draftTeamCount === 2 ? false : greenPlayers.length === 0)
+                }
+                className="h-7 rounded-full border border-emerald-500/35 bg-emerald-600/18 px-4 text-xs font-bold text-emerald-400 transition active:scale-95 disabled:opacity-40 hover:bg-emerald-600/35"
+              >
+                ابدأ اللعب السريع ⚡
+              </button>
+            )}
+
             {room.status === "playing" && (
               <button
                 type="button"

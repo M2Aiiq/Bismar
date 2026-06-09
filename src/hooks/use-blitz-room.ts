@@ -291,6 +291,7 @@ export function useBlitzRoom(roomId: string) {
           currentRoom.status = "playing";
           currentRoom.scores = { red: 0, blue: 0, green: 0 };
           currentRoom.winner = null;
+          currentRoom.isPaused = false;
         } catch (err) {
           console.error("Error starting Blitz game with settings:", err);
         }
@@ -419,6 +420,7 @@ export function useBlitzRoom(roomId: string) {
               }
             });
           }
+          currentRoom.isPaused = false;
         } catch (err) {
           console.error("Error resetting Blitz game:", err);
         }
