@@ -126,7 +126,7 @@ export function useBlitzRoom(roomId: string) {
   }, [isReady, roomId, playerId]);
 
   // دالة مساعدة لتوليد جولة بليتز جديدة (مجموعة كروت وفئة جديدة)
-  const generateRoundData = useCallback((settings: { roundTimerSeconds: number; categoryPools: string[] }) => {
+  const generateRoundData = useCallback((settings: BlitzRoomSettings) => {
     const pool = settings.categoryPools?.[0] || "all";
     const categories = getBlitzCategoriesByPool(pool);
     if (categories.length === 0) {
@@ -143,7 +143,10 @@ export function useBlitzRoom(roomId: string) {
       (word) => !correctSet.has(word) && !blacklist.has(word)
     );
 
-    const distractorsCount = Math.max(0, 25 - correctWords.length);
+    const difficultyLines = settings.difficultyLines ?? 0;
+    const totalCardsCount = 25 + (difficultyLines * 5); // 5 أعمدة × (5 صفوف + أسطر إضافية)
+
+    const distractorsCount = Math.max(0, totalCardsCount - correctWords.length);
     const chosenDistractors = shuffleList(safeDistractors).slice(0, distractorsCount);
 
     const finalWordsList = [

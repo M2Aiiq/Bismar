@@ -258,6 +258,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
   const [draftScoreLimit, setDraftScoreLimit] = useState(15);
   const [draftPool, setDraftPool] = useState("all");
   const [draftTeamCount, setDraftTeamCount] = useState(3);
+  const [draftDifficultyLines, setDraftDifficultyLines] = useState(0);
 
   // مرجع لضمان فتح الإعدادات تلقائياً للمضيف مرة واحدة فقط عند الإنشاء
   const hasAutoOpenedRef = useRef(false);
@@ -407,6 +408,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
       setDraftScoreLimit(room.settings.scoreLimit);
       setDraftPool(room.settings.categoryPools?.[0] || "all");
       setDraftTeamCount(room.settings.teamCount ?? 3);
+      setDraftDifficultyLines(room.settings.difficultyLines ?? 0);
     }
   }, [room?.settings]);
 
@@ -770,6 +772,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                     scoreLimit: draftScoreLimit,
                     categoryPools: [draftPool],
                     teamCount: draftTeamCount,
+                    difficultyLines: draftDifficultyLines,
                   };
                   void startBlitzGame(finalSettings);
                 }}
@@ -974,6 +977,31 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                     />
                   </div>
 
+                  {/* إعداد مستوى الصعوبة كمسودة */}
+                  <div className="text-right">
+                    <label className="flex items-center justify-between text-xs font-bold text-slate-300">
+                      <span>مستوى الصعوبة</span>
+                      <span className="text-[#EF4444] font-black">
+                        {draftDifficultyLines === 1
+                          ? "عادي (سطر إضافي)"
+                          : draftDifficultyLines === 2
+                          ? "متوسط (سطران إضافيان)"
+                          : draftDifficultyLines === 3
+                          ? "صعب (3 أسطر إضافية)"
+                          : "بدون (شبكة 5×5)"}
+                      </span>
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="3"
+                      step="1"
+                      value={draftDifficultyLines}
+                      onChange={(e) => setDraftDifficultyLines(Number(e.target.value))}
+                      className="mt-2 w-full accent-[#EF4444] bg-[#0F172A] h-2 rounded-lg appearance-none cursor-pointer"
+                    />
+                  </div>
+
                   {/* مجمع الفئات كمسودة */}
                   <div className="text-right">
                     <label className="text-xs font-bold text-slate-300">مجمع الفئات المستهدفة</label>
@@ -1001,6 +1029,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                             scoreLimit: draftScoreLimit,
                             categoryPools: [draftPool],
                             teamCount: draftTeamCount,
+                            difficultyLines: draftDifficultyLines,
                           };
                           void startBlitzGame(finalSettings);
                           setIsSettingsOpen(false);
@@ -1024,6 +1053,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                               scoreLimit: draftScoreLimit,
                               categoryPools: [draftPool],
                               teamCount: draftTeamCount,
+                              difficultyLines: draftDifficultyLines,
                             };
                             void startBlitzGame(finalSettings);
                             setIsSettingsOpen(false);
@@ -1068,6 +1098,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
               scoreLimit: draftScoreLimit,
               categoryPools: [draftPool],
               teamCount: draftTeamCount,
+              difficultyLines: draftDifficultyLines,
             };
             void resetBlitzGame(finalSettings);
           }}
