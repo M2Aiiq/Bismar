@@ -779,11 +779,6 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                   };
                   void startBlitzGame(finalSettings);
                 }}
-                disabled={
-                  redPlayers.length === 0 &&
-                  bluePlayers.length === 0 &&
-                  (draftTeamCount === 2 ? false : greenPlayers.length === 0)
-                }
                 className="h-7 rounded-full border border-emerald-500/35 bg-emerald-600/18 px-4 text-xs font-bold text-emerald-400 transition active:scale-95 disabled:opacity-40 hover:bg-emerald-600/35"
               >
                 بدء اللعب
@@ -1039,11 +1034,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                           void startBlitzGame(finalSettings);
                           setIsSettingsOpen(false);
                         }}
-                        disabled={
-                          redPlayers.length === 0 &&
-                          bluePlayers.length === 0 &&
-                          (draftTeamCount === 2 ? false : greenPlayers.length === 0)
-                        }
+
                         className="w-full rounded-2xl bg-emerald-600 py-3 text-sm font-black text-white transition hover:bg-emerald-500 disabled:opacity-40"
                       >
                         بدء اللعب
