@@ -113,4 +113,5 @@ export interface BlitzRoomState {
     team: BlitzTeam;
     timestamp: number;
   } | null;
+  bgTheme?: "default" | "red" | "blue" | "green" | null;
 }

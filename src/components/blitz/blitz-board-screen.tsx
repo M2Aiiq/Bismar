@@ -10,9 +10,9 @@ interface BlitzBoardScreenProps {
   roomId: string;
 }
 
-// دالة لتحديد الخلفية التفاعلية للغرفة بناءً على فريق اللاعب الحالي
-function blitzBackgroundClass(team: string) {
-  switch (team) {
+// دالة لتحديد الخلفية التفاعلية للغرفة بناءً على ثييم اللعبة الحالي
+function blitzBackgroundClass(bgTheme: string | null | undefined) {
+  switch (bgTheme) {
     case "red":
       return "bg-[linear-gradient(180deg,_#DC2626_0%,_#B91C1C_38%,_#7F1D1D_100%)]";
     case "blue":
@@ -20,7 +20,7 @@ function blitzBackgroundClass(team: string) {
     case "green":
       return "bg-[linear-gradient(180deg,_#059669_0%,_#047857_38%,_#064E3B_100%)]";
     default:
-      return "bg-[linear-gradient(180deg,_#1E293B_0%,_#0F172A_100%)]"; // تدرج داكن هادئ للمشاهدين
+      return "bg-[linear-gradient(180deg,_#1E293B_0%,_#0F172A_100%)]"; // ثييم اللعبة الافتراضي الداكن
   }
 }
 
@@ -425,10 +425,13 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
   const boardSectionHeightClass = usesMultiRowTeamGrid ? "h-[62vh]" : "h-[65vh]";
   const gameBoardMaxHeight = usesMultiRowTeamGrid ? 62 : 65;
 
+  // استخدام ثييم الخلفية المشترك (bgTheme)، وفي اللوبي نلتزم دائماً بالثييم الافتراضي الداكن
+  const currentBgTheme = room.status === "lobby" ? "default" : (room.bgTheme ?? "default");
+
   return (
     <section
-      className={`flex h-full w-full max-h-screen flex-col overflow-hidden text-[#F8FAFC] ${blitzBackgroundClass(
-        playerTeam
+      className={`flex h-full w-full max-h-screen flex-col overflow-hidden text-[#F8FAFC] transition-colors duration-500 ${blitzBackgroundClass(
+        currentBgTheme
       )}`}
       dir="rtl"
     >

@@ -80,6 +80,7 @@ export function useBlitzRoom(roomId: string) {
         if (!data.presence) data.presence = {};
         if (!data.scores) data.scores = { red: 0, blue: 0, green: 0 };
         if (data.lastWrongClick === undefined) data.lastWrongClick = null;
+        if (data.bgTheme === undefined) data.bgTheme = "default";
 
         // تطبيع بيانات الشبكة: Firebase يحذف القيم null تلقائياً، فيصبح clickedBy هو undefined بدلاً من null
         if (data.grid) {
@@ -302,6 +303,7 @@ export function useBlitzRoom(roomId: string) {
           currentRoom.winner = null;
           currentRoom.isPaused = false;
           currentRoom.lastWrongClick = null;
+          currentRoom.bgTheme = "default";
         } catch (err) {
           console.error("Error starting Blitz game with settings:", err);
         }
@@ -341,6 +343,7 @@ export function useBlitzRoom(roomId: string) {
           // الكلمة صحيحة: تنقلب البطاقة بلون الفريق الضاغط وتُحسب نقطة
           card.clickedBy = team;
           currentRoom.scores[team] = (currentRoom.scores[team] || 0) + 1;
+          currentRoom.bgTheme = team; // تغيير الخلفية للون الفريق الضاغط
         } else {
           // الكلمة خاطئة: لا تنقلب البطاقة، فقط عقوبة -1 نقطة وتحديث آخر نقرة خاطئة
           currentRoom.scores[team] = Math.max(0, (currentRoom.scores[team] || 0) - 1);
@@ -349,6 +352,7 @@ export function useBlitzRoom(roomId: string) {
             team: team,
             timestamp: Date.now()
           };
+          currentRoom.bgTheme = "default"; // إرجاع الخلفية للون الافتراضي عند الخطأ
         }
 
         // 3. التحقق من وصول أي فريق للحد الأقصى للنقاط
@@ -398,6 +402,7 @@ export function useBlitzRoom(roomId: string) {
         currentRoom.grid = nextRound.grid;
         currentRoom.timer = nextRound.timer;
         currentRoom.lastWrongClick = null;
+        currentRoom.bgTheme = "default";
       } catch (err) {
         console.error("Error skipping to next round:", err);
       }
@@ -428,6 +433,7 @@ export function useBlitzRoom(roomId: string) {
           currentRoom.winner = null;
           currentRoom.settings = settingsToUse;
           currentRoom.lastWrongClick = null;
+          currentRoom.bgTheme = "default";
 
           // إذا تم تغيير عدد الفرق إلى 2، يتم إرجاع أي لاعب في الفريق الأخضر إلى الحالة unassigned
           if (settingsToUse.teamCount === 2 && currentRoom.players) {
