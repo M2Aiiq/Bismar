@@ -334,14 +334,13 @@ export function useBlitzRoom(roomId: string) {
           return currentRoom;
         }
 
-        // 1. تعيين لون الفريق الضاغط
-        card.clickedBy = team;
-
-        // 2. تحديث النقاط وتطبيق العقوبات
+        // تحديث النقاط: فقط الكلمة الصحيحة تنقلب بلون الفريق
         if (card.isCorrect) {
+          // الكلمة صحيحة: تنقلب البطاقة بلون الفريق الضاغط وتُحسب نقطة
+          card.clickedBy = team;
           currentRoom.scores[team] = (currentRoom.scores[team] || 0) + 1;
         } else {
-          // عقوبة -1 لتفادي الضغط العشوائي
+          // الكلمة خاطئة: لا تنقلب البطاقة، فقط عقوبة -1 نقطة
           currentRoom.scores[team] = Math.max(0, (currentRoom.scores[team] || 0) - 1);
         }
 
