@@ -259,6 +259,9 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
   const [draftPool, setDraftPool] = useState("all");
   const [draftTeamCount, setDraftTeamCount] = useState(3);
 
+  // مرجع لضمان فتح الإعدادات تلقائياً للمضيف مرة واحدة فقط عند الإنشاء
+  const hasAutoOpenedRef = useRef(false);
+
   // حالة البطاقة الخاطئة التي يجب أن تنقلب بالخطأ حالياً
   const [localWrongCardId, setLocalWrongCardId] = useState<number | null>(null);
 
@@ -410,6 +413,18 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
       setIsSettingsOpen(false);
     }
   }, [room?.status]);
+
+  // فتح الإعدادات تلقائياً للمضيف عند إنشاء الغرفة لأول مرة (في اللوبي)
+  useEffect(() => {
+    if (room && room.status === "lobby" && playerId) {
+      const activePlayer = room.players?.[playerId];
+      const isPlayerHost = activePlayer?.isHost;
+      if (isPlayerHost && !hasAutoOpenedRef.current) {
+        setIsSettingsOpen(true);
+        hasAutoOpenedRef.current = true;
+      }
+    }
+  }, [room?.status, room?.players, playerId]);
 
   // تحديث إحصائيات اللاعب عند انتهاء لعبة بليتز
   useEffect(() => {
