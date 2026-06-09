@@ -244,6 +244,28 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
   const [draftPool, setDraftPool] = useState("all");
   const [draftTeamCount, setDraftTeamCount] = useState(3);
 
+  // حالة البطاقة الخاطئة التي يجب أن تنقلب بالخطأ حالياً
+  const [localWrongCardId, setLocalWrongCardId] = useState<number | null>(null);
+
+  // مراقبة النقرة الخاطئة الأخيرة لتشغيل التأثير البصري
+  useEffect(() => {
+    if (room?.lastWrongClick) {
+      const { cardId, timestamp } = room.lastWrongClick;
+      const elapsed = Date.now() - timestamp;
+      const duration = 800; // إجمالي مدة التأثير 800ms
+      
+      if (elapsed < duration) {
+        setLocalWrongCardId(cardId);
+        const timer = setTimeout(() => {
+          setLocalWrongCardId(null);
+        }, duration - elapsed);
+        return () => clearTimeout(timer);
+      }
+    } else {
+      setLocalWrongCardId(null);
+    }
+  }, [room?.lastWrongClick?.timestamp, room?.lastWrongClick?.cardId]);
+
   // مزامنة المسودات مع إعدادات الغرفة الفعلية من Firebase
   useEffect(() => {
     if (room?.settings) {
@@ -355,6 +377,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
   const mappedBoard: Card[] = room.grid.map((card) => {
     // نستخدم فحص truthy لأن Firebase يحذف القيم null تلقائياً فيصبح clickedBy هو undefined بدلاً من null
     const isClicked = !!card.clickedBy;
+    const isWrongFlip = localWrongCardId === card.id;
     let type: CardType = "Neutral";
 
     if (isClicked) {
@@ -369,7 +392,8 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
       id: card.id,
       text: card.word,
       type,
-      isRevealed: isClicked || room.status === "ended",
+      isRevealed: isClicked || room.status === "ended" || isWrongFlip,
+      isWrongFlip,
     };
   });
 

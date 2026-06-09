@@ -79,6 +79,7 @@ export function useBlitzRoom(roomId: string) {
         if (!data.players) data.players = {};
         if (!data.presence) data.presence = {};
         if (!data.scores) data.scores = { red: 0, blue: 0, green: 0 };
+        if (data.lastWrongClick === undefined) data.lastWrongClick = null;
 
         // تطبيع بيانات الشبكة: Firebase يحذف القيم null تلقائياً، فيصبح clickedBy هو undefined بدلاً من null
         if (data.grid) {
@@ -300,6 +301,7 @@ export function useBlitzRoom(roomId: string) {
           currentRoom.scores = { red: 0, blue: 0, green: 0 };
           currentRoom.winner = null;
           currentRoom.isPaused = false;
+          currentRoom.lastWrongClick = null;
         } catch (err) {
           console.error("Error starting Blitz game with settings:", err);
         }
@@ -340,8 +342,13 @@ export function useBlitzRoom(roomId: string) {
           card.clickedBy = team;
           currentRoom.scores[team] = (currentRoom.scores[team] || 0) + 1;
         } else {
-          // الكلمة خاطئة: لا تنقلب البطاقة، فقط عقوبة -1 نقطة
+          // الكلمة خاطئة: لا تنقلب البطاقة، فقط عقوبة -1 نقطة وتحديث آخر نقرة خاطئة
           currentRoom.scores[team] = Math.max(0, (currentRoom.scores[team] || 0) - 1);
+          currentRoom.lastWrongClick = {
+            cardId: cardId,
+            team: team,
+            timestamp: Date.now()
+          };
         }
 
         // 3. التحقق من وصول أي فريق للحد الأقصى للنقاط
@@ -390,6 +397,7 @@ export function useBlitzRoom(roomId: string) {
         currentRoom.currentCategory = nextRound.currentCategory;
         currentRoom.grid = nextRound.grid;
         currentRoom.timer = nextRound.timer;
+        currentRoom.lastWrongClick = null;
       } catch (err) {
         console.error("Error skipping to next round:", err);
       }
@@ -419,6 +427,7 @@ export function useBlitzRoom(roomId: string) {
           currentRoom.scores = { red: 0, blue: 0, green: 0 };
           currentRoom.winner = null;
           currentRoom.settings = settingsToUse;
+          currentRoom.lastWrongClick = null;
 
           // إذا تم تغيير عدد الفرق إلى 2، يتم إرجاع أي لاعب في الفريق الأخضر إلى الحالة unassigned
           if (settingsToUse.teamCount === 2 && currentRoom.players) {

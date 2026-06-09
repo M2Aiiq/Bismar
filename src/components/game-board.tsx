@@ -248,7 +248,7 @@ export function GameBoard({
         const hasVotes = voteCount > 0;
         const isPendingReveal = pendingRevealCardId === card.id;
         const isPeeking = Boolean(peekedCards[card.id]);
-        const isFlipped = card.isRevealed && !isPeeking;
+        const isFlipped = (card.isRevealed || !!card.isWrongFlip) && !isPeeking;
 
         return (
           <button
@@ -272,7 +272,7 @@ export function GameBoard({
               !card.isRevealed && !canReveal && "cursor-default",
             )}
           >
-            <div className={cx("card-inner", isFlipped && "card-flipped")}>
+            <div className={cx("card-inner", isFlipped && "card-flipped", card.isWrongFlip && "card-inner-fast")}>
               {/* Front Side: Word display */}
               <div
                 className={cx(
@@ -318,17 +318,25 @@ export function GameBoard({
               <div
                 aria-hidden="true"
                 className={cx(
-                  "card-back absolute inset-0 z-10 border overflow-hidden",
+                  "card-back absolute inset-0 z-10 border overflow-hidden flex items-center justify-center",
                   denseBoard ? "rounded-xl" : "rounded-[1.15rem]",
                   "border-slate-900/15",
-                  resolveShutterSurfaceClass(card.type),
+                  card.isWrongFlip
+                    ? "bg-gradient-to-b from-[#FFFFFF] to-[#F3F4F6] text-[#EF4444] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.92),inset_0_10px_20px_rgba(148,163,184,0.18)]"
+                    : resolveShutterSurfaceClass(card.type),
                 )}
               >
-                <div className="absolute inset-0 opacity-20">
-                  <div className="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-white/30" />
-                  <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-white/15" />
-                  <div className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-white/10" />
-                </div>
+                {card.isWrongFlip ? (
+                  <span className="text-2xl sm:text-3xl font-black drop-shadow-[0_1px_2px_rgba(0,0,0,0.1)]">
+                    -1
+                  </span>
+                ) : (
+                  <div className="absolute inset-0 opacity-20">
+                    <div className="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-white/30" />
+                    <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-white/15" />
+                    <div className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rotate-45 border border-white/10" />
+                  </div>
+                )}
               </div>
             </div>
           </button>

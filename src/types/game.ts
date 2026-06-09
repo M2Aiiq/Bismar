@@ -30,6 +30,7 @@ export interface Card {
   text: string;
   type: CardType;
   isRevealed: boolean;
+  isWrongFlip?: boolean;
 }
 
 export interface Clue {
@@ -107,4 +108,9 @@ export interface BlitzRoomState {
   presence: Record<string, boolean>;
   winner: "red" | "blue" | "green" | null;
   isPaused?: boolean;
+  lastWrongClick?: {
+    cardId: number;
+    team: BlitzTeam;
+    timestamp: number;
+  } | null;
 }
