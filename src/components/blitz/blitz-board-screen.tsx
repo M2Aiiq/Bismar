@@ -708,7 +708,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
       </div>
 
       {/* 3. شريط السؤال النشط (الفئة المستهدفة في مكان التلميحات تماماً) */}
-      <div className="mx-2 mt-0.5 shrink-0">
+      <div className="mx-2 mt-2 shrink-0">
         <div className="mx-auto w-full max-w-[44rem] flex flex-col justify-center">
           {room.status === "lobby" ? (
             <div className="flex flex-wrap justify-center gap-2 py-0">
@@ -735,9 +735,9 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
       </div>
 
       {/* 4. لوحة البطاقات 5x5 الأصلية من كود نيم لضمان مطابقة التصميم تماماً */}
-      <div className={`mt-1 flex min-h-0 items-start overflow-hidden px-1.5 sm:px-2 ${boardSectionHeightClass}`}>
+      <div className={`mt-0 flex min-h-0 items-start overflow-hidden px-1.5 sm:px-2 ${boardSectionHeightClass}`}>
         <div className="mx-auto flex h-full w-full flex-col max-w-md md:max-w-[48rem] lg:max-w-[60rem] xl:max-w-[70rem] items-center justify-start overflow-visible">
-          <div className="flex min-h-0 w-full items-start justify-center overflow-visible pt-2 pb-1">
+          <div className="flex min-h-0 w-full items-start justify-center overflow-visible pt-1 pb-1">
             <GameBoard
               board={mappedBoard}
               columns={5}
