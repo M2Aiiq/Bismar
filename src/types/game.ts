@@ -106,4 +106,5 @@ export interface BlitzRoomState {
   players: Record<string, BlitzRoomPlayer>;
   presence: Record<string, boolean>;
   winner: "red" | "blue" | "green" | null;
+  isPaused?: boolean;
 }

@@ -287,10 +287,12 @@ export function useBlitzRoom(roomId: string) {
                 }
               });
             }
+            currentRoom.isPaused = false;
           }
           currentRoom.status = "playing";
           currentRoom.scores = { red: 0, blue: 0, green: 0 };
           currentRoom.winner = null;
+          currentRoom.isPaused = false;
         } catch (err) {
           console.error("Error starting Blitz game with settings:", err);
         }
@@ -304,7 +306,7 @@ export function useBlitzRoom(roomId: string) {
   // 8. النقر التنافسي المتزامن (Firebase Transactions)
   const tapBlitzCard = useCallback(
     async (cardId: number) => {
-      if (!roomId || !room || room.status !== "playing") return;
+      if (!roomId || !room || room.status !== "playing" || room.isPaused) return;
 
       const activePlayer = room.players[playerId];
       if (!activePlayer || activePlayer.team === "unassigned") {
@@ -316,7 +318,7 @@ export function useBlitzRoom(roomId: string) {
       const roomPathRef = ref(database, `blitzRooms/${roomId}`);
 
       await runTransaction(roomPathRef, (currentRoom: BlitzRoomState | null) => {
-        if (!currentRoom || currentRoom.status !== "playing") return currentRoom;
+        if (!currentRoom || currentRoom.status !== "playing" || currentRoom.isPaused) return currentRoom;
 
         const card = currentRoom.grid?.[cardId];
         // إذا تم النقر عليه بالفعل من قبل أي لاعب، تجاهل الطلب
@@ -410,6 +412,7 @@ export function useBlitzRoom(roomId: string) {
           currentRoom.scores = { red: 0, blue: 0, green: 0 };
           currentRoom.winner = null;
           currentRoom.settings = settingsToUse;
+          currentRoom.isPaused = false;
 
           // إذا تم تغيير عدد الفرق إلى 2، يتم إرجاع أي لاعب في الفريق الأخضر إلى الحالة unassigned
           if (settingsToUse.teamCount === 2 && currentRoom.players) {
@@ -441,7 +444,7 @@ export function useBlitzRoom(roomId: string) {
 
     const interval = setInterval(() => {
       void runTransaction(roomPathRef, (currentRoom: BlitzRoomState | null) => {
-        if (!currentRoom || currentRoom.status !== "playing") return currentRoom;
+        if (!currentRoom || currentRoom.status !== "playing" || currentRoom.isPaused) return currentRoom;
 
         if (currentRoom.timer <= 1) {
           // انتهى وقت الفئة الحالية! ننتقل للفئة التالية تلقائياً
@@ -464,6 +467,13 @@ export function useBlitzRoom(roomId: string) {
     return () => clearInterval(interval);
   }, [room?.status, room?.players, roomId, playerId, generateRoundData]);
 
+  const togglePauseBlitzGame = useCallback(async () => {
+    if (!roomId || !room) return;
+    const database = getRealtimeDatabase() || getDatabase();
+    const isPausedRef = ref(database, `blitzRooms/${roomId}/isPaused`);
+    await set(isPausedRef, !room.isPaused);
+  }, [roomId, room]);
+
   return {
     room,
     playerId,
@@ -477,7 +487,8 @@ export function useBlitzRoom(roomId: string) {
     tapBlitzCard,
     nextBlitzRound,
     resetBlitzGame,
-    kickBlitzPlayer
+    kickBlitzPlayer,
+    togglePauseBlitzGame
   };
 }
 
