@@ -44,7 +44,7 @@ export function CreateBlitzRoomButton() {
 
       // جلب بنك الكلمات العامة
       const generalBank = IRAQI_WORDS_BY_CATEGORY.General || [];
-      
+
       // تصفية الكلمات العامة لمنع التداخل اللفظي والدلالي
       const safeDistractors = generalBank.filter(
         (word) => !correctSet.has(word) && !blacklist.has(word)
@@ -103,7 +103,7 @@ export function CreateBlitzRoomButton() {
 
       // 4. حفظ الغرفة في Firebase والتوجيه للمسار الديناميكي
       await set(ref(database, `blitzRooms/${roomId}`), initialRoom);
-      
+
       setIsOpen(false);
       router.push(`/blitz/${roomId}`);
     } catch (error) {
@@ -122,7 +122,7 @@ export function CreateBlitzRoomButton() {
         disabled={disabled}
         className="w-full rounded-2xl border border-[#EF4444]/30 bg-[#7F1D1D]/20 px-5 py-4 text-base font-black text-[#FCA5A5] transition hover:bg-[#7F1D1D]/45 hover:border-[#EF4444] disabled:cursor-not-allowed disabled:bg-[#7F1D1D]/10 disabled:text-[#FCA5A5]/40"
       >
-        طور البسامير السريعة (Blitz Mode) ⚡
+        العب Blitz
       </button>
 
       {isOpen && (
@@ -130,8 +130,8 @@ export function CreateBlitzRoomButton() {
           <div className="w-full max-w-md scale-100 rounded-3xl border border-white/10 bg-[#1E293B] p-6 shadow-2xl transition-all duration-300 md:p-8">
             <div className="text-right">
               <h2 className="text-2xl font-black text-[#F8FAFC] flex items-center gap-2">
-                <span>طور البسامير السريعة</span>
-                <span className="text-[#EF4444]">⚡ Blitz</span>
+                <span>اللعب</span>
+                <span className="text-[#EF4444]">Blitz</span>
               </h2>
               <p className="mt-1.5 text-xs font-semibold text-[#94A3B8]">
                 تنافسوا في السرعة لتخمين الكلمات المرتبطة بالفئة الهدف مباشرة وفي نفس اللحظة!
@@ -181,11 +181,10 @@ export function CreateBlitzRoomButton() {
                     key={count}
                     type="button"
                     onClick={() => setTeamCount(count)}
-                    className={`rounded-2xl py-3 text-sm font-bold transition ${
-                      teamCount === count
-                        ? "bg-[#EF4444] text-[#F8FAFC]"
-                        : "border border-white/10 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-white/5"
-                    }`}
+                    className={`rounded-2xl py-3 text-sm font-bold transition ${teamCount === count
+                      ? "bg-[#EF4444] text-[#F8FAFC]"
+                      : "border border-white/10 bg-[#0F172A] text-[#F8FAFC]/85 hover:bg-white/5"
+                      }`}
                   >
                     {count} فرق
                   </button>
