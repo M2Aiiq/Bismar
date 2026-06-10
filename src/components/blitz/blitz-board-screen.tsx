@@ -552,31 +552,30 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
     };
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/90 px-4 backdrop-blur-md">
-        <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#1E293B] p-6 shadow-2xl md:p-8">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/80 px-4 backdrop-blur-sm">
+        <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#1E293B] p-6 shadow-2xl md:p-8 animate-in fade-in zoom-in-95 duration-200">
           <div className="text-right">
-            <h2 className="text-2xl font-black text-[#F8FAFC]">انضم للبسامير السريعة ⚡</h2>
-            <p className="mt-1 text-xs text-[#94A3B8]">اكتب اسمك للمشاركة في اللعب التنافسي</p>
+            <h2 className="text-2xl font-black text-[#F8FAFC]">اكتب اسمك</h2>
           </div>
 
           <div className="mt-5 text-right">
             <input
               value={nameDraft}
               onChange={(e) => setNameDraft(e.target.value)}
-              placeholder="مثال: يوسف"
-              className="w-full rounded-2xl border border-white/15 bg-[#0F172A] px-4 py-3 text-base text-[#F8FAFC] outline-none transition focus:border-[#EF4444]"
+              placeholder="مثال: علي"
+              className="w-full rounded-2xl border border-white/15 bg-[#0F172A] px-4 py-3 text-base text-[#F8FAFC] outline-none transition focus:border-[#2563EB]"
             />
           </div>
 
-          {nameError && <p className="mt-2 text-sm text-[#EF4444] text-right">{nameError}</p>}
+          {nameError && <p className="mt-2 text-sm text-[#DC2626] text-right">{nameError}</p>}
 
           <div className="mt-6 flex">
             <button
               type="button"
               onClick={handleSaveName}
-              className="w-full rounded-2xl bg-[#EF4444] px-5 py-3 text-sm font-bold text-[#F8FAFC] transition hover:bg-red-600"
+              className="w-full rounded-2xl bg-[#2563EB] px-5 py-3 text-sm font-bold text-[#F8FAFC] transition hover:bg-[#1D4ED8]"
             >
-              دخول اللوبي 🚀
+              حفظ
             </button>
           </div>
         </div>
