@@ -182,6 +182,62 @@ export const BLITZ_CATEGORIES: BlitzCategory[] = [
     correct_words: ["مطبخ", "هول", "تواليت", "ديوانية", "سطح", "طارمة", "استقبال", "حوش", "منور", "سرداب"],
     trick_words: ["بيت", "بناء", "طابوق", "سكن", "عائلة", "غرفة"],
     blacklist: ["دار", "منزل"]
+  },
+  {
+    category_id: "school_university",
+    target_word: "المدرسة والجامعة",
+    correct_words: ["صف", "رحلة", "أستاذ", "محاضرة", "امتحان", "شهادة", "قلم", "دفتر", "جنطة", "تخرج", "عميد", "قاعة"],
+    trick_words: ["دراسة", "علم", "نجاح", "مستشفى", "طبيب", "دوام", "عطلة"],
+    blacklist: ["مدرسة", "كلية", "جامعة", "طالب", "تعليم"]
+  },
+  {
+    category_id: "street_traffic",
+    target_word: "الشارع وحركة المرور",
+    correct_words: ["رصيف", "ترافك لايت", "تقاطع", "جسر", "عبرة", "شرطي المرور", "سيارات", "خط السريع", "لافته", "سايدين"],
+    trick_words: ["سائق", "سفر", "مطار", "طيار", "سكة", "قطار"],
+    blacklist: ["مرور", "شارع", "طريق", "حركة"]
+  },
+  {
+    category_id: "jobs_crafts",
+    target_word: "المهن والحرف الشعبية",
+    correct_words: ["خياط", "فيترجي", "صائغ", "حلاق", "بقال", "چايچي", "نجار", "حداد", "بناي", "أبو التكسي", "أبو المولد"],
+    trick_words: ["محل", "سوق", "فلوس", "شغل", "راتب", "أوسطى", "خلفه"],
+    blacklist: ["مهنة", "حرفة", "عمل", "وظيفة"]
+  },
+  {
+    category_id: "space_planets",
+    target_word: "الفضاء والكواكب",
+    correct_words: ["مريخ", "مشتري", "زحل", "أرض", "شمس", "قمر", "نجم", "مجرة", "نيزك", "مذنب", "ثقب أسود", "مركبة"],
+    trick_words: ["تلسكوب", "رائد فضاء", "فضاء", "سماء", "طائرة", "غيوم", "مطر"],
+    blacklist: ["كوكب", "كواكب", "كون"]
+  },
+  {
+    category_id: "iraqi_sweets",
+    target_word: "الحلويات والمعجنات العراقية",
+    correct_words: ["كليچة", "بقلاوة", "زلابية", "دهينة", "زنود الست", "برمة", "حلاوة شكر", "من السما", "لقيمات", "داطلي"],
+    trick_words: ["شكر", "طحين", "دهن", "جوز", "فستق", "چاي", "شربت", "سوق"],
+    blacklist: ["حلوى", "حلويات", "معجنات"]
+  },
+  {
+    category_id: "insects_bugs",
+    target_word: "الحشرات",
+    correct_words: ["ذبانة", "بگة", "صرصور", "نملة", "نحلة", "دبور", "عنكبوت", "فراشة", "عقرب", "جرادة", "خنفيسة"],
+    trick_words: ["سم", "مبيد", "مستنقع", "تراب", "عسل", "بيت العنكبوت", "شبكة"],
+    blacklist: ["حشرة", "حشرات"]
+  },
+  {
+    category_id: "entertainment_tv",
+    target_word: "التسلية والترفيه",
+    correct_words: ["مسلسل", "فلم", "مسرحية", "تلفزيون", "سينما", "شاشة", "لعبة", "كارتون", "مهرجان", "حفلة"],
+    trick_words: ["موبايل", "انترنت", "كتاب", "موسیقی", "اغنية", "ممثل", "مخرج"],
+    blacklist: ["تسلية", "ترفيه", "برنامج"]
+  },
+  {
+    category_id: "shopping_market",
+    target_word: "التسوق والأسواق",
+    correct_words: ["علاوة", "مول", "دكان", "محل", "عربانة", "بسطية", "فلوس", "سعر", "خصم", "مشتري", "بايع", "كاشير"],
+    trick_words: ["شراء", "بيع", "سوق", "بضاعة", "ملابس", "مسواك"],
+    blacklist: ["تسوق", "سوبرماركت"]
   }
 ];
 
@@ -193,10 +249,10 @@ export const BLITZ_POOL_LABELS: Record<string, string> = {
 
 export function getBlitzCategoriesByPool(pool: string): BlitzCategory[] {
   if (pool === "iraqi") {
-    return BLITZ_CATEGORIES.filter(c => ["iraqi_food", "iraqi_tea", "cities_iraq", "iraqi_places", "iraqi_heritage", "clothes", "house_rooms"].includes(c.category_id));
+    return BLITZ_CATEGORIES.filter(c => ["iraqi_food", "iraqi_tea", "cities_iraq", "iraqi_places", "iraqi_heritage", "clothes", "house_rooms", "iraqi_sweets", "jobs_crafts", "shopping_market"].includes(c.category_id));
   }
   if (pool === "nature_tools") {
-    return BLITZ_CATEGORIES.filter(c => ["car", "house", "animals1", "sky", "tools", "animals", "fruits_veg", "sports", "technology", "sea_ocean", "cooking_kitchen", "colors_art", "musical_instruments", "body_parts", "nature", "birds", "seasons_weather"].includes(c.category_id));
+    return BLITZ_CATEGORIES.filter(c => ["car", "house", "animals1", "sky", "tools", "animals", "fruits_veg", "sports", "technology", "sea_ocean", "cooking_kitchen", "colors_art", "musical_instruments", "body_parts", "nature", "birds", "seasons_weather", "school_university", "street_traffic", "space_planets", "insects_bugs", "entertainment_tv"].includes(c.category_id));
   }
   return BLITZ_CATEGORIES;
 }
