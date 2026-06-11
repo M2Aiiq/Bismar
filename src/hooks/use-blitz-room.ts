@@ -491,8 +491,19 @@ export function useBlitzRoom(roomId: string) {
         } else {
           if (currentRoom.settings?.extraChallenges && currentRoom.timer === 15) {
             if (currentRoom.grid && currentRoom.grid.length > 0) {
-              currentRoom.grid = shuffleList(currentRoom.grid);
-              currentRoom.grid = currentRoom.grid.map((card, index) => ({
+              const incorrectCards = currentRoom.grid.filter(card => !card.isCorrect);
+              const shuffledIncorrect = shuffleList(incorrectCards);
+              let incorrectIdx = 0;
+              const newGrid = currentRoom.grid.map((card) => {
+                if (card.isCorrect) {
+                  return card;
+                } else {
+                  return {
+                    ...shuffledIncorrect[incorrectIdx++],
+                  };
+                }
+              });
+              currentRoom.grid = newGrid.map((card, index) => ({
                 ...card,
                 id: index
               }));
