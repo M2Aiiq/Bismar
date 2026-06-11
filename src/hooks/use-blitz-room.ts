@@ -126,13 +126,21 @@ export function useBlitzRoom(roomId: string) {
   }, [isReady, roomId, playerId]);
 
   // دالة مساعدة لتوليد جولة بليتز جديدة (مجموعة كروت وفئة جديدة)
-  const generateRoundData = useCallback((settings: BlitzRoomSettings) => {
+  const generateRoundData = useCallback((settings: BlitzRoomSettings, usedCategories: string[] = []) => {
     const pool = settings.categoryPools?.[0] || "all";
     const categories = getBlitzCategoriesByPool(pool);
     if (categories.length === 0) {
       throw new Error("لا توجد فئات كلمات متاحة.");
     }
-    const category = categories[Math.floor(Math.random() * categories.length)];
+    // تصفية الفئات التي تم لعبها بالفعل لتجنب التكرار في المباراة
+    let availableCategories = categories.filter((c) => !usedCategories.includes(c.category_id));
+
+    // إذا استهلكنا كل الفئات المتاحة، نعيد استخدامها مجدداً لتجنب توقف اللعب
+    if (availableCategories.length === 0) {
+      availableCategories = categories;
+    }
+
+    const category = availableCategories[Math.floor(Math.random() * availableCategories.length)];
 
     const correctWords = [...category.correct_words];
     const trickWords = [...(category.trick_words || [])];
@@ -171,6 +179,7 @@ export function useBlitzRoom(roomId: string) {
     }));
 
     return {
+      categoryId: category.category_id,
       currentCategory: category.target_word,
       grid,
       timer: settings.roundTimerSeconds
@@ -294,10 +303,11 @@ export function useBlitzRoom(roomId: string) {
         try {
           if (newSettings) {
             currentRoom.settings = newSettings;
-            const nextRound = generateRoundData(newSettings);
+            const nextRound = generateRoundData(newSettings, []);
             currentRoom.currentCategory = nextRound.currentCategory;
             currentRoom.grid = nextRound.grid;
             currentRoom.timer = nextRound.timer;
+            currentRoom.usedCategories = [nextRound.categoryId];
 
             // إذا تم تغيير عدد الفرق إلى 2، يتم إرجاع أي لاعب في الفريق الأخضر إلى الحالة unassigned
             if (newSettings.teamCount === 2 && currentRoom.players) {
@@ -381,10 +391,12 @@ export function useBlitzRoom(roomId: string) {
         if (allCorrectClicked) {
           // بدء جولة جديدة وتحديث الفئة والبطاقات مع الاحتفاظ بالنقاط المتراكمة
           try {
-            const nextRound = generateRoundData(currentRoom.settings);
+            const usedCats = currentRoom.usedCategories || [];
+            const nextRound = generateRoundData(currentRoom.settings, usedCats);
             currentRoom.currentCategory = nextRound.currentCategory;
             currentRoom.grid = nextRound.grid;
             currentRoom.timer = nextRound.timer;
+            currentRoom.usedCategories = [...usedCats, nextRound.categoryId];
           } catch (err) {
             console.error("Error generating next round in transaction:", err);
           }
@@ -407,12 +419,14 @@ export function useBlitzRoom(roomId: string) {
       if (!currentRoom || currentRoom.status !== "playing") return currentRoom;
 
       try {
-        const nextRound = generateRoundData(currentRoom.settings);
+        const usedCats = currentRoom.usedCategories || [];
+        const nextRound = generateRoundData(currentRoom.settings, usedCats);
         currentRoom.currentCategory = nextRound.currentCategory;
         currentRoom.grid = nextRound.grid;
         currentRoom.timer = nextRound.timer;
         currentRoom.lastWrongClick = null;
         currentRoom.bgTheme = "default";
+        currentRoom.usedCategories = [...usedCats, nextRound.categoryId];
       } catch (err) {
         console.error("Error skipping to next round:", err);
       }
@@ -434,7 +448,7 @@ export function useBlitzRoom(roomId: string) {
 
         try {
           const settingsToUse = newSettings || currentRoom.settings;
-          const nextRound = generateRoundData(settingsToUse);
+          const nextRound = generateRoundData(settingsToUse, []);
           currentRoom.status = "lobby";
           currentRoom.currentCategory = nextRound.currentCategory;
           currentRoom.grid = nextRound.grid;
@@ -444,6 +458,7 @@ export function useBlitzRoom(roomId: string) {
           currentRoom.settings = settingsToUse;
           currentRoom.lastWrongClick = null;
           currentRoom.bgTheme = "default";
+          currentRoom.usedCategories = [nextRound.categoryId];
 
           // إذا تم تغيير عدد الفرق إلى 2، يتم إرجاع أي لاعب في الفريق الأخضر إلى الحالة unassigned
           if (settingsToUse.teamCount === 2 && currentRoom.players) {
@@ -481,10 +496,12 @@ export function useBlitzRoom(roomId: string) {
         if (currentRoom.timer <= 1) {
           // انتهى وقت الفئة الحالية! ننتقل للفئة التالية تلقائياً
           try {
-            const nextRound = generateRoundData(currentRoom.settings);
+            const usedCats = currentRoom.usedCategories || [];
+            const nextRound = generateRoundData(currentRoom.settings, usedCats);
             currentRoom.currentCategory = nextRound.currentCategory;
             currentRoom.grid = nextRound.grid;
             currentRoom.timer = nextRound.timer;
+            currentRoom.usedCategories = [...usedCats, nextRound.categoryId];
           } catch (err) {
             console.error("Error generating next round on timeout:", err);
           }

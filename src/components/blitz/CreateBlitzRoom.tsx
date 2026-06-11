@@ -99,8 +99,10 @@ export function CreateBlitzRoomButton() {
         presence: {
           [playerId]: true
         },
-        winner: null
+        winner: null,
+        usedCategories: [category.category_id]
       };
+
 
       // 4. حفظ الغرفة في Firebase والتوجيه للمسار الديناميكي
       await set(ref(database, `blitzRooms/${roomId}`), initialRoom);

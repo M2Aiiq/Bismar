@@ -117,4 +117,6 @@ export interface BlitzRoomState {
     timestamp: number;
   } | null;
   bgTheme?: "default" | "red" | "blue" | "green" | null;
+  usedCategories?: string[];
 }
+
