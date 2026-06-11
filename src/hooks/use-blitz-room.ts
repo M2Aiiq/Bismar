@@ -489,6 +489,15 @@ export function useBlitzRoom(roomId: string) {
             console.error("Error generating next round on timeout:", err);
           }
         } else {
+          if (currentRoom.settings?.extraChallenges && currentRoom.timer === 15) {
+            if (currentRoom.grid && currentRoom.grid.length > 0) {
+              currentRoom.grid = shuffleList(currentRoom.grid);
+              currentRoom.grid = currentRoom.grid.map((card, index) => ({
+                ...card,
+                id: index
+              }));
+            }
+          }
           currentRoom.timer -= 1;
         }
 

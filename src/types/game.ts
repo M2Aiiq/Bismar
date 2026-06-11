@@ -92,6 +92,7 @@ export interface BlitzRoomSettings {
   categoryPools: string[];
   teamCount: number;
   difficultyLines?: number;
+  extraChallenges?: boolean;
 }
 
 export interface BlitzRoomState {

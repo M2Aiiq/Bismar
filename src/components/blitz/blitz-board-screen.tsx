@@ -259,6 +259,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
   const [draftPool, setDraftPool] = useState("all");
   const [draftTeamCount, setDraftTeamCount] = useState(2);
   const [draftDifficultyLines, setDraftDifficultyLines] = useState(0);
+  const [draftExtraChallenges, setDraftExtraChallenges] = useState(false);
 
   // مرجع لضمان فتح الإعدادات تلقائياً للمضيف مرة واحدة فقط عند الإنشاء
   const hasAutoOpenedRef = useRef(false);
@@ -409,6 +410,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
       setDraftPool(room.settings.categoryPools?.[0] || "all");
       setDraftTeamCount(room.settings.teamCount ?? 3);
       setDraftDifficultyLines(room.settings.difficultyLines ?? 0);
+      setDraftExtraChallenges(room.settings.extraChallenges ?? false);
     }
   }, [room?.settings]);
 
@@ -739,6 +741,16 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
       {/* 4. لوحة البطاقات 5x5 الأصلية من كود نيم لضمان مطابقة التصميم تماماً */}
       <div className={`mt-0 flex min-h-0 items-start overflow-hidden px-1.5 sm:px-2 ${boardSectionHeightClass}`}>
         <div className="mx-auto flex h-full w-full flex-col max-w-md md:max-w-[48rem] lg:max-w-[60rem] xl:max-w-[70rem] items-center justify-start overflow-visible">
+          {room.status === "playing" && room.settings?.extraChallenges && room.timer >= 16 && room.timer <= 18 && (
+            <div className="w-full max-w-[44rem] px-2 mb-1.5 animate-in fade-in duration-200 pointer-events-none select-none">
+              <div className="flex items-center justify-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 py-1.5 px-4 text-center shadow-[0_0_12px_rgba(245,158,11,0.15)] text-amber-400">
+                <span className="animate-spin text-sm">⚙️</span>
+                <span className="text-xs sm:text-sm font-black tracking-wide">
+                  إعادة ترتيب النظام بعد {room.timer - 15}...
+                </span>
+              </div>
+            </div>
+          )}
           <div className="flex min-h-0 w-full items-start justify-center overflow-visible pt-1 pb-1">
             <GameBoard
               board={mappedBoard}
@@ -775,6 +787,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                     categoryPools: [draftPool],
                     teamCount: draftTeamCount,
                     difficultyLines: draftDifficultyLines,
+                    extraChallenges: draftExtraChallenges,
                   };
                   void startBlitzGame(finalSettings);
                 }}
@@ -1001,6 +1014,25 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                     />
                   </div>
 
+                  {/* إعداد تحديات إضافية كمسودة */}
+                  <div className="flex items-center justify-between border-b border-white/5 pb-4 text-right">
+                    <div className="text-right">
+                      <p className="text-xs font-bold text-slate-300">تحديات إضافية</p>
+                      <p className="mt-1 text-[10px] text-slate-400 font-medium leading-relaxed">
+                        خلط الكروت عشوائياً عند بقاء 15 ثانية على نهاية الجولة.
+                      </p>
+                    </div>
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input
+                        type="checkbox"
+                        checked={draftExtraChallenges}
+                        onChange={(e) => setDraftExtraChallenges(e.target.checked)}
+                        className="peer sr-only"
+                      />
+                      <div className="peer h-6 w-11 rounded-full bg-slate-800 border border-white/10 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-slate-400 after:transition-all after:content-[''] peer-checked:bg-[#EF4444] peer-checked:border-transparent peer-checked:after:translate-x-full peer-checked:after:bg-white peer-focus:outline-none" />
+                    </label>
+                  </div>
+
                   {/* مجمع الفئات كمسودة */}
                   <div className="text-right">
                     <label className="text-xs font-bold text-slate-300">مجمع الفئات المستهدفة</label>
@@ -1029,6 +1061,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                             categoryPools: [draftPool],
                             teamCount: draftTeamCount,
                             difficultyLines: draftDifficultyLines,
+                            extraChallenges: draftExtraChallenges,
                           };
                           void startBlitzGame(finalSettings);
                           setIsSettingsOpen(false);
@@ -1049,6 +1082,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
                               categoryPools: [draftPool],
                               teamCount: draftTeamCount,
                               difficultyLines: draftDifficultyLines,
+                              extraChallenges: draftExtraChallenges,
                             };
                             void startBlitzGame(finalSettings);
                             setIsSettingsOpen(false);
@@ -1094,6 +1128,7 @@ export function BlitzBoardScreen({ roomId }: BlitzBoardScreenProps) {
               categoryPools: [draftPool],
               teamCount: draftTeamCount,
               difficultyLines: draftDifficultyLines,
+              extraChallenges: draftExtraChallenges,
             };
             void resetBlitzGame(finalSettings);
           }}
