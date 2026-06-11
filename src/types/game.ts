@@ -61,7 +61,7 @@ export interface Room {
   winner: Winner;
 }
 
-// Blitz Mode (طور البسامير السريعة) types
+// Blitz Mode
 export type BlitzTeam = "red" | "blue" | "green" | "unassigned";
 
 export interface BlitzCategory {

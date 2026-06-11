@@ -74,7 +74,7 @@ export function useBlitzRoom(roomId: string) {
         }
 
         const data = snapshot.val() as BlitzRoomState;
-        
+
         // التأكد من تهيئة الهياكل الأساسية
         if (!data.players) data.players = {};
         if (!data.presence) data.presence = {};
@@ -519,7 +519,7 @@ export function useBlitzRoom(roomId: string) {
     return () => clearInterval(interval);
   }, [room?.status, room?.players, room?.isPaused, roomId, playerId, generateRoundData]);
 
-  // 12. تبديل حالة الإيقاف المؤقت للعب
+
   const togglePauseBlitzGame = useCallback(async () => {
     if (!roomId || !room || room.status !== "playing") return;
 
@@ -546,7 +546,7 @@ export function useBlitzRoom(roomId: string) {
   };
 }
 
-// دالة مساعدة لجلب البيانات (للتحقق البسيط)
+
 async function get(reference: any) {
   const { get: fbGet } = await import("firebase/database");
   return fbGet(reference);
