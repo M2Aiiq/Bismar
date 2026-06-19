@@ -511,20 +511,15 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   {isMyTurn ? "🔔 حان دورك الآن! العب بحكمة" : `🕒 دور اللاعب الحالي: ${activePlayerName}`}
                 </span>
 
-                {/* مؤقت الدور - الشريط السفلي التفاعلي مع الوقت فوق الخط مباشرة */}
+                {/* مؤقت الدور - الشريط السفلي التفاعلي (ينكمش للمنتصف بدون عداد) */}
                 {room.status === "playing" && room.turnEndsAt && (
-                  <>
-                    <div
-                      className={`absolute bottom-0 h-1 transition-all duration-100 ${barColor}`}
-                      style={{
-                        width: `${timePercent}%`,
-                        left: `${(100 - timePercent) / 2}%`,
-                      }}
-                    />
-                    <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-mono font-black text-slate-400 bg-slate-950 px-1.5 py-0.5 rounded-t border-t border-x border-white/5 pointer-events-none select-none">
-                      {Math.ceil(localTimeRemaining)}ث
-                    </div>
-                  </>
+                  <div
+                    className={`absolute bottom-0 h-1 transition-all duration-100 ${barColor}`}
+                    style={{
+                      width: `${timePercent}%`,
+                      left: `${(100 - timePercent) / 2}%`,
+                    }}
+                  />
                 )}
               </div>
             );
