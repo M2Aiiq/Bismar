@@ -471,9 +471,8 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                     : "border-amber-500/20 bg-amber-950/10 shadow-lg shadow-amber-500/5 text-amber-200"
                 }`}
               >
-                <div className="flex justify-between items-center w-full">
-                  <span className="text-[10px] font-bold text-slate-400">{o.name}</span>
-                  <span className="text-sm">{o.isDead ? "💀" : o.hp === 2 ? "❤️" : "💔"}</span>
+                <div className="flex justify-center items-center w-full">
+                  <span className="text-xs font-black text-slate-300 tracking-wide">{o.name}</span>
                 </div>
 
                 {/* Organ Image Display */}
@@ -481,7 +480,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   <img
                     src={o.isDead ? `/${o.id}_died.png` : `/${o.id}.png`}
                     alt={o.name}
-                    className="w-12 h-12 object-contain"
+                    className="w-16 h-16 object-contain"
                   />
                 </div>
 
@@ -490,14 +489,6 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   <div className={`h-1.5 flex-1 rounded-full ${o.hp >= 1 ? hpColor : "bg-slate-800"}`} />
                   <div className={`h-1.5 flex-1 rounded-full ${o.hp === 2 ? hpColor : "bg-slate-800"}`} />
                 </div>
-
-                {/* Dead Overlay */}
-                {isDead && (
-                  <div className="absolute inset-0 bg-black/75 flex items-center justify-center flex-col gap-1 z-10">
-                    <span className="text-xl">💀</span>
-                    <span className="text-[9px] uppercase font-black text-rose-500 tracking-wider">ميت / مغلق</span>
-                  </div>
-                )}
               </div>
             );
           })}
