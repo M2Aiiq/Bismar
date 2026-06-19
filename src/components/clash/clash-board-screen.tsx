@@ -8,17 +8,23 @@ import type { ActionCard, OrganCard, ClashPlayer } from "../../types/organClash"
 
 function MiniOrganBadge({ organ }: { organ: OrganCard }) {
   const hpColors = organ.isDead
-    ? "bg-slate-900 border-slate-800 text-slate-600 grayscale"
+    ? "bg-slate-900/60 border-slate-800 grayscale"
     : organ.hp === 2
-    ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400"
-    : "bg-amber-500/20 border-amber-500/30 text-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.2)]";
+    ? "bg-emerald-500/10 border-emerald-500/20"
+    : "bg-amber-500/10 border-amber-500/20 shadow-[0_0_8px_rgba(245,158,11,0.15)]";
+
+  const imgPath = organ.isDead ? `/${organ.id}_died.png` : `/${organ.id}.png`;
 
   return (
     <div
-      className={`h-6 rounded-lg flex items-center justify-center border font-bold text-[9px] w-full transition ${hpColors}`}
+      className={`h-7 w-7 rounded-lg flex items-center justify-center border transition relative overflow-hidden p-0.5 ${hpColors}`}
       title={`${organ.name}: ${organ.hp} HP`}
     >
-      {organ.isDead ? "💀" : organ.id[0].toUpperCase()}
+      <img
+        src={imgPath}
+        alt={organ.name}
+        className="w-full h-full object-contain"
+      />
     </div>
   );
 }
@@ -470,28 +476,13 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   <span className="text-sm">{o.isDead ? "💀" : o.hp === 2 ? "❤️" : "💔"}</span>
                 </div>
 
-                {/* Asset placeholder box */}
-                <div className="flex-1 flex items-center justify-center my-1 opacity-20">
-                  {o.id === "heart" && (
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-8 h-8 text-rose-500">
-                      <path d="m11.645 20.91-.007-.003-.003-.001a11.13 11.13 0 0 1-5.101-3.927C3.512 13.111 2.25 9.495 2.25 6.947c0-2.466 1.908-4.447 4.25-4.447 1.854 0 3.422 1.218 3.99 2.923.568-1.705 2.136-2.923 3.99-2.923 2.342 0 4.25 1.981 4.25 4.447 0 2.548-1.262 6.164-4.284 10.034a11.13 11.13 0 0 1-5.102 3.927l-.003.001-.007.003Z" />
-                    </svg>
-                  )}
-                  {o.id === "lung" && (
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-8 h-8 text-sky-400">
-                      <path d="M12 2.25a.75.75 0 0 1 .75.75v3.25h1c2.071 0 3.75 1.679 3.75 3.75v3.5c0 2.898-2.352 5.25-5.25 5.25-.17 0-.33-.046-.49-.126l-1.51-.755A.75.75 0 0 0 9.5 18.5v1.75a.75.75 0 0 1-1.5 0V18.5a.75.75 0 0 0-.75-.75h-.5a4.25 4.25 0 0 1-4.25-4.25V9.75A3.75 3.75 0 0 1 6.25 6h1V2.75a.75.75 0 0 1 1.5 0v3.5a.75.75 0 0 0 .75.75h1.5a.75.75 0 0 0 .75-.75V3a.75.75 0 0 1 .75-.75Z" />
-                    </svg>
-                  )}
-                  {o.id === "liver" && (
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-8 h-8 text-orange-400">
-                      <path d="M11.645 2.25H12.355A9.645 9.645 0 0 1 22 11.895v.21A9.645 9.645 0 0 1 12.355 21.75H11.645A9.645 9.645 0 0 1 2 12.105v-.21A9.645 9.645 0 0 1 11.645 2.25Z" />
-                    </svg>
-                  )}
-                  {o.id === "kidney" && (
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-8 h-8 text-yellow-500">
-                      <path d="M7.5 2.25a.75.75 0 0 1 .75.75v2.25h7.5V3a.75.75 0 0 1 1.5 0v1.5a2.25 2.25 0 0 1 2.25 2.25v10.5a2.25 2.25 0 0 1-2.25 2.25H6.75a2.25 2.25 0 0 1-2.25-2.25V6.75A2.25 2.25 0 0 1 6.75 4.5V3a.75.75 0 0 1 .75-.75Z" />
-                    </svg>
-                  )}
+                {/* Organ Image Display */}
+                <div className="flex-1 flex items-center justify-center my-1 select-none">
+                  <img
+                    src={o.isDead ? `/${o.id}_died.png` : `/${o.id}.png`}
+                    alt={o.name}
+                    className="w-12 h-12 object-contain"
+                  />
                 </div>
 
                 {/* 2-segment HP bar */}
@@ -696,6 +687,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 (عضو{" "}
                 <span className="font-bold text-white">
                   {room.pendingAction.targetOrganId === "heart" && "القلب"}
+                  {room.pendingAction.targetOrganId === "mind" && "العقل"}
                   {room.pendingAction.targetOrganId === "lung" && "الرئة"}
                   {room.pendingAction.targetOrganId === "liver" && "الكبد"}
                   {room.pendingAction.targetOrganId === "kidney" && "الكلية"}

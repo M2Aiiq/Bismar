@@ -112,12 +112,14 @@ export function createInitialDeck(): ActionCard[] {
 }
 
 export function createInitialOrgans(): OrganCard[] {
-  return [
+  const allOrgans: OrganCard[] = [
     { id: "heart", name: "القلب", hp: 2, isDead: false },
+    { id: "mind", name: "العقل", hp: 2, isDead: false },
     { id: "lung", name: "الرئة", hp: 2, isDead: false },
     { id: "liver", name: "الكبد", hp: 2, isDead: false },
     { id: "kidney", name: "الكلية", hp: 2, isDead: false },
   ];
+  return shuffleList(allOrgans).slice(0, 4);
 }
 
 function shuffleList<T>(list: T[]): T[] {

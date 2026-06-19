@@ -1,6 +1,6 @@
 export interface OrganCard {
-  id: string;      // "heart" | "lung" | "liver" | "kidney"
-  name: string;    // "القلب" | "الرئة" | "الكبد" | "الكلية"
+  id: string;      // "heart" | "mind" | "lung" | "liver" | "kidney"
+  name: string;    // "القلب" | "العقل" | "الرئة" | "الكبد" | "الكلية"
   hp: number;      // يبدأ بـ 2، الحد الأقصى 2
   isDead: boolean; // true إذا كان hp <= 0
 }
