@@ -501,50 +501,31 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
               ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]"
               : "bg-rose-600 shadow-[0_0_8px_rgba(225,29,72,0.4)] animate-pulse";
 
-            const horizPercent = Math.max(0, Math.min(100, timePercent * 2));
-            const vertPercent = Math.max(0, Math.min(100, (timePercent - 50) * 2));
-
             return (
               <div className={`w-full py-2.5 px-4 rounded-xl border text-center transition-all relative overflow-hidden ${
                 isMyTurn
                   ? "border-emerald-500/30 bg-emerald-950/20 text-emerald-400 font-black shadow-[0_0_15px_rgba(16,185,129,0.08)]"
                   : "border-slate-800 bg-slate-900/50 text-slate-400 font-medium"
               }`}>
-                {/* مؤقت الدور - خطوط الحدود (تبدأ ملتصقة وتنفصل عند التناقص) */}
+                <span className="text-xs uppercase tracking-wider flex items-center justify-center gap-1.5">
+                  {isMyTurn ? "🔔 حان دورك الآن! العب بحكمة" : `🕒 دور اللاعب الحالي: ${activePlayerName}`}
+                </span>
+
+                {/* مؤقت الدور - الشريط السفلي التفاعلي مع الوقت فوق الخط مباشرة */}
                 {room.status === "playing" && room.turnEndsAt && (
                   <>
-                    {/* الخط الأول: الجزء العلوي (يبدأ من اليمين وينكمش لليسار) */}
                     <div
-                      className={`absolute top-0 right-0 h-[3px] transition-all duration-100 ${barColor}`}
-                      style={{ width: `${horizPercent}%` }}
+                      className={`absolute bottom-0 h-1 transition-all duration-100 ${barColor}`}
+                      style={{
+                        width: `${timePercent}%`,
+                        left: `${(100 - timePercent) / 2}%`,
+                      }}
                     />
-                    {/* الخط الأول: الجزء الأيسر (يبدأ من الأعلى وينكمش للأسفل) */}
-                    <div
-                      className={`absolute top-0 left-0 w-[3px] transition-all duration-100 ${barColor}`}
-                      style={{ height: `${vertPercent}%` }}
-                    />
-
-                    {/* الخط الثاني: الجزء السفلي (يبدأ من اليسار وينكمش لليمين) */}
-                    <div
-                      className={`absolute bottom-0 left-0 h-[3px] transition-all duration-100 ${barColor}`}
-                      style={{ width: `${horizPercent}%` }}
-                    />
-                    {/* الخط الثاني: الجزء الأيمن (يبدأ من الأسفل وينكمش للأعلى) */}
-                    <div
-                      className={`absolute bottom-0 right-0 w-[3px] transition-all duration-100 ${barColor}`}
-                      style={{ height: `${vertPercent}%` }}
-                    />
+                    <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-mono font-black text-slate-400 bg-slate-950 px-1.5 py-0.5 rounded-t border-t border-x border-white/5 pointer-events-none select-none">
+                      {Math.ceil(localTimeRemaining)}ث
+                    </div>
                   </>
                 )}
-
-                <span className="text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 z-10 relative">
-                  {isMyTurn ? "🔔 حان دورك الآن! العب بحكمة" : `🕒 دور اللاعب الحالي: ${activePlayerName}`}
-                  {room.status === "playing" && room.turnEndsAt && (
-                    <span className="font-mono bg-black/40 px-1.5 py-0.5 rounded text-[10px] text-slate-300">
-                      {Math.ceil(localTimeRemaining)}ث
-                    </span>
-                  )}
-                </span>
               </div>
             );
           })()}
