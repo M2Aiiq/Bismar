@@ -432,7 +432,8 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   const counterCardsInHand = me?.hand?.filter((c) => c.type === "instant") || [];
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden p-3 bg-slate-950 text-white flex flex-col justify-between select-none">
+    <div className="w-screen h-screen bg-slate-950 flex justify-center overflow-hidden">
+      <div className="relative h-full w-full max-w-md p-3 text-white flex flex-col justify-between select-none border-x border-slate-900/60 shadow-2xl bg-slate-950">
       {/* شريط الإعدادات والتحكم العلوي */}
       <div className="w-full flex items-center justify-between px-2 mb-1 select-none">
         <div className="flex items-center gap-2">
@@ -484,7 +485,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
             return (
               <div
                 key={o.id}
-                className={`relative overflow-hidden rounded-2xl border p-3 flex flex-col justify-between transition-all aspect-square ${
+                className={`relative overflow-hidden rounded-2xl border p-2.5 flex flex-col justify-between transition-all aspect-[4/3] ${
                   isDead
                     ? "border-slate-800 bg-slate-950/60 text-slate-600 grayscale contrast-75 opacity-60 pointer-events-none"
                     : o.hp === 2
@@ -497,11 +498,11 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 </div>
 
                 {/* Organ Image Display */}
-                <div className="flex-1 flex items-center justify-center my-2 select-none w-full h-full">
+                <div className="flex-1 flex items-center justify-center my-1 select-none w-full h-full">
                   <img
                     src={o.isDead ? `/${o.id}_died.png` : `/${o.id}.png`}
                     alt={o.name}
-                    className="w-20 h-20 object-contain"
+                    className="w-18 h-18 object-contain"
                   />
                 </div>
 
@@ -895,6 +896,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
           </div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 }
