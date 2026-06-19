@@ -137,9 +137,17 @@ export function HomeScreen() {
           setIsJoinExpanded(false);
           return;
         }
+
+        // التحقق من وجود غرفة صراع الأعضاء بهذا الرمز
+        const clashSnapshot = await get(ref(database, `clashRooms/${roomCode}`));
+        if (clashSnapshot.exists()) {
+          router.push(`/clash/${roomCode}`);
+          setIsJoinExpanded(false);
+          return;
+        }
       }
     } catch (err) {
-      console.error("Error checking blitz room:", err);
+      console.error("Error checking room codes:", err);
     }
 
     await joinRoom(roomCode, playerName);
