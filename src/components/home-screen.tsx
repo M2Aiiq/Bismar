@@ -7,6 +7,7 @@ import { useGameRoom } from "../context/game-room-context";
 import { getRealtimeDatabase } from "../lib/firebase";
 import { ref, get } from "firebase/database";
 import { CreateBlitzRoomButton } from "./blitz/CreateBlitzRoom";
+import { CreateClashRoomButton } from "./clash/CreateClashRoom";
 
 function normalizeRoomCode(value: string | null) {
   return (value ?? "").replace(/\D/g, "").slice(0, 5);
@@ -276,6 +277,8 @@ export function HomeScreen() {
         </button>
 
         <CreateBlitzRoomButton />
+
+        <CreateClashRoomButton />
 
         <div
           className="relative h-14 overflow-hidden rounded-2xl border border-white/15 bg-[#1E293B] transition-all duration-300"

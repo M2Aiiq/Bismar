@@ -94,6 +94,12 @@
         ".read": "$roomId.matches(/^[0-9]{5}$/)",
         ".write": "$roomId.matches(/^[0-9]{5}$/)"
       }
+    },
+    "clashRooms": {
+      "$roomId": {
+        ".read": "$roomId.matches(/^[0-9]{5}$/)",
+        ".write": "$roomId.matches(/^[0-9]{5}$/)"
+      }
     }
   }
 }
