@@ -4,7 +4,138 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useClashRoom } from "../../hooks/use-clash-room";
 import { motion, AnimatePresence } from "framer-motion";
-import type { ActionCard, OrganCard } from "../../types/organClash";
+import type { ActionCard, OrganCard, ClashPlayer } from "../../types/organClash";
+
+function MiniOrganBadge({ organ }: { organ: OrganCard }) {
+  const hpColors = organ.isDead
+    ? "bg-slate-900 border-slate-800 text-slate-600 grayscale"
+    : organ.hp === 2
+    ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400"
+    : "bg-amber-500/20 border-amber-500/30 text-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.2)]";
+
+  return (
+    <div
+      className={`h-6 rounded-lg flex items-center justify-center border font-bold text-[9px] w-full transition ${hpColors}`}
+      title={`${organ.name}: ${organ.hp} HP`}
+    >
+      {organ.isDead ? "💀" : organ.id[0].toUpperCase()}
+    </div>
+  );
+}
+
+interface OpponentsRadarProps {
+  opponents: ClashPlayer[];
+  currentTurnPlayerId: string;
+}
+
+function OpponentsRadar({ opponents, currentTurnPlayerId }: OpponentsRadarProps) {
+  if (opponents.length === 0) {
+    return (
+      <div className="w-full h-20 flex items-center justify-center text-xs font-semibold text-slate-500 select-none">
+        بانتظار انضمام منافسين...
+      </div>
+    );
+  }
+
+  if (opponents.length === 1) {
+    const opp = opponents[0];
+    const isTurn = currentTurnPlayerId === opp.id;
+    return (
+      <div className="w-full h-24 px-4 py-2 select-none">
+        <div className={`w-full h-full rounded-2xl border bg-slate-900/80 p-3 flex items-center justify-between transition-all ${
+          isTurn ? "border-rose-500 shadow-md shadow-rose-500/10" : "border-slate-800"
+        }`}>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-black text-white">{opp.name}</span>
+              {opp.isZombie && <span className="text-[9px] bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 px-1.5 py-0.5 rounded-md animate-pulse">Zombie 🧟</span>}
+            </div>
+            <span className="text-[10px] text-slate-400 mt-1">🎴 يد اللاعب: {opp.hand?.length || 0} كروت</span>
+          </div>
+          <div className="flex gap-2 w-48">
+            {opp.organs?.map((o) => (
+              <MiniOrganBadge key={o.id} organ={o} />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (opponents.length === 2) {
+    return (
+      <div className="w-full h-24 grid grid-cols-2 gap-2 px-4 py-2 select-none">
+        {opponents.map((opp) => {
+          const isTurn = currentTurnPlayerId === opp.id;
+          return (
+            <div key={opp.id} className={`rounded-2xl border bg-slate-900/80 p-3 flex flex-col justify-between transition-all ${
+              isTurn ? "border-rose-500 shadow-md shadow-rose-500/10" : "border-slate-800"
+            }`}>
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-bold text-white truncate max-w-[80px]">{opp.name}</span>
+                <span className="text-[9px] text-slate-400 font-mono">🎴 {opp.hand?.length || 0}</span>
+              </div>
+              <div className="grid grid-cols-4 gap-1 mt-2">
+                {opp.organs?.map((o) => (
+                  <MiniOrganBadge key={o.id} organ={o} />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  if (opponents.length === 3) {
+    return (
+      <div className="w-full h-20 grid grid-cols-3 gap-1.5 px-3 py-1.5 select-none">
+        {opponents.map((opp) => {
+          const isTurn = currentTurnPlayerId === opp.id;
+          return (
+            <div key={opp.id} className={`rounded-xl border bg-slate-900/90 p-2.5 flex flex-col justify-between transition-all ${
+              isTurn ? "border-rose-500 shadow-sm shadow-rose-500/10" : "border-slate-800"
+            }`}>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-black text-white truncate max-w-[65px]">{opp.name}</span>
+                <span className="text-[8px] text-slate-400 font-mono">🎴 {opp.hand?.length || 0}</span>
+              </div>
+              <div className="grid grid-cols-4 gap-0.5 mt-1.5">
+                {opp.organs?.map((o) => (
+                  <MiniOrganBadge key={o.id} organ={o} />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // 4 opponents (5-player game) -> horizontal swiper
+  return (
+    <div className="w-full h-20 flex overflow-x-auto gap-2 px-4 py-1.5 snap-x scrollbar-none select-none">
+      {opponents.map((opp) => {
+        const isTurn = currentTurnPlayerId === opp.id;
+        return (
+          <div key={opp.id} className={`min-w-[130px] snap-center rounded-xl border bg-slate-900/90 p-2.5 flex flex-col justify-between transition-all ${
+            isTurn ? "border-rose-500 shadow-sm shadow-rose-500/10" : "border-slate-800"
+          }`}>
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-black text-white truncate max-w-[70px]">{opp.name}</span>
+              <span className="text-[8px] text-slate-400 font-mono">🎴 {opp.hand?.length || 0}</span>
+            </div>
+            <div className="grid grid-cols-4 gap-1 mt-1">
+              {opp.organs?.map((o) => (
+                <MiniOrganBadge key={o.id} organ={o} />
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 interface ClashBoardScreenProps {
   roomId: string;
@@ -35,6 +166,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   const [targetSelectorOpen, setTargetSelectorOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(5);
   const [nameError, setNameError] = useState<string | null>(null);
+  const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null);
 
   const me = room?.players?.[playerId];
   const isHost = me?.isHost || false;
@@ -293,134 +425,133 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   const counterCardsInHand = me?.hand?.filter((c) => c.type === "instant") || [];
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-[#0B0F19] text-[#F8FAFC] flex flex-col">
+    <div className="relative h-screen w-screen overflow-hidden p-3 bg-slate-950 text-white flex flex-col justify-between select-none">
       {/* 1. منطقة الخصوم (Top Zone - Enemy Radar) */}
-      <div className="flex justify-center gap-4 p-4 border-b border-white/5 bg-[#111625]/80 backdrop-blur-sm overflow-x-auto select-none">
-        {opponents.map((opp) => (
-          <div
-            key={opp.id}
-            className={`min-w-[160px] rounded-2xl border p-3 bg-[#181E2F]/60 flex flex-col justify-between transition ${
-              opp.isZombie
-                ? "border-emerald-600/30 bg-emerald-950/10"
-                : room.currentTurnPlayerId === opp.id
-                ? "border-rose-500 shadow-lg shadow-rose-500/10"
-                : "border-white/5"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold truncate max-w-[100px]">{opp.name}</span>
-              <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-mono">
-                🎴 {opp.hand?.length || 0}
-              </span>
-            </div>
+      <OpponentsRadar opponents={opponents} currentTurnPlayerId={room.currentTurnPlayerId} />
 
-            {/* مؤشرات الأعضاء الأربعة للخصم */}
-            <div className="grid grid-cols-4 gap-1">
-              {opp.organs?.map((o) => (
-                <div
-                  key={o.id}
-                  title={`${o.name}: ${o.hp} HP`}
-                  className={`h-6 rounded-lg flex items-center justify-center border transition ${
-                    o.isDead
-                      ? "border-slate-800 bg-slate-900/40 text-slate-600 grayscale"
-                      : o.hp === 2
-                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
-                      : "border-amber-500/40 bg-amber-500/10 text-amber-400"
-                  }`}
-                >
-                  <span className="text-[10px] font-bold">
-                    {o.isDead ? "🔒" : o.id[0].toUpperCase()}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {opp.isZombie && (
-              <span className="text-[8px] text-center font-bold text-emerald-400 mt-1 animate-pulse">
-                🧟 زومبي تخريبي
-              </span>
-            )}
+      {/* 2. منطقة المعركة واللاعب الحالي (Middle Zone - Player Battlefield & Turn Ticker) */}
+      <div className="flex-1 flex flex-col items-center justify-center py-2 relative">
+        {/* Turn Ticker */}
+        <div className="w-full max-w-md flex justify-center mb-3">
+          <div className={`w-full py-2 px-4 rounded-xl border text-center transition-all ${
+            isMyTurn
+              ? "border-emerald-500 bg-emerald-950/20 text-emerald-400 font-black animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+              : "border-slate-800 bg-slate-900/50 text-slate-400 font-medium"
+          }`}>
+            <span className="text-xs uppercase tracking-wider">
+              {isMyTurn ? "🔔 حان دورك الآن! العب بحكمة" : `🕒 دور اللاعب الحالي: ${activePlayerName}`}
+            </span>
           </div>
-        ))}
-      </div>
+        </div>
 
-      {/* 2. منطقة المعركة واللاعب الحالي (Middle Zone - Player Battlefield) */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 relative">
-        <h3 className="text-sm font-bold text-slate-500 mb-2 tracking-widest">ساحة المعركة الخاصة بك</h3>
+        {/* Player Organs Grid */}
+        <div className="grid grid-cols-2 gap-3 my-auto max-h-[35vh] w-full max-w-md px-2">
+          {me?.organs?.map((o) => {
+            const isDead = o.isDead;
+            const hpColor = o.hp === 2
+              ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+              : o.hp === 1
+              ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]"
+              : "bg-slate-800";
+            
+            return (
+              <div
+                key={o.id}
+                className={`relative overflow-hidden rounded-2xl border p-3 flex flex-col justify-between transition-all aspect-video ${
+                  isDead
+                    ? "border-slate-800 bg-slate-950/60 text-slate-600 grayscale contrast-75 opacity-60 pointer-events-none"
+                    : o.hp === 2
+                    ? "border-emerald-500/20 bg-emerald-950/10 shadow-lg shadow-emerald-500/5 text-emerald-200"
+                    : "border-amber-500/20 bg-amber-950/10 shadow-lg shadow-amber-500/5 text-amber-200"
+                }`}
+              >
+                <div className="flex justify-between items-center w-full">
+                  <span className="text-[10px] font-bold text-slate-400">{o.name}</span>
+                  <span className="text-sm">{o.isDead ? "💀" : o.hp === 2 ? "❤️" : "💔"}</span>
+                </div>
 
-        {/* عرض أعضاء اللاعب الأربعة */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-4xl select-none">
-          {me?.organs?.map((o) => (
-            <div
-              key={o.id}
-              className={`relative rounded-2xl border p-4 flex flex-col items-center justify-between text-center transition h-32 ${
-                o.isDead
-                  ? "border-slate-800 bg-slate-950/60 text-slate-600 grayscale"
-                  : o.hp === 2
-                  ? "border-emerald-500/30 bg-emerald-950/20 shadow-lg shadow-emerald-500/5 text-emerald-200"
-                  : "border-amber-500/30 bg-amber-950/20 shadow-lg shadow-amber-500/5 text-amber-200"
-              }`}
-            >
-              <span className="text-xs font-bold text-slate-400">{o.name}</span>
-              <span className="text-3xl font-black">{o.isDead ? "💀" : o.hp === 2 ? "❤️" : "💔"}</span>
-              <div className="flex gap-1">
-                <div className={`h-2 w-4 rounded-full ${o.isDead ? "bg-slate-800" : "bg-emerald-500"}`} />
-                <div className={`h-2 w-4 rounded-full ${o.isDead ? "bg-slate-800" : o.hp === 2 ? "bg-emerald-500" : "bg-slate-700"}`} />
+                {/* Asset placeholder box */}
+                <div className="flex-1 flex items-center justify-center my-1 opacity-20">
+                  {o.id === "heart" && (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-8 h-8 text-rose-500">
+                      <path d="m11.645 20.91-.007-.003-.003-.001a11.13 11.13 0 0 1-5.101-3.927C3.512 13.111 2.25 9.495 2.25 6.947c0-2.466 1.908-4.447 4.25-4.447 1.854 0 3.422 1.218 3.99 2.923.568-1.705 2.136-2.923 3.99-2.923 2.342 0 4.25 1.981 4.25 4.447 0 2.548-1.262 6.164-4.284 10.034a11.13 11.13 0 0 1-5.102 3.927l-.003.001-.007.003Z" />
+                    </svg>
+                  )}
+                  {o.id === "lung" && (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-8 h-8 text-sky-400">
+                      <path d="M12 2.25a.75.75 0 0 1 .75.75v3.25h1c2.071 0 3.75 1.679 3.75 3.75v3.5c0 2.898-2.352 5.25-5.25 5.25-.17 0-.33-.046-.49-.126l-1.51-.755A.75.75 0 0 0 9.5 18.5v1.75a.75.75 0 0 1-1.5 0V18.5a.75.75 0 0 0-.75-.75h-.5a4.25 4.25 0 0 1-4.25-4.25V9.75A3.75 3.75 0 0 1 6.25 6h1V2.75a.75.75 0 0 1 1.5 0v3.5a.75.75 0 0 0 .75.75h1.5a.75.75 0 0 0 .75-.75V3a.75.75 0 0 1 .75-.75Z" />
+                    </svg>
+                  )}
+                  {o.id === "liver" && (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-8 h-8 text-orange-400">
+                      <path d="M11.645 2.25H12.355A9.645 9.645 0 0 1 22 11.895v.21A9.645 9.645 0 0 1 12.355 21.75H11.645A9.645 9.645 0 0 1 2 12.105v-.21A9.645 9.645 0 0 1 11.645 2.25Z" />
+                    </svg>
+                  )}
+                  {o.id === "kidney" && (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="w-8 h-8 text-yellow-500">
+                      <path d="M7.5 2.25a.75.75 0 0 1 .75.75v2.25h7.5V3a.75.75 0 0 1 1.5 0v1.5a2.25 2.25 0 0 1 2.25 2.25v10.5a2.25 2.25 0 0 1-2.25 2.25H6.75a2.25 2.25 0 0 1-2.25-2.25V6.75A2.25 2.25 0 0 1 6.75 4.5V3a.75.75 0 0 1 .75-.75Z" />
+                    </svg>
+                  )}
+                </div>
+
+                {/* 2-segment HP bar */}
+                <div className="flex gap-1.5 w-full">
+                  <div className={`h-1.5 flex-1 rounded-full ${o.hp >= 1 ? hpColor : "bg-slate-800"}`} />
+                  <div className={`h-1.5 flex-1 rounded-full ${o.hp === 2 ? hpColor : "bg-slate-800"}`} />
+                </div>
+
+                {/* Dead Overlay */}
+                {isDead && (
+                  <div className="absolute inset-0 bg-black/75 flex items-center justify-center flex-col gap-1 z-10">
+                    <span className="text-xl">💀</span>
+                    <span className="text-[9px] uppercase font-black text-rose-500 tracking-wider">ميت / مغلق</span>
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        {/* مؤشر دور اللاعب الحالي */}
-        <div className="mt-8 text-center">
-          {room.turnPhase === "draw" && (
-            <p className="text-sm text-yellow-400 font-bold animate-pulse">
-              جاري سحب كارت وتجهيز الدور...
-            </p>
-          )}
-          {room.turnPhase === "play" && (
-            <p className="text-sm font-medium text-slate-400">
-              الدور الحالي لـ: <span className="font-bold text-rose-400">{isMyTurn ? "دورك أنت" : activePlayerName}</span>
-            </p>
-          )}
-          {room.turnPhase === "pass" && isMyTurn && (
-            <button
-              onClick={endClashTurn}
-              className="mt-2 rounded-2xl bg-rose-600 px-6 py-2.5 font-bold text-white transition hover:bg-rose-500 shadow-lg shadow-rose-600/30"
-            >
-              إنهاء الدور وتمرير اللعب ➔
-            </button>
-          )}
-        </div>
+        {/* Turn Phase manual action */}
+        {room.turnPhase === "pass" && isMyTurn && (
+          <button
+            onClick={endClashTurn}
+            className="mt-3 rounded-2xl bg-rose-600 px-6 py-2.5 font-bold text-white transition hover:bg-rose-500 shadow-lg shadow-rose-600/30 text-xs"
+          >
+            إنهاء الدور وتمرير اللعب ➔
+          </button>
+        )}
       </div>
 
       {/* 3. منطقة اليد المروحية (Bottom Zone - The Fan Deck) */}
-      <div className="relative h-60 w-full flex items-end justify-center pb-8 bg-gradient-to-t from-[#090D18] to-transparent">
+      <div className="relative pb-4 w-full h-[25vh] flex items-end justify-center">
         {me?.hand && me.hand.length > 0 ? (
-          <div className="relative w-full max-w-2xl h-full flex justify-center">
+          <div className="relative w-full max-w-xl h-full flex justify-center items-end">
             {me.hand.map((card, index) => {
               const totalCards = me.hand.length;
-              // حساب الزاوية والإزاحة لخلق شكل المروحة (Fan Deck)
-              const angleStep = Math.min(30 / Math.max(1, totalCards - 1), 8);
+              const angleStep = Math.min(30 / Math.max(1, totalCards - 1), 6);
               const startAngle = -((totalCards - 1) * angleStep) / 2;
               const rotate = startAngle + index * angleStep;
-              const translateY = Math.abs(rotate) * 0.8;
-              const translateX = rotate * 2.5;
+              
+              const translateY = Math.abs(rotate) * 0.9;
+              const translateX = rotate * 2.8;
 
-              // الألوان بناء على النوع
               const borderColors = {
-                attack: "border-rose-600/40 hover:border-rose-500",
-                cure: "border-emerald-600/40 hover:border-emerald-500",
-                instant: "border-sky-600/40 hover:border-sky-500",
-                useless: "border-slate-700 hover:border-slate-500",
+                attack: "border-rose-600/50 hover:border-rose-500 shadow-rose-900/10",
+                cure: "border-emerald-600/50 hover:border-emerald-500 shadow-emerald-900/10",
+                instant: "border-sky-600/50 hover:border-sky-500 shadow-sky-900/10",
+                useless: "border-slate-700 hover:border-slate-600 shadow-slate-950/10",
               };
 
               const badgeColors = {
-                attack: "bg-rose-500/20 text-rose-300",
-                cure: "bg-emerald-500/20 text-emerald-300",
-                instant: "bg-sky-500/20 text-sky-300",
-                useless: "bg-slate-800 text-slate-400",
+                attack: "bg-rose-500/20 text-rose-300 border border-rose-500/30",
+                cure: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
+                instant: "bg-sky-500/20 text-sky-300 border border-sky-500/30",
+                useless: "bg-slate-800 text-slate-400 border border-slate-700/30",
               };
+
+              const isHovered = hoveredCardIndex === index;
+              const isAnyHovered = hoveredCardIndex !== null;
 
               return (
                 <motion.div
@@ -432,37 +563,38 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   }}
                   animate={{
                     rotate: rotate,
-                    y: translateY,
+                    y: isHovered ? -35 : translateY,
                     x: translateX,
-                    zIndex: index,
+                    scale: isHovered ? 1.12 : 1.0,
+                    zIndex: isHovered ? 100 : index,
+                    opacity: isAnyHovered && !isHovered ? 0.5 : 1.0,
                   }}
-                  whileHover={{
-                    y: -50,
-                    scale: 1.12,
-                    zIndex: 100,
-                    transition: { type: "spring", stiffness: 300, damping: 15 },
-                  }}
+                  transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                  onMouseEnter={() => setHoveredCardIndex(index)}
+                  onMouseLeave={() => setHoveredCardIndex(null)}
+                  onTouchStart={() => setHoveredCardIndex(index)}
+                  onTouchEnd={() => setHoveredCardIndex(null)}
                   onClick={() => handleCardClick(card)}
-                  className={`w-32 h-44 rounded-2xl border-2 bg-slate-900/95 p-3 flex flex-col justify-between cursor-pointer select-none shadow-2xl transition-all ${
+                  className={`w-28 h-40 rounded-2xl border-2 bg-slate-900 p-2.5 flex flex-col justify-between cursor-pointer select-none shadow-2xl transition-all duration-200 ${
                     borderColors[card.type]
                   }`}
                 >
                   <div className="flex flex-col gap-1.5">
-                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md self-start ${badgeColors[card.type]}`}>
+                    <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-md self-start ${badgeColors[card.type]}`}>
                       {card.type === "attack" && "هجوم"}
                       {card.type === "cure" && "علاج"}
                       {card.type === "instant" && "فوري"}
                       {card.type === "useless" && "خردة"}
                     </span>
-                    <span className="text-xs font-black leading-tight text-white">{card.name}</span>
+                    <span className="text-[11px] font-black leading-tight text-white">{card.name}</span>
                   </div>
-                  <span className="text-[9px] text-slate-400 leading-normal">{card.description}</span>
+                  <span className="text-[8px] text-slate-400 leading-normal">{card.description}</span>
                 </motion.div>
               );
             })}
           </div>
         ) : (
-          <div className="text-xs font-bold text-slate-600 animate-pulse">لا توجد كروت في يدك حالياً</div>
+          <div className="text-[10px] font-bold text-slate-600 animate-pulse pb-6">لا توجد كروت في يدك حالياً</div>
         )}
       </div>
 
