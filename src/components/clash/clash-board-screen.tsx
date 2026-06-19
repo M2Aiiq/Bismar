@@ -451,7 +451,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
         </div>
 
         {/* Player Organs Grid */}
-        <div className="grid grid-cols-2 gap-3 my-auto max-h-[35vh] w-full max-w-md px-2">
+        <div className="grid grid-cols-2 gap-3 my-auto max-h-[40vh] w-full max-w-md px-2">
           {me?.organs?.map((o) => {
             const isDead = o.isDead;
             const hpColor = o.hp === 2
@@ -463,7 +463,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
             return (
               <div
                 key={o.id}
-                className={`relative overflow-hidden rounded-2xl border p-3 flex flex-col justify-between transition-all aspect-video ${
+                className={`relative overflow-hidden rounded-2xl border p-3 flex flex-col justify-between transition-all aspect-square ${
                   isDead
                     ? "border-slate-800 bg-slate-950/60 text-slate-600 grayscale contrast-75 opacity-60 pointer-events-none"
                     : o.hp === 2
@@ -472,15 +472,15 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 }`}
               >
                 <div className="flex justify-center items-center w-full">
-                  <span className="text-xs font-black text-slate-300 tracking-wide">{o.name}</span>
+                  <span className="text-sm font-black text-slate-300 tracking-wide">{o.name}</span>
                 </div>
 
                 {/* Organ Image Display */}
-                <div className="flex-1 flex items-center justify-center my-1 select-none">
+                <div className="flex-1 flex items-center justify-center my-2 select-none w-full h-full">
                   <img
                     src={o.isDead ? `/${o.id}_died.png` : `/${o.id}.png`}
                     alt={o.name}
-                    className="w-16 h-16 object-contain"
+                    className="w-20 h-20 object-contain"
                   />
                 </div>
 
