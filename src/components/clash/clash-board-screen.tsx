@@ -37,7 +37,7 @@ interface OpponentsRadarProps {
 function OpponentsRadar({ opponents, currentTurnPlayerId }: OpponentsRadarProps) {
   if (opponents.length === 0) {
     return (
-      <div className="w-full h-20 flex items-center justify-center text-xs font-semibold text-slate-500 select-none">
+      <div className="w-full max-w-3xl mx-auto h-20 flex items-center justify-center text-xs font-semibold text-slate-500 select-none">
         بانتظار انضمام منافسين...
       </div>
     );
@@ -47,7 +47,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId }: OpponentsRadarProps)
     const opp = opponents[0];
     const isTurn = currentTurnPlayerId === opp.id;
     return (
-      <div className="w-full h-24 px-4 py-2 select-none">
+      <div className="w-full max-w-3xl mx-auto h-24 px-4 py-2 select-none">
         <div className={`w-full h-full rounded-2xl border bg-slate-900/80 p-3 flex items-center justify-between transition-all ${
           isTurn ? "border-rose-500 shadow-md shadow-rose-500/10" : "border-slate-800"
         }`}>
@@ -70,7 +70,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId }: OpponentsRadarProps)
 
   if (opponents.length === 2) {
     return (
-      <div className="w-full h-24 grid grid-cols-2 gap-2 px-4 py-2 select-none">
+      <div className="w-full max-w-3xl mx-auto h-24 grid grid-cols-2 gap-2 px-4 py-2 select-none">
         {opponents.map((opp) => {
           const isTurn = currentTurnPlayerId === opp.id;
           return (
@@ -95,7 +95,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId }: OpponentsRadarProps)
 
   if (opponents.length === 3) {
     return (
-      <div className="w-full h-20 grid grid-cols-3 gap-1.5 px-3 py-1.5 select-none">
+      <div className="w-full max-w-3xl mx-auto h-20 grid grid-cols-3 gap-1.5 px-3 py-1.5 select-none">
         {opponents.map((opp) => {
           const isTurn = currentTurnPlayerId === opp.id;
           return (
@@ -120,7 +120,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId }: OpponentsRadarProps)
 
   // 4 opponents (5-player game) -> horizontal swiper
   return (
-    <div className="w-full h-20 flex overflow-x-auto gap-2 px-4 py-1.5 snap-x scrollbar-none select-none">
+    <div className="w-full max-w-3xl mx-auto h-20 flex overflow-x-auto gap-2 px-4 py-1.5 snap-x scrollbar-none select-none">
       {opponents.map((opp) => {
         const isTurn = currentTurnPlayerId === opp.id;
         return (
@@ -432,10 +432,9 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   const counterCardsInHand = me?.hand?.filter((c) => c.type === "instant") || [];
 
   return (
-    <div className="w-screen h-screen bg-slate-950 flex justify-center overflow-hidden">
-      <div className="relative h-full w-full max-w-md p-3 text-white flex flex-col justify-between select-none border-x border-slate-900/60 shadow-2xl bg-slate-950">
+    <div className="relative h-screen w-screen overflow-hidden p-3 bg-slate-950 text-white flex flex-col justify-between select-none">
       {/* شريط الإعدادات والتحكم العلوي */}
-      <div className="w-full flex items-center justify-between px-2 mb-1 select-none">
+      <div className="w-full max-w-3xl mx-auto flex items-center justify-between px-2 mb-1 select-none">
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">صراع الأعضاء</span>
           <span className="text-[9px] bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700 text-slate-400 font-mono">
@@ -458,9 +457,9 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
       <OpponentsRadar opponents={opponents} currentTurnPlayerId={room.currentTurnPlayerId} />
 
       {/* 2. منطقة المعركة واللاعب الحالي (Middle Zone - Player Battlefield & Turn Ticker) */}
-      <div className="flex-1 flex flex-col items-center justify-center py-2 relative">
+      <div className="flex-1 flex flex-col items-center justify-center py-2 relative w-full max-w-3xl mx-auto">
         {/* Turn Ticker */}
-        <div className="w-full max-w-md flex justify-center mb-3">
+        <div className="w-full max-w-md md:max-w-xl flex justify-center mb-3">
           <div className={`w-full py-2 px-4 rounded-xl border text-center transition-all ${
             isMyTurn
               ? "border-emerald-500 bg-emerald-950/20 text-emerald-400 font-black animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.15)]"
@@ -473,7 +472,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
         </div>
 
         {/* Player Organs Grid */}
-        <div className="grid grid-cols-2 gap-3 my-auto max-h-[40vh] w-full max-w-md px-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 my-auto max-h-[40vh] md:max-h-[30vh] w-full max-w-md md:max-w-3xl px-2">
           {me?.organs?.map((o) => {
             const isDead = o.isDead;
             const hpColor = o.hp === 2
@@ -485,7 +484,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
             return (
               <div
                 key={o.id}
-                className={`relative overflow-hidden rounded-2xl border p-2.5 flex flex-col justify-between transition-all aspect-[4/3] ${
+                className={`relative overflow-hidden rounded-2xl border p-3 flex flex-col justify-between transition-all aspect-square ${
                   isDead
                     ? "border-slate-800 bg-slate-950/60 text-slate-600 grayscale contrast-75 opacity-60 pointer-events-none"
                     : o.hp === 2
@@ -498,11 +497,11 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 </div>
 
                 {/* Organ Image Display */}
-                <div className="flex-1 flex items-center justify-center my-1 select-none w-full h-full">
+                <div className="flex-1 flex items-center justify-center my-2 select-none w-full h-full">
                   <img
                     src={o.isDead ? `/${o.id}_died.png` : `/${o.id}.png`}
                     alt={o.name}
-                    className="w-18 h-18 object-contain"
+                    className="w-20 h-20 md:w-24 md:h-24 object-contain"
                   />
                 </div>
 
@@ -528,7 +527,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
       </div>
 
       {/* 3. منطقة اليد المروحية (Bottom Zone - The Fan Deck) */}
-      <div className="relative pb-4 w-full h-[25vh] flex items-end justify-center">
+      <div className="relative pb-4 w-full h-[25vh] md:h-[28vh] flex items-end justify-center">
         {me?.hand && me.hand.length > 0 ? (
           <div className="relative w-full max-w-xl h-full flex justify-center items-end">
             {me.hand.map((card, index) => {
@@ -896,7 +895,6 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
           </div>
         )}
       </AnimatePresence>
-      </div>
     </div>
   );
 }
