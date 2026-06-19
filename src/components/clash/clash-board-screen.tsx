@@ -173,6 +173,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   const [timeLeft, setTimeLeft] = useState(5);
   const [nameError, setNameError] = useState<string | null>(null);
   const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const me = room?.players?.[playerId];
   const isHost = me?.isHost || false;
@@ -432,6 +433,26 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
 
   return (
     <div className="relative h-screen w-screen overflow-hidden p-3 bg-slate-950 text-white flex flex-col justify-between select-none">
+      {/* شريط الإعدادات والتحكم العلوي */}
+      <div className="w-full flex items-center justify-between px-2 mb-1 select-none">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">صراع الأعضاء</span>
+          <span className="text-[9px] bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700 text-slate-400 font-mono">
+            كود: {room.roomId}
+          </span>
+        </div>
+        <button
+          onClick={() => setSettingsOpen(true)}
+          className="p-1.5 rounded-lg border border-slate-850 bg-slate-900/60 text-slate-400 hover:text-white hover:border-slate-700 hover:bg-slate-900 transition-all cursor-pointer"
+          title="الإعدادات"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-4 h-4">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.43l-1.003.828c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.43l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+          </svg>
+        </button>
+      </div>
+
       {/* 1. منطقة الخصوم (Top Zone - Enemy Radar) */}
       <OpponentsRadar opponents={opponents} currentTurnPlayerId={room.currentTurnPlayerId} />
 
@@ -761,6 +782,113 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   className="w-full rounded-2xl border border-white/10 py-3 text-sm font-bold text-slate-400 transition hover:bg-slate-800 hover:text-white"
                 >
                   الخروج إلى القائمة الرئيسية
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* نافذة الإعدادات (Settings Modal) */}
+      <AnimatePresence>
+        {settingsOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-sm rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl text-right flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-3">
+                  <button
+                    onClick={() => setSettingsOpen(false)}
+                    className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition cursor-pointer"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                  <h3 className="text-base font-black text-rose-400">إعدادات الغرفة</h3>
+                </div>
+
+                {/* تفاصيل الغرفة والكود */}
+                <div className="space-y-4 mb-6">
+                  <div>
+                    <label className="text-[10px] text-slate-400 block mb-1">كود الغرفة</label>
+                    <div className="flex items-center gap-2 bg-slate-950 p-2.5 rounded-xl border border-white/5">
+                      <button
+                        onClick={() => {
+                          void navigator.clipboard.writeText(room.roomId);
+                          alert("تم نسخ كود الغرفة!");
+                        }}
+                        className="px-2.5 py-1 bg-rose-600/20 text-rose-400 border border-rose-500/30 rounded-lg text-[10px] font-bold hover:bg-rose-600/30 transition cursor-pointer"
+                      >
+                        نسخ الكود
+                      </button>
+                      <span className="flex-1 font-mono text-center text-xs font-bold text-white tracking-widest">{room.roomId}</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-slate-400 block mb-1">رابط الدعوة</label>
+                    <div className="flex items-center gap-2 bg-slate-950 p-2.5 rounded-xl border border-white/5">
+                      <button
+                        onClick={() => {
+                          const link = `${window.location.origin}/clash/${room.roomId}`;
+                          void navigator.clipboard.writeText(link);
+                          alert("تم نسخ رابط الدعوة!");
+                        }}
+                        className="px-2.5 py-1 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-[10px] font-bold hover:bg-emerald-600/30 transition cursor-pointer"
+                      >
+                        نسخ الرابط
+                      </button>
+                      <span className="flex-1 text-center text-[10px] text-slate-400 truncate dir-ltr select-all">
+                        {typeof window !== "undefined" ? `${window.location.origin}/clash/${room.roomId}` : ""}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* تفاصيل اللعبة (إعدادات المباراة) */}
+                <div className="rounded-xl border border-white/5 bg-slate-950 p-3.5 mb-6 space-y-2 text-xs">
+                  <span className="text-[10px] text-slate-400 block border-b border-white/5 pb-1.5 mb-2 font-black">إعدادات الجولة</span>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">الحد الأقصى للاعبين:</span>
+                    <span className="font-bold text-white">{room.settings?.maxPlayers || 4} لاعبين</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">الكروت البدائية باليد:</span>
+                    <span className="font-bold text-white">{room.settings?.initialHandSize || 5} كروت</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* أزرار التحكم والمغادرة */}
+              <div className="space-y-3">
+                {isHost && (
+                  <button
+                    onClick={async () => {
+                      if (confirm("هل أنت متأكد من رغبتك في إنهاء المباراة الحالية والعودة للوبي؟")) {
+                        await resetClashGame();
+                        setSettingsOpen(false);
+                      }
+                    }}
+                    className="w-full rounded-xl border border-amber-600/30 bg-amber-600/10 py-2.5 text-xs font-black text-amber-400 hover:bg-amber-600/20 transition text-center cursor-pointer"
+                  >
+                    إعادة تعيين المباراة والعودة للوبي 🔄
+                  </button>
+                )}
+
+                <button
+                  onClick={async () => {
+                    if (confirm("هل أنت متأكد من مغادرة اللعبة؟")) {
+                      await leaveClashRoom();
+                    }
+                  }}
+                  className="w-full rounded-xl bg-rose-600 py-2.5 text-xs font-black text-white hover:bg-rose-500 transition text-center shadow-lg shadow-rose-600/20 cursor-pointer"
+                >
+                  مغادرة الغرفة والعودة للرئيسية ➔
                 </button>
               </div>
             </motion.div>
