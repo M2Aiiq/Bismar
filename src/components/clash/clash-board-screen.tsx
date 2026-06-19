@@ -34,6 +34,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   const [selectedCard, setSelectedCard] = useState<ActionCard | null>(null);
   const [targetSelectorOpen, setTargetSelectorOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(5);
+  const [nameError, setNameError] = useState<string | null>(null);
 
   const me = room?.players?.[playerId];
   const isHost = me?.isHost || false;
@@ -100,6 +101,68 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#0F172A] text-slate-400 font-bold">
         جاري تحميل الغرفة...
+      </div>
+    );
+  }
+
+  // إذا لم يكن اللاعب مسجلاً في الغرفة بعد
+  if (room && !me) {
+    // إذا كان هناك اسم مسجل مسبقاً في الجلسة، نعرض شاشة تحميل خفيفة أثناء الانضمام التلقائي
+    if (playerName) {
+      return (
+        <div className="flex h-screen items-center justify-center bg-[#0F172A] text-[#F8FAFC]">
+          <div className="text-center font-bold">جاري تسجيل دخولك للغرفة...</div>
+        </div>
+      );
+    }
+
+    // وإلا، نطلب منه كتابة اسمه
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/85 px-4 backdrop-blur-sm">
+        <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#1E293B] p-6 shadow-2xl md:p-8">
+          <div className="text-right">
+            <h2 className="text-2xl font-black text-[#F8FAFC]">اكتب اسمك للانضمام</h2>
+          </div>
+
+          <div className="mt-5 text-right">
+            <input
+              value={lobbyName}
+              onChange={(e) => setLobbyName(e.target.value)}
+              placeholder="مثال: علي"
+              className="w-full rounded-2xl border border-white/15 bg-[#0F172A] px-4 py-3 text-base text-[#F8FAFC] outline-none transition focus:border-rose-500"
+            />
+          </div>
+
+          {nameError && <p className="mt-2 text-sm text-rose-500 text-right">{nameError}</p>}
+
+          <div className="mt-6 flex">
+            <button
+              type="button"
+              onClick={async () => {
+                const name = lobbyName.trim();
+                if (name.length < 2) {
+                  setNameError("الاسم يجب أن يكون حرفين على الأقل.");
+                  return;
+                }
+                try {
+                  // حفظ الجلسة محلياً ليتطابق مع Codenames/Blitz
+                  localStorage.setItem(
+                    "iraqi-codenames-session",
+                    JSON.stringify({ playerId, playerName: name })
+                  );
+                  await joinClashRoom(name);
+                  setNameError(null);
+                  window.location.reload();
+                } catch (err) {
+                  setNameError(err instanceof Error ? err.message : "حدث خطأ غير معروف");
+                }
+              }}
+              className="w-full rounded-2xl bg-rose-600 px-5 py-3 text-sm font-bold text-[#F8FAFC] transition hover:bg-rose-500"
+            >
+              دخول الغرفة
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

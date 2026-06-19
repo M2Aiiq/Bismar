@@ -6,7 +6,7 @@ import { getDatabase, ref, onValue, set, runTransaction, onDisconnect } from "fi
 import { getRealtimeDatabase } from "../lib/firebase";
 import type { ClashRoomState, ClashPlayer, ActionCard, OrganCard, PendingAction } from "../types/organClash";
 
-const SESSION_STORAGE_KEY = "bismar_player_session";
+const SESSION_STORAGE_KEY = "iraqi-codenames-session";
 
 interface SessionData {
   playerId: string;
