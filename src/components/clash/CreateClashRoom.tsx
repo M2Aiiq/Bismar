@@ -15,6 +15,7 @@ export function CreateClashRoomButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [maxPlayers, setMaxPlayers] = useState(4);
   const [initialHandSize, setInitialHandSize] = useState(5);
+  const [turnTimerSeconds, setTurnTimerSeconds] = useState(30);
   const [creating, setCreating] = useState(false);
 
   const disabled = isBusy || !firebaseReady || !playerName || creating;
@@ -51,6 +52,7 @@ export function CreateClashRoomButton() {
         settings: {
           maxPlayers,
           initialHandSize,
+          turnTimerSeconds,
         },
       };
 
@@ -144,6 +146,42 @@ export function CreateClashRoomButton() {
                   <span>3 كروت</span>
                   <span>5 كروت (افتراضي)</span>
                   <span>8 كروت</span>
+                </div>
+              </div>
+
+              {/* مؤقت دور اللاعب بالثواني */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-slate-300 mb-2">
+                  مؤقت دور اللاعب (بالثواني):
+                </label>
+                <div className="flex gap-2 items-center bg-slate-800 rounded-xl p-1 border border-white/5">
+                  <input
+                    type="number"
+                    min={5}
+                    max={300}
+                    value={turnTimerSeconds}
+                    onChange={(e) => setTurnTimerSeconds(Math.max(5, Math.min(300, Number(e.target.value) || 30)))}
+                    className="flex-1 bg-transparent px-3 py-2 text-sm text-[#F8FAFC] outline-none text-center font-bold font-mono"
+                  />
+                  <div className="flex gap-1 pr-1.5">
+                    {[15, 30, 45, 60].map((sec) => (
+                      <button
+                        key={sec}
+                        type="button"
+                        onClick={() => setTurnTimerSeconds(sec)}
+                        className={`px-2 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
+                          turnTimerSeconds === sec
+                            ? "bg-rose-600 text-white shadow-sm"
+                            : "bg-slate-700 text-slate-400 hover:bg-slate-650"
+                        }`}
+                      >
+                        {sec}ث
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="text-[10px] text-slate-500 mt-1 text-right">
+                  الحد الأدنى 5 ثوانٍ، الأقصى 300 ثانية.
                 </div>
               </div>
 

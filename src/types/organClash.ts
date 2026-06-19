@@ -42,8 +42,10 @@ export interface ClashRoomState {
   turnPhase: "draw" | "play" | "pass";
   pendingAction?: PendingAction | null;
   winnerId: string | null;
+  turnEndsAt?: number | null;
   settings: {
     maxPlayers: number;
     initialHandSize: number;
+    turnTimerSeconds: number;
   };
 }

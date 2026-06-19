@@ -323,7 +323,7 @@ export function useClashRoom(roomId: string) {
 
   // 7. بدء اللعب
   const startClashGame = useCallback(
-    async (maxPlayers: number, initialHandSize: number) => {
+    async (maxPlayers: number, initialHandSize: number, turnTimerSeconds?: number) => {
       if (!roomId || !room) return;
 
       const database = getRealtimeDatabase() || getDatabase();
@@ -366,9 +366,14 @@ export function useClashRoom(roomId: string) {
           currentRoom.currentTurnPlayerId = hostId;
           currentRoom.turnPhase = "draw";
 
+          // تعيين مؤقت الجولة الأولى
+          const timerVal = turnTimerSeconds || 30;
+          currentRoom.turnEndsAt = Date.now() + timerVal * 1000;
+
           currentRoom.settings = {
             maxPlayers,
             initialHandSize,
+            turnTimerSeconds: timerVal,
           };
         } catch (err) {
           console.error("Error inside startClashGame Transaction:", err);
@@ -597,10 +602,14 @@ export function useClashRoom(roomId: string) {
     [roomId, room]
   );
 
-  // 12. إنهاء الدور الحالي والانتقال للاعب التالي
-  const endClashTurn = useCallback(async () => {
+  // 12. إنهاء الدور الحالي والانتقال للاعب التالي (مع دعم التجاوز الإجباري من المضيف forceByHost)
+  const endClashTurn = useCallback(async (forceByHost = false) => {
     if (!roomId || !room || room.status !== "playing") return;
-    if (room.currentTurnPlayerId !== playerId) return;
+    
+    // التحقق من أنه دور اللاعب الحالي أو فرض من المضيف
+    const isMyTurn = room.currentTurnPlayerId === playerId;
+    const isHost = room.players?.[playerId]?.isHost || false;
+    if (!isMyTurn && !(forceByHost && isHost)) return;
 
     const database = getRealtimeDatabase() || getDatabase();
     const roomPathRef = ref(database, `clashRooms/${roomId}`);
@@ -621,6 +630,10 @@ export function useClashRoom(roomId: string) {
         currentRoom.currentTurnPlayerId = nextPlayerId;
         currentRoom.turnPhase = "draw";
         currentRoom.pendingAction = null;
+
+        // تعيين مؤقت الدور الجديد للاعب التالي
+        const timerSeconds = currentRoom.settings?.turnTimerSeconds || 30;
+        currentRoom.turnEndsAt = Date.now() + timerSeconds * 1000;
 
         // معالجة دور الزومبي تلقائياً إذا كان اللاعب زومبي
         const nextPlayer = currentRoom.players[nextPlayerId];
@@ -672,6 +685,9 @@ export function useClashRoom(roomId: string) {
           let nextNextIndex = (nextIndex + 1) % playerIds.length;
           currentRoom.currentTurnPlayerId = playerIds[nextNextIndex];
           currentRoom.turnPhase = "draw";
+
+          // تعيين مؤقت الدور الجديد للاعب بعد الزومبي
+          currentRoom.turnEndsAt = Date.now() + timerSeconds * 1000;
 
           // إعادة فحص الفائز
           const alivePlayers = playerIds.filter((pid) => !currentRoom.players[pid].isZombie);

@@ -180,6 +180,35 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   const isMyTurn = room?.currentTurnPlayerId === playerId;
   const activePlayerName = room?.players?.[room.currentTurnPlayerId]?.name || "غير معروف";
 
+  const [localTimeRemaining, setLocalTimeRemaining] = useState(30);
+  const totalDuration = room?.settings?.turnTimerSeconds || 30;
+
+  useEffect(() => {
+    if (room?.status !== "playing" || !room.turnEndsAt) return;
+
+    setLocalTimeRemaining(Math.max(0, (room.turnEndsAt - Date.now()) / 1000));
+
+    const interval = setInterval(() => {
+      const remaining = Math.max(0, room.turnEndsAt! - Date.now());
+      setLocalTimeRemaining(remaining / 1000);
+
+      if (remaining <= 0 && isMyTurn) {
+        clearInterval(interval);
+        void endClashTurn();
+      }
+
+      if (remaining <= 0 && isHost && room.currentTurnPlayerId !== playerId) {
+        const overtime = Date.now() - room.turnEndsAt!;
+        if (overtime >= 2500) {
+          clearInterval(interval);
+          void endClashTurn(true);
+        }
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [room?.status, room?.turnEndsAt, isMyTurn, isHost, room?.currentTurnPlayerId, playerId, endClashTurn]);
+
   // 1. الانضمام التلقائي للوبي إذا لم نكن مسجلين
   useEffect(() => {
     if (isReady && room && !me && playerName) {
@@ -382,13 +411,17 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   <span>الكروت البدائية باليد:</span>
                   <span className="text-[#F8FAFC]">{room.settings?.initialHandSize || 5} كروت</span>
                 </div>
+                <div className="flex justify-between">
+                  <span>مؤقت الجولة:</span>
+                  <span className="text-[#F8FAFC]">{room.settings?.turnTimerSeconds || 30} ثانية</span>
+                </div>
               </div>
             </div>
 
             <div className="mt-8 space-y-3">
               {isHost ? (
                 <button
-                  onClick={() => startClashGame(room.settings.maxPlayers, room.settings.initialHandSize)}
+                  onClick={() => startClashGame(room.settings.maxPlayers, room.settings.initialHandSize, room.settings.turnTimerSeconds)}
                   disabled={Object.keys(room.players).length < 2}
                   className="w-full rounded-2xl bg-rose-600 py-4 font-bold text-white transition hover:bg-rose-500 disabled:bg-rose-900 disabled:cursor-not-allowed"
                 >
@@ -460,15 +493,53 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
       <div className="flex-1 flex flex-col items-center justify-center py-2 relative w-full max-w-3xl mx-auto">
         {/* Turn Ticker */}
         <div className="w-full max-w-md md:max-w-xl flex justify-center mb-3">
-          <div className={`w-full py-2 px-4 rounded-xl border text-center transition-all ${
-            isMyTurn
-              ? "border-emerald-500 bg-emerald-950/20 text-emerald-400 font-black animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.15)]"
-              : "border-slate-800 bg-slate-900/50 text-slate-400 font-medium"
-          }`}>
-            <span className="text-xs uppercase tracking-wider">
-              {isMyTurn ? "🔔 حان دورك الآن! العب بحكمة" : `🕒 دور اللاعب الحالي: ${activePlayerName}`}
-            </span>
-          </div>
+          {(() => {
+            const timePercent = Math.min(100, Math.max(0, (localTimeRemaining / totalDuration) * 100));
+            const barColor = timePercent > 50
+              ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+              : timePercent > 20
+              ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]"
+              : "bg-rose-600 shadow-[0_0_8px_rgba(225,29,72,0.4)] animate-pulse";
+
+            return (
+              <div className={`w-full py-2.5 px-4 rounded-xl border text-center transition-all relative overflow-hidden ${
+                isMyTurn
+                  ? "border-emerald-500/30 bg-emerald-950/20 text-emerald-400 font-black shadow-[0_0_15px_rgba(16,185,129,0.08)]"
+                  : "border-slate-800 bg-slate-900/50 text-slate-400 font-medium"
+              }`}>
+                {/* مؤقت الدور - الشريط العلوي المزدوج (ينكمش للمنتصف) */}
+                {room.status === "playing" && room.turnEndsAt && (
+                  <div
+                    className={`absolute top-0 h-1 transition-all duration-100 ${barColor}`}
+                    style={{
+                      width: `${timePercent}%`,
+                      left: `${(100 - timePercent) / 2}%`,
+                    }}
+                  />
+                )}
+
+                <span className="text-xs uppercase tracking-wider flex items-center justify-center gap-1.5">
+                  {isMyTurn ? "🔔 حان دورك الآن! العب بحكمة" : `🕒 دور اللاعب الحالي: ${activePlayerName}`}
+                  {room.status === "playing" && room.turnEndsAt && (
+                    <span className="font-mono bg-black/40 px-1.5 py-0.5 rounded text-[10px] text-slate-300">
+                      {Math.ceil(localTimeRemaining)}ث
+                    </span>
+                  )}
+                </span>
+
+                {/* مؤقت الدور - الشريط السفلي المزدوج (ينكمش للمنتصف) */}
+                {room.status === "playing" && room.turnEndsAt && (
+                  <div
+                    className={`absolute bottom-0 h-1 transition-all duration-100 ${barColor}`}
+                    style={{
+                      width: `${timePercent}%`,
+                      left: `${(100 - timePercent) / 2}%`,
+                    }}
+                  />
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Player Organs Grid */}
@@ -518,7 +589,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
         {/* Turn Phase manual action */}
         {room.turnPhase === "pass" && isMyTurn && (
           <button
-            onClick={endClashTurn}
+            onClick={() => void endClashTurn(false)}
             className="mt-3 rounded-2xl bg-rose-600 px-6 py-2.5 font-bold text-white transition hover:bg-rose-500 shadow-lg shadow-rose-600/30 text-xs"
           >
             إنهاء الدور وتمرير اللعب ➔
@@ -860,6 +931,10 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   <div className="flex justify-between">
                     <span className="text-slate-400">الكروت البدائية باليد:</span>
                     <span className="font-bold text-white">{room.settings?.initialHandSize || 5} كروت</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">مؤقت الجولة:</span>
+                    <span className="font-bold text-white">{room.settings?.turnTimerSeconds || 30} ثانية</span>
                   </div>
                 </div>
               </div>
