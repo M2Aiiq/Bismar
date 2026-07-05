@@ -95,7 +95,7 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
   const roundTimerValue = draftSettings?.roundTimerSeconds ?? String(room.settings.roundTimerSeconds);
   const isModal = mode === "modal";
   const isLobbyModal = isModal && room.gameState === "Lobby";
-  const setupControlsDisabled = isBusy || room.gameState !== "Lobby";
+  const setupControlsDisabled = isBusy || (room.gameState !== "Lobby" && room.gameState !== "GameOver");
   const teamCountControlsDisabled = isBusy || !player.isHost;
   const canApplyDraft = player.isHost && !isBusy && draftSettings !== null;
   const shouldShowHostControls = player.isHost;

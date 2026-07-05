@@ -24,6 +24,7 @@ interface TeamPanelProps {
   onJoinAsOperative: (team: ActiveTeam) => void;
   onJoinAsSpymaster: (team: ActiveTeam) => void;
   onKickPlayer: (playerId: string) => void;
+  isGameOver?: boolean;
 }
 
 function presenceDotClass(isOnline: boolean) {
@@ -227,6 +228,7 @@ function TeamPanel({
   onJoinAsOperative,
   onJoinAsSpymaster,
   onKickPlayer,
+  isGameOver = false,
 }: TeamPanelProps) {
   const orderedPlayers = [...players].sort((left, right) => {
     if (left.role === right.role) {
@@ -237,8 +239,8 @@ function TeamPanel({
   });
   const spymaster = orderedPlayers.find((currentPlayer) => currentPlayer.role === "Spymaster") ?? null;
   const operatives = orderedPlayers.filter((currentPlayer) => currentPlayer.role === "Operative");
-  const canShowJoinAsOperative = !isEliminated && (currentPlayer.role !== "Operative" || currentPlayer.team !== team);
-  const canShowJoinAsSpymaster = !isEliminated && (currentPlayer.role !== "Spymaster" || currentPlayer.team !== team);
+  const canShowJoinAsOperative = (isGameOver || !isEliminated) && (currentPlayer.role !== "Operative" || currentPlayer.team !== team);
+  const canShowJoinAsSpymaster = (isGameOver || !isEliminated) && (currentPlayer.role !== "Spymaster" || currentPlayer.team !== team);
   const canKickPlayer = (playerToKick: Player) => currentPlayer.isHost && !playerToKick.isHost && playerToKick.id !== currentPlayer.id;
   const isPlayerOnline = (targetPlayer: Player) => presence[targetPlayer.id] === true;
 
@@ -683,7 +685,11 @@ export function BoardScreen() {
   const usesMultiRowTeamGrid = activeTeams.length > 2;
   const shouldUseExpandedDenseFont = isLargeFont && (room.settings.extraRows === 3 || (room.board.length >= 36 && activeTeams.length >= 3));
   const shouldShowClueInput =
-    !room.isPaused && player.role === "Spymaster" && player.team === room.currentTurn && room.turnPhase === "Clue";
+    room.gameState === "Playing" &&
+    !room.isPaused &&
+    player.role === "Spymaster" &&
+    player.team === room.currentTurn &&
+    room.turnPhase === "Clue";
   const shouldShowClueStrip = visibleClues.length > 0;
   const teamSlots: Array<ActiveTeam | null> = activeTeams.length === 3 ? [...activeTeams, null] : activeTeams;
   const teamGridHeightClass = usesMultiRowTeamGrid ? "h-[25vh]" : "h-[22vh]";
@@ -789,6 +795,7 @@ export function BoardScreen() {
               onJoinAsOperative={(nextTeam) => joinTeamAs(nextTeam, "Operative")}
               onJoinAsSpymaster={(nextTeam) => joinTeamAs(nextTeam, "Spymaster")}
               onKickPlayer={(targetPlayerId) => kickPlayer(targetPlayerId)}
+              isGameOver={room.gameState === "GameOver"}
             />
           ) : (
             <div key={`team-slot-${index}`} aria-hidden="true" className="border border-transparent opacity-0" />
