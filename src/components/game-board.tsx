@@ -1,7 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
+import { motion, type Variants } from "framer-motion";
 
 import type { ActiveTeam } from "../lib/teams";
 import type { Card } from "../types/game";
+
+const cardVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.25,
+    y: 50,
+    rotate: -8,
+  },
+  show: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    rotate: 0,
+    transition: {
+      type: "spring",
+      stiffness: 195,
+      damping: 16,
+      mass: 0.8,
+    },
+  },
+};
 
 interface GameBoardProps {
   board: Card[];
@@ -177,6 +199,11 @@ export function GameBoard({
     [board],
   );
 
+  const wordsKey = useMemo(
+    () => board.map((card) => card.text).join("|"),
+    [board],
+  );
+
   useEffect(() => {
     const revealedCardIds = new Set(board.filter((card) => card.isRevealed).map((card) => card.id));
 
@@ -212,7 +239,18 @@ export function GameBoard({
   };
 
   return (
-    <div
+    <motion.div
+      key={wordsKey}
+      variants={{
+        hidden: {},
+        show: {
+          transition: {
+            staggerChildren: 0.025,
+          },
+        },
+      }}
+      initial="hidden"
+      animate="show"
       className={cx("grid", compact ? (denseBoard ? "w-full max-h-full gap-1" : "w-full max-h-full gap-1.5") : "gap-2 md:gap-3")}
       style={{
         gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
@@ -251,8 +289,9 @@ export function GameBoard({
         const isFlipped = (card.isRevealed || !!card.isWrongFlip) && !isPeeking;
 
         return (
-          <button
+          <motion.button
             key={card.id}
+            variants={cardVariants}
             id={`blitz-card-${card.id}`}
             type="button"
             disabled={!onReveal && !card.isRevealed}
@@ -340,9 +379,9 @@ export function GameBoard({
                 )}
               </div>
             </div>
-          </button>
+          </motion.button>
         );
       })}
-    </div>
+    </motion.div>
   );
 }
