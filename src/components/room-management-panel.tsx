@@ -387,7 +387,10 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => void shuffleBoardWords()}
+                  onClick={() => {
+                    void shuffleBoardWords();
+                    onClose?.();
+                  }}
                   disabled={isBusy}
                   className="flex items-center justify-center gap-1.5 rounded-2xl bg-[#2563EB] px-3 py-2 text-xs font-black text-[#F8FAFC] whitespace-nowrap transition hover:bg-[#1D4ED8] active:scale-95 disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
                 >
@@ -396,7 +399,10 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                 </button>
                 <button
                   type="button"
-                  onClick={() => void shuffleTeams()}
+                  onClick={() => {
+                    void shuffleTeams();
+                    onClose?.();
+                  }}
                   disabled={isBusy}
                   className="flex items-center justify-center gap-1.5 rounded-2xl bg-[#2563EB] px-3 py-2 text-xs font-black text-[#F8FAFC] whitespace-nowrap transition hover:bg-[#1D4ED8] active:scale-95 disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
                 >
