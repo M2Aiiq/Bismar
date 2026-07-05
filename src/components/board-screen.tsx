@@ -239,8 +239,8 @@ function TeamPanel({
   });
   const spymaster = orderedPlayers.find((currentPlayer) => currentPlayer.role === "Spymaster") ?? null;
   const operatives = orderedPlayers.filter((currentPlayer) => currentPlayer.role === "Operative");
-  const canShowJoinAsOperative = (isGameOver || !isEliminated) && (currentPlayer.role !== "Operative" || currentPlayer.team !== team);
-  const canShowJoinAsSpymaster = (isGameOver || !isEliminated) && (currentPlayer.role !== "Spymaster" || currentPlayer.team !== team);
+  const canShowJoinAsOperative = currentPlayer.role !== "Operative" || currentPlayer.team !== team;
+  const canShowJoinAsSpymaster = currentPlayer.role !== "Spymaster" || currentPlayer.team !== team;
   const canKickPlayer = (playerToKick: Player) => currentPlayer.isHost && !playerToKick.isHost && playerToKick.id !== currentPlayer.id;
   const isPlayerOnline = (targetPlayer: Player) => presence[targetPlayer.id] === true;
 

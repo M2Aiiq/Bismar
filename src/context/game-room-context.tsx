@@ -837,7 +837,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
           const currentRoom = normalizeRoom(currentValue);
 
-          if (!currentRoom || currentRoom.gameState === "Playing") {
+          if (!currentRoom) {
             return currentValue;
           }
 
@@ -879,7 +879,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
           const currentRoom = normalizeRoom(currentValue);
 
-          if (!currentRoom || currentRoom.gameState === "Playing") {
+          if (!currentRoom) {
             return currentValue;
           }
 
@@ -927,7 +927,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
           const currentRoom = normalizeRoom(currentValue);
 
-          if (!currentRoom || currentRoom.gameState === "Playing") {
+          if (!currentRoom) {
             return currentValue;
           }
 

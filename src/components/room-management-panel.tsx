@@ -95,7 +95,7 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
   const roundTimerValue = draftSettings?.roundTimerSeconds ?? String(room.settings.roundTimerSeconds);
   const isModal = mode === "modal";
   const isLobbyModal = isModal && room.gameState === "Lobby";
-  const setupControlsDisabled = isBusy || (room.gameState !== "Lobby" && room.gameState !== "GameOver");
+  const setupControlsDisabled = isBusy;
   const teamCountControlsDisabled = isBusy || !player.isHost;
   const canApplyDraft = player.isHost && !isBusy && draftSettings !== null;
   const shouldShowHostControls = player.isHost;
@@ -743,12 +743,7 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
                 </div>
               </div>
 
-              {room.gameState !== "Lobby" ? (
-                <div className="mt-4 rounded-3xl bg-[#0F172A] p-4 text-sm leading-7 text-[#F8FAFC]/74">
-                  تغيير الفريق أو الدور متاح من اللوبي فقط. إذا أردت تعديل هذه الخيارات أثناء اللعب فارجع أولًا إلى
-                  اللوبي.
-                </div>
-              ) : null}
+
             </div>
           </div>
 
