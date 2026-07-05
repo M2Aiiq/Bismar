@@ -807,7 +807,7 @@ export function BoardScreen() {
       </div>
 
       {shouldShowClueStrip || shouldShowClueInput || canEndTurn ? (
-        <div className="flex flex-col gap-1 pt-4 pb-0.5 shrink-0">
+        <div className="flex flex-col gap-1 py-0.5 shrink-0">
           {shouldShowClueStrip ? (
             <div className="mx-2 shrink-0">
               <div
