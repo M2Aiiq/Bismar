@@ -937,9 +937,19 @@ export function BoardScreen() {
                 type="button"
                 onClick={handlePauseToggle}
                 disabled={isBusy}
-                className="h-7 rounded-full border border-white/25 bg-black/10 px-4 text-xs font-bold text-slate-200 transition active:scale-95 disabled:opacity-50"
+                aria-label={room.isPaused ? "تشغيل اللعبة" : "إيقاف اللعبة"}
+                className="h-7 w-7 flex items-center justify-center rounded-full border border-white/25 bg-black/10 text-slate-200 transition active:scale-95 disabled:opacity-50"
               >
-                {room.isPaused ? "تشغيل" : "إيقاف"}
+                {room.isPaused ? (
+                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-slate-200" aria-hidden="true">
+                    <path d="M8 5.5v13l10-6.5L8 5.5Z" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-slate-200" aria-hidden="true">
+                    <rect x="6" y="5" width="4" height="14" rx="1.2" />
+                    <rect x="14" y="5" width="4" height="14" rx="1.2" />
+                  </svg>
+                )}
               </button>
             ) : null}
           </div>
