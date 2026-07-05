@@ -36,7 +36,7 @@ export function GameShell() {
 
         {!isReady ? (
           <div className="rounded-3xl border border-white/10 bg-[#1E293B] p-8 text-center text-sm text-[#F8FAFC]/80 shadow-lg">
-            جارٍ تهيئة الجلسة المحلية والاتصال اللحظي...
+            جارٍ تهيئة اللعبة...
           </div>
         ) : null}
 
