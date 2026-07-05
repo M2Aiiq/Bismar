@@ -806,90 +806,96 @@ export function BoardScreen() {
         </div>
       </div>
 
-      {shouldShowClueStrip ? (
-        <div className="mx-2 shrink-0">
-          <div
-            className={`mx-auto w-full max-w-[44rem] transition-all duration-300 ease-out ${isClueBarVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-              }`}
-          >
-            <div
-              dir="rtl"
-              className="overflow-x-auto overscroll-x-contain rounded-2xl px-0.5 py-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-            >
-              <div className="flex min-w-full justify-start gap-2">
-                {[...visibleClues].reverse().map((clue, index, clues) => (
-                  <div
-                    key={`${clue.team}-${clue.createdAt}`}
-                    ref={index === clues.length - 1 ? latestClueRef : null}
-                    dir="rtl"
-                    className={`flex shrink-0 items-center gap-2 rounded-2xl border px-3 py-1 text-[#F8FAFC] shadow-lg backdrop-blur-sm ${clueChipClass(clue.team)}`}
-                  >
-                    <span className="rounded-full bg-black/20 px-2 py-0.5 text-xs font-black">{clue.count}</span>
-                    <span className="text-sm font-black">{clue.text}</span>
+      {shouldShowClueStrip || shouldShowClueInput || canEndTurn ? (
+        <div className="flex flex-1 flex-col justify-center gap-1.5 pt-3 pb-1 min-h-0">
+          {shouldShowClueStrip ? (
+            <div className="mx-2 shrink-0">
+              <div
+                className={`mx-auto w-full max-w-[44rem] transition-all duration-300 ease-out ${isClueBarVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+                  }`}
+              >
+                <div
+                  dir="rtl"
+                  className="overflow-x-auto overscroll-x-contain rounded-2xl px-0.5 py-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                >
+                  <div className="flex min-w-full justify-start gap-2">
+                    {[...visibleClues].reverse().map((clue, index, clues) => (
+                      <div
+                        key={`${clue.team}-${clue.createdAt}`}
+                        ref={index === clues.length - 1 ? latestClueRef : null}
+                        dir="rtl"
+                        className={`flex shrink-0 items-center gap-2 rounded-2xl border px-3 py-1 text-[#F8FAFC] shadow-lg backdrop-blur-sm ${clueChipClass(clue.team)}`}
+                      >
+                        <span className="rounded-full bg-black/20 px-2 py-0.5 text-xs font-black">{clue.count}</span>
+                        <span className="text-sm font-black">{clue.text}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      ) : null}
+          ) : null}
 
-      {shouldShowClueInput ? (
-        <div className="mx-2 shrink-0">
-          <div
-            className={`mx-auto w-full max-w-[44rem] transition-all duration-300 ease-out ${isClueBarVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-              }`}
-          >
-            <div className="overflow-hidden rounded-2xl border border-white/20 bg-black/25 shadow-lg backdrop-blur-sm">
-              <div className="grid h-10 grid-cols-[38px_44px_minmax(0,1fr)] items-center">
+          {shouldShowClueInput ? (
+            <div className="mx-2 shrink-0">
+              <div
+                className={`mx-auto w-full max-w-[44rem] transition-all duration-300 ease-out ${isClueBarVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+                  }`}
+              >
+                <div className="overflow-hidden rounded-2xl border border-white/20 bg-black/25 shadow-lg backdrop-blur-sm">
+                  <div className="grid h-10 grid-cols-[38px_44px_minmax(0,1fr)] items-center">
+                    <button
+                      type="button"
+                      onClick={handleClueSend}
+                      disabled={!clueDraft.trim()}
+                      className="h-full bg-white/15 text-xs font-black text-[#F8FAFC] transition active:scale-95 disabled:opacity-40"
+                    >
+                      {">"}
+                    </button>
+                    <div className="h-full border-x border-white/15">
+                      <select
+                        value={clueCount}
+                        onChange={(event) => setClueCount(event.target.value)}
+                        className="h-full w-full bg-transparent px-1 text-center text-xs font-bold text-[#F8FAFC] outline-none"
+                      >
+                        {CLUE_COUNT_OPTIONS.map((value) => (
+                          <option key={value} value={value} className="bg-[#0F172A] text-[#F8FAFC]">
+                            {value}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <input
+                      dir="rtl"
+                      value={clueDraft}
+                      onChange={(event) => setClueDraft(event.target.value)}
+                      placeholder={`تلميح فريق ${teamLabel(currentTeam)}`}
+                      className="h-full min-w-0 bg-transparent px-3 text-sm font-bold text-[#F8FAFC] outline-none placeholder:text-[#F8FAFC]/45"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {canEndTurn ? (
+            <div className="mx-2 shrink-0">
+              <div className="mx-auto flex w-full max-w-[44rem] justify-center">
                 <button
                   type="button"
-                  onClick={handleClueSend}
-                  disabled={!clueDraft.trim()}
-                  className="h-full bg-white/15 text-xs font-black text-[#F8FAFC] transition active:scale-95 disabled:opacity-40"
+                  onClick={() => void endGuessTurn()}
+                  disabled={isBusy}
+                  className="h-8 rounded-full border border-white/25 bg-black/20 px-5 text-xs font-black text-[#F8FAFC] transition active:scale-95 disabled:opacity-50"
                 >
-                  {">"}
+                  إنهاء الدور
                 </button>
-                <div className="h-full border-x border-white/15">
-                  <select
-                    value={clueCount}
-                    onChange={(event) => setClueCount(event.target.value)}
-                    className="h-full w-full bg-transparent px-1 text-center text-xs font-bold text-[#F8FAFC] outline-none"
-                  >
-                    {CLUE_COUNT_OPTIONS.map((value) => (
-                      <option key={value} value={value} className="bg-[#0F172A] text-[#F8FAFC]">
-                        {value}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <input
-                  dir="rtl"
-                  value={clueDraft}
-                  onChange={(event) => setClueDraft(event.target.value)}
-                  placeholder={`تلميح فريق ${teamLabel(currentTeam)}`}
-                  className="h-full min-w-0 bg-transparent px-3 text-sm font-bold text-[#F8FAFC] outline-none placeholder:text-[#F8FAFC]/45"
-                />
               </div>
             </div>
-          </div>
+          ) : null}
         </div>
-      ) : null}
-
-      {canEndTurn ? (
-        <div className="mx-2 mt-1 shrink-0">
-          <div className="mx-auto flex w-full max-w-[44rem] justify-center">
-            <button
-              type="button"
-              onClick={() => void endGuessTurn()}
-              disabled={isBusy}
-              className="h-8 rounded-full border border-white/25 bg-black/20 px-5 text-xs font-black text-[#F8FAFC] transition active:scale-95 disabled:opacity-50"
-            >
-              إنهاء الدور
-            </button>
-          </div>
-        </div>
-      ) : null}
+      ) : (
+        <div className="flex-1" />
+      )}
 
       <div className={`mt-1 flex min-h-0 items-start overflow-hidden px-1.5 sm:px-2 ${boardSectionHeightClass}`}>
         <div className={`mx-auto flex h-full w-full flex-col ${boardWidthClass} items-center justify-start overflow-visible`}>
