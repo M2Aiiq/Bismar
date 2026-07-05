@@ -875,7 +875,12 @@ export function BoardScreen() {
                     <input
                       dir="rtl"
                       value={clueDraft}
-                      onChange={(event) => setClueDraft(event.target.value)}
+                      onChange={(event) => setClueDraft(event.target.value.replace(/\s/g, ""))}
+                      onKeyDown={(event) => {
+                        if (event.key === " ") {
+                          event.preventDefault();
+                        }
+                      }}
                       placeholder={`تلميح فريق ${teamLabel(currentTeam)}`}
                       className="h-full min-w-0 bg-transparent px-3 text-sm font-bold text-[#F8FAFC] outline-none placeholder:text-[#F8FAFC]/45"
                     />
