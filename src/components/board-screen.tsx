@@ -807,7 +807,7 @@ export function BoardScreen() {
       </div>
 
       {shouldShowClueStrip || shouldShowClueInput || canEndTurn ? (
-        <div className="flex flex-1 flex-col justify-center gap-1.5 pt-3 pb-1 min-h-0">
+        <div className="flex flex-col gap-1.5 pt-2.5 pb-1.5 shrink-0">
           {shouldShowClueStrip ? (
             <div className="mx-2 shrink-0">
               <div
@@ -894,7 +894,7 @@ export function BoardScreen() {
           ) : null}
         </div>
       ) : (
-        <div className="flex-1" />
+        <div className="h-2 shrink-0" />
       )}
 
       <div className={`mt-1 flex min-h-0 items-start overflow-hidden px-1.5 sm:px-2 ${boardSectionHeightClass}`}>
