@@ -58,7 +58,7 @@ export function createInitialDeck(): ActionCard[] {
 
   let affIndex = 0;
   afflictionTypes.forEach((aff) => {
-    const isThreeCopies = ["cholesterol", "smoke", "foodPoisoning", "dehydration", "appendicitis"].includes(aff.subType);
+    const isThreeCopies = ["caffeine", "brokenHeart", "insomnia", "brainFreeze", "foodPoisoning"].includes(aff.subType);
     const count = isThreeCopies ? 3 : 2;
     for (let k = 0; k < count; k++) {
       deck.push({
@@ -83,7 +83,11 @@ export function createInitialDeck(): ActionCard[] {
 
   let cureIndex = 0;
   cureTypes.forEach((cure) => {
-    const count = cure.subType === "antibiotic" ? 7 : 6;
+    let count = 6;
+    if (cure.subType === "antibiotic") count = 8;
+    else if (cure.subType === "vitamin") count = 8;
+    else if (cure.subType === "icu") count = 5;
+    else if (cure.subType === "surgery") count = 4;
     for (let k = 0; k < count; k++) {
       deck.push({
         id: `cure_${cure.subType}_${cureIndex++}`,
@@ -108,7 +112,13 @@ export function createInitialDeck(): ActionCard[] {
 
   let tacIndex = 0;
   tacticalTypes.forEach((tac) => {
-    const count = (tac.subType === "antibody" || tac.subType === "doubleDraw") ? 4 : 3;
+    let count = 3;
+    if (tac.subType === "antibody") count = 5;
+    else if (tac.subType === "doubleDraw") count = 4;
+    else if (tac.subType === "steal") count = 3;
+    else if (tac.subType === "infection") count = 3;
+    else if (tac.subType === "sedative") count = 3;
+    else if (tac.subType === "swap") count = 2;
     for (let k = 0; k < count; k++) {
       deck.push({
         id: `tac_${tac.subType}_${tacIndex++}`,
@@ -128,7 +138,8 @@ export function createInitialDeck(): ActionCard[] {
 
   let genIndex = 0;
   generalAttackTypes.forEach((gen) => {
-    for (let k = 0; k < 6; k++) {
+    const count = gen.subType === "acuteInflammation" ? 8 : 4;
+    for (let k = 0; k < count; k++) {
       deck.push({
         id: `gen_${gen.subType}_${genIndex++}`,
         name: gen.name,
@@ -183,6 +194,15 @@ function shuffleList<T>(list: T[]): T[] {
   }
   return arr;
 }
+
+function pullCardByType(deck: ActionCard[], condition: (c: ActionCard) => boolean): ActionCard | null {
+  const index = deck.findIndex(condition);
+  if (index !== -1) {
+    return deck.splice(index, 1)[0];
+  }
+  return null;
+}
+
 
 function addRoomLog(currentRoom: ClashRoomState, text: string, type: GameLog["type"] = "system") {
   if (!currentRoom.logs) currentRoom.logs = [];
@@ -544,14 +564,43 @@ export function useClashRoom(roomId: string) {
 
           playerIds.forEach((pid) => {
             const playerHand: ActionCard[] = [];
-            for (let i = 0; i < initialHandSize; i++) {
-              if (deck.length > 0) {
+            if (initialHandSize === 5) {
+              // 1. Pull exactly 1 Cure card (25% / 1 card minimum)
+              const cure = pullCardByType(deck, (c) => c.type === "cure");
+              if (cure) playerHand.push(cure);
+
+              // 2. Pull exactly 1 Tactical card (20% / 1 card)
+              const tac = pullCardByType(deck, (c) => c.type === "tactical" || c.type === "instant");
+              if (tac) playerHand.push(tac);
+
+              // 3. Pull exactly 2 Affliction cards (35% / 1-2 cards)
+              const aff1 = pullCardByType(deck, (c) => c.type === "attack" && c.targetOrganId !== "any");
+              if (aff1) playerHand.push(aff1);
+              const aff2 = pullCardByType(deck, (c) => c.type === "attack" && c.targetOrganId !== "any");
+              if (aff2) playerHand.push(aff2);
+
+              // 4. Pull exactly 1 General Attack or Immunity card (20% / 1 card exchangeable)
+              const genOrImm = pullCardByType(deck, (c) => (c.type === "attack" && c.targetOrganId === "any") || c.type === "immunity");
+              if (genOrImm) playerHand.push(genOrImm);
+
+              // 5. Fill remaining if anything was missing
+              while (playerHand.length < 5 && deck.length > 0) {
                 playerHand.push(deck.pop()!);
               }
+
+              // Shuffling the hand so the user doesn't see them in a fixed category order
+              currentRoom.players[pid].hand = shuffleList(playerHand);
+            } else {
+              // Fallback for custom hand sizes
+              for (let i = 0; i < initialHandSize; i++) {
+                if (deck.length > 0) {
+                  playerHand.push(deck.pop()!);
+                }
+              }
+              currentRoom.players[pid].hand = playerHand;
             }
 
             currentRoom.players[pid].organs = createInitialOrgans();
-            currentRoom.players[pid].hand = playerHand;
             currentRoom.players[pid].isZombie = false;
             clearOrganicDietEffect(currentRoom.players[pid]);
           });
