@@ -412,16 +412,13 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   return (
     <div className="relative h-screen w-screen overflow-hidden p-3 bg-slate-950 text-white flex flex-col justify-between select-none">
       {/* شريط الإعدادات والتحكم العلوي */}
-      <div className="w-full max-w-3xl mx-auto flex items-center justify-between px-2 mb-1 select-none">
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">صراع الأعضاء</span>
-          <span className="text-[9px] bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700 text-slate-400 font-mono">
-            كود: {room.roomId}
-          </span>
-        </div>
+      <div className="w-full max-w-3xl mx-auto relative flex items-center justify-center px-2 py-2 mb-2 select-none">
+        <span className="text-sm md:text-base font-black tracking-widest text-rose-400">
+          صراع الأعضاء
+        </span>
         <button
           onClick={() => setSettingsOpen(true)}
-          className="p-1.5 rounded-lg border border-slate-850 bg-slate-900/60 text-slate-400 hover:text-white hover:border-slate-700 hover:bg-slate-900 transition-all cursor-pointer"
+          className="absolute right-2 p-1.5 rounded-lg border border-slate-850 bg-slate-900/60 text-slate-400 hover:text-white hover:border-slate-700 hover:bg-slate-900 transition-all cursor-pointer"
           title="الإعدادات"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-4 h-4">

@@ -64,7 +64,7 @@ export function CreateClashRoomButton() {
       console.error("Failed to launch Organ Clash room:", error);
       alert(
         "تعذر إنشاء غرفة صراع الأعضاء: " +
-          (error instanceof Error ? error.message : "خطأ غير معروف")
+        (error instanceof Error ? error.message : "خطأ غير معروف")
       );
     } finally {
       setCreating(false);
@@ -79,7 +79,7 @@ export function CreateClashRoomButton() {
         disabled={disabled}
         className="w-full rounded-2xl border border-rose-500/30 bg-rose-950/20 px-5 py-4 text-base font-black text-rose-300 transition hover:bg-rose-950/40 hover:border-rose-500 disabled:cursor-not-allowed disabled:bg-rose-950/10 disabled:text-rose-300/40"
       >
-        العب صراع الأعضاء (Organ Clash)
+        العب صراع الأعضاء
       </button>
 
       <AnimatePresence>
@@ -117,11 +117,10 @@ export function CreateClashRoomButton() {
                       key={num}
                       type="button"
                       onClick={() => setMaxPlayers(num)}
-                      className={`flex-1 py-2 text-sm font-bold rounded-xl transition ${
-                        maxPlayers === num
+                      className={`flex-1 py-2 text-sm font-bold rounded-xl transition ${maxPlayers === num
                           ? "bg-rose-600 text-white shadow-lg shadow-rose-600/30"
                           : "bg-slate-800 text-slate-400 hover:bg-slate-700"
-                      }`}
+                        }`}
                     >
                       {num}
                     </button>
