@@ -59,7 +59,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
               {opp.isZombie && <span className="text-[9px] bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 px-1.5 py-0.5 rounded-md animate-pulse">Zombie 🧟</span>}
             </div>
             <span className="text-[10px] text-slate-400 mt-1">
-              {isLobby ? "🟢 متصل - في الانتظار" : `🎴 يد اللاعب: ${opp.hand?.length || 0} كروت`}
+              {isLobby ? "🟢 متصل - في الانتظار" : "🟢 متصل"}
             </span>
           </div>
           {!isLobby && (
@@ -85,7 +85,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
               <div className="flex justify-between items-center">
                 <span className="text-xs font-bold text-white truncate max-w-[80px]">{opp.name}</span>
                 <span className="text-[9px] text-slate-400 font-mono">
-                  {isLobby ? "🟢 متصل" : `🎴 ${opp.hand?.length || 0}`}
+                  {isLobby ? "🟢 متصل" : "🟢 متصل"}
                 </span>
               </div>
               {!isLobby && (
@@ -113,7 +113,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-black text-white truncate max-w-[65px]">{opp.name}</span>
                 <span className="text-[8px] text-slate-400 font-mono">
-                  {isLobby ? "🟢 متصل" : `🎴 ${opp.hand?.length || 0}`}
+                  {isLobby ? "🟢 متصل" : "🟢 متصل"}
                 </span>
               </div>
               {!isLobby && (
@@ -141,7 +141,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
             <div className="flex justify-between items-center">
               <span className="text-[10px] font-black text-white truncate max-w-[70px]">{opp.name}</span>
               <span className="text-[8px] text-slate-400 font-mono">
-                {isLobby ? "🟢 متصل" : `🎴 ${opp.hand?.length || 0}`}
+                {isLobby ? "🟢 متصل" : "🟢 متصل"}
               </span>
             </div>
             {!isLobby && (
@@ -856,7 +856,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                         disabled={opp.isZombie}
                         className="w-full rounded-2xl bg-slate-800 border border-white/5 py-3.5 text-xs font-bold hover:bg-rose-900/20 hover:border-rose-500 disabled:opacity-30 transition"
                       >
-                        {opp.name} (عدد الكروت: {opp.hand?.length || 0}) {opp.isZombie && "🧟"}
+                        {opp.name} {opp.isZombie && "🧟"}
                       </button>
                     ))}
                   </div>
