@@ -10,8 +10,8 @@ function MiniOrganBadge({ organ }: { organ: OrganCard }) {
   const hpColors = organ.isDead
     ? "bg-slate-900/60 border-slate-800 grayscale"
     : organ.hp === 2
-    ? "bg-emerald-500/10 border-emerald-500/20"
-    : "bg-amber-500/10 border-amber-500/20 shadow-[0_0_8px_rgba(245,158,11,0.15)]";
+      ? "bg-emerald-500/10 border-emerald-500/20"
+      : "bg-amber-500/10 border-amber-500/20 shadow-[0_0_8px_rgba(245,158,11,0.15)]";
 
   const imgPath = organ.isDead ? `/${organ.id}_died.png` : `/${organ.id}.png`;
 
@@ -48,9 +48,8 @@ function OpponentsRadar({ opponents, currentTurnPlayerId }: OpponentsRadarProps)
     const isTurn = currentTurnPlayerId === opp.id;
     return (
       <div className="w-full max-w-3xl mx-auto h-24 px-4 py-2 select-none">
-        <div className={`w-full h-full rounded-2xl border bg-slate-900/80 p-3 flex items-center justify-between transition-all ${
-          isTurn ? "border-rose-500 shadow-md shadow-rose-500/10" : "border-slate-800"
-        }`}>
+        <div className={`w-full h-full rounded-2xl border bg-slate-900/80 p-3 flex items-center justify-between transition-all ${isTurn ? "border-rose-500 shadow-md shadow-rose-500/10" : "border-slate-800"
+          }`}>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="text-sm font-black text-white">{opp.name}</span>
@@ -74,9 +73,8 @@ function OpponentsRadar({ opponents, currentTurnPlayerId }: OpponentsRadarProps)
         {opponents.map((opp) => {
           const isTurn = currentTurnPlayerId === opp.id;
           return (
-            <div key={opp.id} className={`rounded-2xl border bg-slate-900/80 p-3 flex flex-col justify-between transition-all ${
-              isTurn ? "border-rose-500 shadow-md shadow-rose-500/10" : "border-slate-800"
-            }`}>
+            <div key={opp.id} className={`rounded-2xl border bg-slate-900/80 p-3 flex flex-col justify-between transition-all ${isTurn ? "border-rose-500 shadow-md shadow-rose-500/10" : "border-slate-800"
+              }`}>
               <div className="flex justify-between items-center">
                 <span className="text-xs font-bold text-white truncate max-w-[80px]">{opp.name}</span>
                 <span className="text-[9px] text-slate-400 font-mono">🎴 {opp.hand?.length || 0}</span>
@@ -99,9 +97,8 @@ function OpponentsRadar({ opponents, currentTurnPlayerId }: OpponentsRadarProps)
         {opponents.map((opp) => {
           const isTurn = currentTurnPlayerId === opp.id;
           return (
-            <div key={opp.id} className={`rounded-xl border bg-slate-900/90 p-2.5 flex flex-col justify-between transition-all ${
-              isTurn ? "border-rose-500 shadow-sm shadow-rose-500/10" : "border-slate-800"
-            }`}>
+            <div key={opp.id} className={`rounded-xl border bg-slate-900/90 p-2.5 flex flex-col justify-between transition-all ${isTurn ? "border-rose-500 shadow-sm shadow-rose-500/10" : "border-slate-800"
+              }`}>
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-black text-white truncate max-w-[65px]">{opp.name}</span>
                 <span className="text-[8px] text-slate-400 font-mono">🎴 {opp.hand?.length || 0}</span>
@@ -124,9 +121,8 @@ function OpponentsRadar({ opponents, currentTurnPlayerId }: OpponentsRadarProps)
       {opponents.map((opp) => {
         const isTurn = currentTurnPlayerId === opp.id;
         return (
-          <div key={opp.id} className={`min-w-[130px] snap-center rounded-xl border bg-slate-900/90 p-2.5 flex flex-col justify-between transition-all ${
-            isTurn ? "border-rose-500 shadow-sm shadow-rose-500/10" : "border-slate-800"
-          }`}>
+          <div key={opp.id} className={`min-w-[130px] snap-center rounded-xl border bg-slate-900/90 p-2.5 flex flex-col justify-between transition-all ${isTurn ? "border-rose-500 shadow-sm shadow-rose-500/10" : "border-slate-800"
+            }`}>
             <div className="flex justify-between items-center">
               <span className="text-[10px] font-black text-white truncate max-w-[70px]">{opp.name}</span>
               <span className="text-[8px] text-slate-400 font-mono">🎴 {opp.hand?.length || 0}</span>
@@ -503,15 +499,14 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
             const barColor = timePercent > 50
               ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
               : timePercent > 20
-              ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]"
-              : "bg-rose-600 shadow-[0_0_8px_rgba(225,29,72,0.4)] animate-pulse";
+                ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]"
+                : "bg-rose-600 shadow-[0_0_8px_rgba(225,29,72,0.4)] animate-pulse";
 
             return (
-              <div className={`w-full py-2.5 px-4 rounded-xl border text-center transition-all relative overflow-hidden ${
-                isMyTurn
+              <div className={`w-full py-2.5 px-4 rounded-xl border text-center transition-all relative overflow-hidden ${isMyTurn
                   ? "border-emerald-500/30 bg-emerald-950/20 text-emerald-400 font-black shadow-[0_0_15px_rgba(16,185,129,0.08)]"
                   : "border-slate-800 bg-slate-900/50 text-slate-400 font-medium"
-              }`}>
+                }`}>
                 <span className="text-xs uppercase tracking-wider flex items-center justify-center gap-1.5">
                   {isMyTurn ? "🔔 حان دورك الآن! العب بحكمة" : `🕒 دور اللاعب الحالي: ${activePlayerName}`}
                 </span>
@@ -535,26 +530,21 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
         <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5 sm:gap-2.5 my-auto max-h-[30vh] md:max-h-[22vh] w-full max-w-sm sm:max-w-4xl px-2">
           {me?.organs?.map((o) => {
             const isDead = o.isDead;
-            const hpColor = o.hp >= 3
-              ? "bg-sky-500 shadow-[0_0_8px_rgba(56,189,248,0.4)]"
-              : o.hp === 2
+            const hpColor = o.hp === 2
               ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
               : o.hp === 1
-              ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]"
-              : "bg-slate-800";
-            
+                ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]"
+                : "bg-slate-800";
+
             return (
               <div
                 key={o.id}
-                className={`relative overflow-hidden rounded-xl border p-1.5 sm:p-2 flex flex-col justify-between transition-all aspect-square ${
-                  isDead
+                className={`relative overflow-hidden rounded-xl border p-1.5 sm:p-2 flex flex-col justify-between transition-all aspect-square ${isDead
                     ? "border-slate-800 bg-slate-950/60 text-slate-600 grayscale contrast-75 opacity-60 pointer-events-none"
-                    : o.hp >= 3
-                    ? "border-sky-500/20 bg-sky-950/10 shadow-lg shadow-sky-500/5 text-sky-200"
                     : o.hp === 2
-                    ? "border-emerald-500/20 bg-emerald-950/10 shadow-lg shadow-emerald-500/5 text-emerald-200"
-                    : "border-amber-500/20 bg-amber-950/10 shadow-lg shadow-amber-500/5 text-amber-200"
-                }`}
+                      ? "border-emerald-500/20 bg-emerald-950/10 shadow-lg shadow-emerald-500/5 text-emerald-200"
+                      : "border-amber-500/20 bg-amber-950/10 shadow-lg shadow-amber-500/5 text-amber-200"
+                  }`}
               >
                 {/* Vaccine badge */}
                 {o.hasVaccine && (
@@ -581,11 +571,10 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   />
                 </div>
 
-                {/* 3-segment HP bar */}
+                {/* 2-segment HP bar */}
                 <div className="flex gap-1 w-full mt-0.5">
                   <div className={`h-1 flex-1 rounded-full ${o.hp >= 1 ? hpColor : "bg-slate-800"}`} />
-                  <div className={`h-1 flex-1 rounded-full ${o.hp >= 2 ? hpColor : "bg-slate-800"}`} />
-                  <div className={`h-1 flex-1 rounded-full ${o.hp >= 3 ? hpColor : "bg-slate-800"}`} />
+                  <div className={`h-1 flex-1 rounded-full ${o.hp === 2 ? hpColor : "bg-slate-800"}`} />
                 </div>
               </div>
             );
@@ -612,7 +601,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
               const angleStep = Math.min(30 / Math.max(1, totalCards - 1), 6);
               const startAngle = -((totalCards - 1) * angleStep) / 2;
               const rotate = startAngle + index * angleStep;
-              
+
               const translateY = Math.abs(rotate) * 0.9;
               const translateX = rotate * 2.8;
 
@@ -659,13 +648,12 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   onTouchStart={() => setHoveredCardIndex(index)}
                   onTouchEnd={() => setHoveredCardIndex(null)}
                   onClick={() => handleCardClick(card)}
-                  className={`w-28 h-40 rounded-2xl border-2 bg-slate-900 p-2.5 flex flex-col justify-between cursor-pointer select-none shadow-2xl transition-all duration-200 ${
-                    borderColors[card.type]
-                  }`}
+                  className={`w-28 h-40 rounded-2xl border-2 bg-slate-900 p-2.5 flex flex-col justify-between cursor-pointer select-none shadow-2xl transition-all duration-200 ${borderColors[card.type]
+                    }`}
                 >
                   <div className="flex flex-col gap-1.5">
                     <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-md self-start ${badgeColors[card.type]}`}>
-                      {card.type === "attack" && (card.targetOrganId === "any" ? "هجوم عام" : "اعتلال")}
+                      {card.type === "attack" && (card.targetOrganId === "any" ? "هجوم عام" : "هجوم")}
                       {card.type === "cure" && "علاج"}
                       {card.type === "instant" && "فوري"}
                       {card.type === "tactical" && "تكتيك"}

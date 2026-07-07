@@ -75,7 +75,7 @@ export function createInitialDeck(): ActionCard[] {
   // B. Cures (25 cards)
   const cureTypes = [
     { subType: "antibiotic", name: "مضاد حيوي", desc: "يزيل اعتلالاً واحداً نشطاً من أي عضو ويعالجه +1 صحة." },
-    { subType: "vitamin", name: "جرعة فيتامين", desc: "يضيف +1 صحة لأي عضو (يمكنه الشفاء الزائد حتى 3 صحة)." },
+    { subType: "vitamin", name: "جرعة فيتامين", desc: "يضيف +1 صحة لأي عضو (بحد أقصى 2 صحة)." },
     { subType: "icu", name: "عناية مركزة", desc: "يعيد فوراً عضواً بصحة 1 إلى كامل صحته القصوى (2 صحة)." },
     { subType: "surgery", name: "عملية جراحية", desc: "يحيي عضواً مدمراً بالكامل بصحة 1، أو يزيل اعتلالاً خطيراً (كالورم)." }
   ] as const;
@@ -586,7 +586,7 @@ export function useClashRoom(roomId: string) {
             }
           } else if (card.subType === "vitamin") {
             if (!targetOrgan.isDead) {
-              targetOrgan.hp = Math.min(3, targetOrgan.hp + 1); // Can overheal up to 3 HP
+              targetOrgan.hp = Math.min(2, targetOrgan.hp + 1);
             }
           } else if (card.subType === "icu") {
             if (!targetOrgan.isDead && targetOrgan.hp === 1) {
