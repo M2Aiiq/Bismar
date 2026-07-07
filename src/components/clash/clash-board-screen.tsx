@@ -716,13 +716,22 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                     <span className="text-xs font-bold block mb-2 text-emerald-300">أعضاؤك الشخصية</span>
                     <div className="grid grid-cols-2 gap-2">
                       {me.organs?.map((o) => {
+                        const isVaccine = selectedCard.subType === "vaccine";
                         const isSurgery = selectedCard.subType === "surgery";
                         const isVitamin = selectedCard.subType === "vitamin";
                         const isIcu = selectedCard.subType === "icu";
 
                         const isClickable = isSurgery
                           ? true
-                          : !o.isDead && (isVitamin ? o.hp < 3 : (isIcu ? o.hp === 1 : o.hp < 2 || (o.afflictions && o.afflictions.length > 0)));
+                          : !o.isDead && (
+                              isVaccine
+                                ? !o.hasVaccine
+                                : isVitamin
+                                  ? o.hp < 2
+                                  : isIcu
+                                    ? o.hp === 1
+                                    : o.hp < 2 || (o.afflictions && o.afflictions.length > 0)
+                            );
 
                         return (
                           <button
