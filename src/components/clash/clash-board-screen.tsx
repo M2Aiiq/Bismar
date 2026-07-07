@@ -518,57 +518,60 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
 
         {/* Player Organs Grid / Lobby waiting card */}
         {room.status === "lobby" ? (
-          <div className="flex-none w-full max-w-sm flex flex-col items-center justify-center text-center rounded-[1.75rem] border border-white/5 bg-slate-900/30 px-5 py-4 sm:px-6 sm:py-5">
-            <h3 className="mb-1 text-base font-black text-rose-400 sm:text-lg">غرفة انتظار صراع الأعضاء</h3>
+          <div className="flex w-full flex-1 flex-col items-center justify-start px-3 pt-4 pb-24 sm:px-4 sm:pt-6 sm:pb-28">
+            <div className="w-full max-w-2xl rounded-[1.75rem] border border-white/5 bg-slate-900/30 px-5 py-4 text-center shadow-2xl sm:px-6 sm:py-5">
+              <h3 className="mb-1 text-base font-black text-rose-400 sm:text-lg">غرفة انتظار صراع الأعضاء</h3>
 
-            {/* كود الغرفة في الأعلى */}
-            <div className="mb-3">
-              <span className="text-[10px] text-slate-400 block mb-1">رمز الغرفة:</span>
-              <span className="text-xl font-black font-mono tracking-[0.35em] text-[#F8FAFC] sm:text-2xl">{room.roomId}</span>
-            </div>
+              <div className="mb-3">
+                <span className="text-[10px] text-slate-400 block mb-1">رمز الغرفة:</span>
+                <span className="text-xl font-black font-mono tracking-[0.35em] text-[#F8FAFC] sm:text-2xl">{room.roomId}</span>
+              </div>
 
-            {/* زري نسخ الكود ونسخ الرابط بدون أيقونات */}
-            <div className="mb-4 flex w-full gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(room.roomId);
-                  setToastMessage("تم نسخ رمز الغرفة بنجاح!");
-                }}
-                className="flex-1 rounded-xl border border-white/5 bg-slate-800 py-2 text-xs font-bold text-slate-300 transition hover:bg-slate-700 cursor-pointer"
-              >
-                نسخ الكود
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const joinUrl = `${window.location.origin}/clash/${room.roomId}`;
-                  navigator.clipboard.writeText(joinUrl);
-                  setToastMessage("تم نسخ رابط الغرفة بنجاح!");
-                }}
-                className="flex-1 rounded-xl border border-white/5 bg-slate-800 py-2 text-xs font-bold text-slate-300 transition hover:bg-slate-700 cursor-pointer"
-              >
-                نسخ الرابط
-              </button>
-            </div>
+              <div className="mb-4 flex w-full flex-col gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(room.roomId);
+                    setToastMessage("تم نسخ رمز الغرفة بنجاح!");
+                  }}
+                  className="flex-1 rounded-xl border border-white/5 bg-slate-800 py-2 text-xs font-bold text-slate-300 transition hover:bg-slate-700 cursor-pointer"
+                >
+                  نسخ الكود
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const joinUrl = `${window.location.origin}/clash/${room.roomId}`;
+                    navigator.clipboard.writeText(joinUrl);
+                    setToastMessage("تم نسخ رابط الغرفة بنجاح!");
+                  }}
+                  className="flex-1 rounded-xl border border-white/5 bg-slate-800 py-2 text-xs font-bold text-slate-300 transition hover:bg-slate-700 cursor-pointer"
+                >
+                  نسخ الرابط
+                </button>
+              </div>
 
-            <p className="mb-3 max-w-xs text-center text-xs leading-relaxed text-slate-400">
-              بانتظار اللاعبين للانضمام. المضيف يمكنه ضبط إعدادات المباراة وتعديلها عبر أيقونة الترس بالعلّي.
-            </p>
-            <div className="mb-4 w-full rounded-lg border border-white/5 bg-slate-950/80 px-3 py-1.5 font-mono text-xs text-slate-400">
-              عدد المتصلين: {Object.keys(room.players).length} / {room.settings?.maxPlayers || 4}
+              <p className="mb-3 max-w-xl text-center text-xs leading-relaxed text-slate-400">
+                بانتظار اللاعبين للانضمام. المضيف يمكنه ضبط إعدادات المباراة وتعديلها عبر أيقونة الترس بالعلّي.
+              </p>
+
+              <div className="w-full rounded-lg border border-white/5 bg-slate-950/80 px-3 py-1.5 font-mono text-xs text-slate-400">
+                عدد المتصلين: {Object.keys(room.players).length} / {room.settings?.maxPlayers || 4}
+              </div>
             </div>
 
             {isHost ? (
-              <button
-                onClick={() => startClashGame(room.settings.maxPlayers, room.settings.initialHandSize, room.settings.turnTimerSeconds)}
-                disabled={Object.keys(room.players).length < 2}
-                className="w-full rounded-2xl bg-rose-600 py-3 font-bold text-white transition hover:bg-rose-500 disabled:bg-rose-900/40 disabled:text-white/40 disabled:cursor-not-allowed text-xs shadow-lg shadow-rose-600/20 cursor-pointer"
-              >
-                بدء المعركة الآن
-              </button>
+              <div className="fixed bottom-4 left-1/2 z-30 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 sm:bottom-6">
+                <button
+                  onClick={() => startClashGame(room.settings.maxPlayers, room.settings.initialHandSize, room.settings.turnTimerSeconds)}
+                  disabled={Object.keys(room.players).length < 2}
+                  className="w-full rounded-2xl bg-rose-600 py-3.5 font-bold text-white shadow-2xl shadow-rose-600/25 transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:bg-rose-900/40 disabled:text-white/40 text-xs cursor-pointer"
+                >
+                  بدء المعركة الآن
+                </button>
+              </div>
             ) : (
-              <div className="text-xs font-semibold text-slate-500 animate-pulse">
+              <div className="mt-4 text-xs font-semibold text-slate-500 animate-pulse">
                 بانتظار المضيف لبدء اللعبة...
               </div>
             )}
