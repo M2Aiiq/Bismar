@@ -569,7 +569,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                       </span>
                     ))}
 
-                  <div className="flex flex-wrap justify-center gap-2">
+                  <div className="flex flex-col items-center gap-2">
                     {Object.values(room.players)
                       .filter((roomPlayer) => !roomPlayer.isHost)
                       .map((roomPlayer) => (
