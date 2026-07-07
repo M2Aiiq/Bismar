@@ -608,10 +608,10 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
       </div>
 
       {/* 3. منطقة اليد (Bottom Zone - Player Hand Cards) */}
-      <div className="w-full max-w-3xl mx-auto px-2 pb-2 bg-transparent select-none">
-        <span className="text-[9px] text-slate-500 block mb-1 text-right">كروت اليد الخاصة بك:</span>
+      <div className="w-full -mx-3 -mb-3 bg-slate-950/80 border-t border-white/5 pb-3 pt-2 px-3 select-none">
+        <span className="text-[9px] text-slate-500 block mb-1 text-right px-1">كروت اليد الخاصة بك:</span>
         {room.status !== "lobby" && me?.hand && me.hand.length > 0 ? (
-          <div className="flex gap-2 overflow-x-auto py-2 scrollbar-none snap-x dir-rtl justify-start md:justify-center">
+          <div className="flex gap-2 overflow-x-auto py-1 scrollbar-none snap-x dir-rtl justify-start md:justify-center -mx-3 px-3">
             {me.hand.map((card) => {
               const borderColors = {
                 attack: "border-rose-600/50 hover:border-rose-500 shadow-rose-900/10",
