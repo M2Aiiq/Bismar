@@ -41,17 +41,17 @@ export function createInitialDeck(): ActionCard[] {
     { subType: "caffeine", target: "heart", name: "جرعة كافيين زائدة", desc: "خفقان القلب، التوتر، واهتزاز اليدين." },
     { subType: "brokenHeart", target: "heart", name: "قلب مكسور", desc: "حزن شديد، ضيق في الصدر، ورغبة مفرطة في السكريات." },
     { subType: "cholesterol", target: "heart", name: "انسداد كوليسترول", desc: "انسداد الشرايين، ضيق التنفس، وضغط زائد على العضلة." },
-    { subType: "insomnia", target: "brain", name: "أرق", desc: "تشتت الذهن، هالات سوداء عميقة، وإرهاق مستمر للدماغ." },
-    { subType: "brainFreeze", target: "brain", name: "تجمد الدماغ", desc: "صداع حاد ومفاجئ، تجمد الرأس، وتوقف التفكير مؤقتاً." },
-    { subType: "forgetfulness", target: "brain", name: "نوبة نسيان", desc: "ضياع المفاتيح، تحديق في الفراغ، واختفاء الكلمات من اللسان." },
+    { subType: "insomnia", target: "mind", name: "أرق", desc: "تشتت الذهن، هالات سوداء عميقة، وإرهاق مستمر للدماغ." },
+    { subType: "brainFreeze", target: "mind", name: "تجمد الدماغ", desc: "صداع حاد ومفاجئ، تجمد الرأس، وتوقف التفكير مؤقتاً." },
+    { subType: "forgetfulness", target: "mind", name: "نوبة نسيان", desc: "ضياع المفاتيح، تحديق في الفراغ، وااختفاء الكلمات من اللسان." },
     { subType: "toxicDose", target: "liver", name: "جرعة سامة", desc: "تسمم حاد في الأنسجة، إجهاد خلوي، وفشل إنزيمي مفاجئ." },
     { subType: "fattyLiver", target: "liver", name: "كبد دهني", desc: "خمول وإرهاق مستمر بسبب تراكم الدهون حول الخلايا." },
-    { subType: "smoke", target: "lungs", name: "سحابة دخان", desc: "ضيق تنفس حاد وسعال جاف بسبب استنشاق الهواء الملوث." },
-    { subType: "cough", target: "lungs", name: "نوبة سعال", desc: "تشنج مستمر في القصبة الهوائية وتمزق مؤلم في الحلق." },
+    { subType: "smoke", target: "lung", name: "سحابة دخان", desc: "ضيق تنفس حاد وسعال جاف بسبب استنشاق الهواء الملوث." },
+    { subType: "cough", target: "lung", name: "نوبة سعال", desc: "تشنج مستمر في القصبة الهوائية وتمزق مؤلم في الحلق." },
     { subType: "spicyFood", target: "stomach", name: "طعام حار", desc: "حرقة معوية شديدة، قرحة مفاجئة، والتهاب جدار المعدة." },
     { subType: "foodPoisoning", target: "stomach", name: "تسمم غذائي", desc: "غثيان حاد، آلام وتقلصات معوية، وفقدان مفاجئ للطاقة." },
-    { subType: "kidneyStone", target: "kidneys", name: "حصوة كلى", desc: "ألم حاد ومفاجئ في الجانب السفلي يمنع الحركة." },
-    { subType: "dehydration", target: "kidneys", name: "جفاف", desc: "نقص حاد في السوائل يؤدي لإجهاد وتراجع وظائف الكلى." },
+    { subType: "kidneyStone", target: "kidney", name: "حصوة كلى", desc: "ألم حاد ومفاجئ في الجانب السفلي يمنع الحركة." },
+    { subType: "dehydration", target: "kidney", name: "جفاف", desc: "نقص حاد في السوائل يؤدي لإجهاد وتراجع وظائف الكلى." },
     { subType: "appendicitis", target: "intestines", name: "التهاب زائدة", desc: "ألم مفاجئ وحاد في الجانب الأيمن يتطلب استئصالاً فورياً." }
   ] as const;
 
@@ -165,11 +165,11 @@ export function createInitialDeck(): ActionCard[] {
 export function createInitialOrgans(): OrganCard[] {
   return [
     { id: "heart", name: "القلب", hp: 2, isDead: false },
-    { id: "brain", name: "الدماغ", hp: 2, isDead: false },
+    { id: "mind", name: "الدماغ", hp: 2, isDead: false },
     { id: "liver", name: "الكبد", hp: 2, isDead: false },
-    { id: "lungs", name: "الرئتين", hp: 2, isDead: false },
+    { id: "lung", name: "الرئتين", hp: 2, isDead: false },
     { id: "stomach", name: "المعدة", hp: 2, isDead: false },
-    { id: "kidneys", name: "الكلى", hp: 2, isDead: false },
+    { id: "kidney", name: "الكلى", hp: 2, isDead: false },
     { id: "intestines", name: "الأمعاء", hp: 2, isDead: false },
   ];
 }
