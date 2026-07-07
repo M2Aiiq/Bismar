@@ -161,6 +161,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
     playInstantCounter,
     endClashTurn,
     resetClashGame,
+    updateClashRoomSettings,
   } = useClashRoom(roomId);
 
   const [lobbyName, setLobbyName] = useState("");
@@ -343,12 +344,26 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
             </span>
             <span className="text-sm font-medium text-slate-400">كود الغرفة: {room.roomId}</span>
           </div>
-          <button
-            onClick={leaveClashRoom}
-            className="rounded-xl border border-white/10 px-4 py-2 text-sm font-bold text-slate-400 transition hover:bg-white/5 hover:text-white"
-          >
-            خروج
-          </button>
+          <div className="flex items-center gap-2">
+            {isHost && (
+              <button
+                onClick={() => setSettingsOpen(true)}
+                className="p-2 rounded-xl border border-white/10 bg-slate-805 text-slate-300 hover:bg-slate-700 hover:text-white transition cursor-pointer"
+                title="تعديل الإعدادات"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.43l-1.003.828c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.43l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                </svg>
+              </button>
+            )}
+            <button
+              onClick={leaveClashRoom}
+              className="rounded-xl border border-white/10 px-4 py-2 text-sm font-bold text-slate-400 transition hover:bg-white/5 hover:text-white cursor-pointer"
+            >
+              خروج
+            </button>
+          </div>
         </div>
 
         {/* جسم اللوبي الرئيسي */}
@@ -955,20 +970,95 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 </div>
 
                 {/* تفاصيل اللعبة (إعدادات المباراة) */}
-                <div className="rounded-xl border border-white/5 bg-slate-950 p-3.5 mb-6 space-y-2 text-xs">
+                <div className="rounded-xl border border-white/5 bg-slate-950 p-3.5 mb-6 space-y-3 text-xs text-right">
                   <span className="text-[10px] text-slate-400 block border-b border-white/5 pb-1.5 mb-2 font-black">إعدادات الجولة</span>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">الحد الأقصى للاعبين:</span>
-                    <span className="font-bold text-white">{room.settings?.maxPlayers || 4} لاعبين</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">الكروت البدائية باليد:</span>
-                    <span className="font-bold text-white">{room.settings?.initialHandSize || 5} كروت</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">مؤقت الجولة:</span>
-                    <span className="font-bold text-white">{room.settings?.turnTimerSeconds || 30} ثانية</span>
-                  </div>
+                  
+                  {isHost ? (
+                    <div className="space-y-3 animate-fadeIn">
+                      <div>
+                        <label className="block text-slate-400 mb-1 text-[11px]">الحد الأقصى للاعبين:</label>
+                        <div className="flex gap-2">
+                          {[2, 3, 4, 5].map((num) => (
+                            <button
+                              key={num}
+                              type="button"
+                              onClick={() => {
+                                void updateClashRoomSettings(
+                                  num,
+                                  room.settings?.initialHandSize || 5,
+                                  room.settings?.turnTimerSeconds || 30
+                                );
+                              }}
+                              className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${
+                                room.settings?.maxPlayers === num
+                                  ? "bg-rose-600 text-white shadow-sm"
+                                  : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                              }`}
+                            >
+                              {num}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-400 mb-1 text-[11px]">الكروت البدائية باليد:</label>
+                        <input
+                          type="range"
+                          min={3}
+                          max={8}
+                          value={room.settings?.initialHandSize || 5}
+                          onChange={(e) => {
+                            void updateClashRoomSettings(
+                              room.settings?.maxPlayers || 4,
+                              Number(e.target.value),
+                              room.settings?.turnTimerSeconds || 30
+                            );
+                          }}
+                          className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-rose-600"
+                        />
+                        <div className="flex justify-between text-[9px] text-slate-500 mt-1">
+                          <span>3 كروت</span>
+                          <span>{room.settings?.initialHandSize || 5} كروت</span>
+                          <span>8 كروت</span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-400 mb-1 text-[11px]">مؤقت الجولة (ثوانٍ - كتابة فقط):</label>
+                        <input
+                          type="number"
+                          min={5}
+                          max={300}
+                          value={room.settings?.turnTimerSeconds || 30}
+                          onChange={(e) => {
+                            const val = Math.max(5, Math.min(300, Number(e.target.value) || 30));
+                            void updateClashRoomSettings(
+                              room.settings?.maxPlayers || 4,
+                              room.settings?.initialHandSize || 5,
+                              val
+                            );
+                          }}
+                          className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white text-center font-bold font-mono outline-none"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">الحد الأقصى للاعبين:</span>
+                        <span className="font-bold text-white">{room.settings?.maxPlayers || 4} لاعبين</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">الكروت البدائية باليد:</span>
+                        <span className="font-bold text-white">{room.settings?.initialHandSize || 5} كروت</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">مؤقت الجولة:</span>
+                        <span className="font-bold text-white">{room.settings?.turnTimerSeconds || 30} ثانية</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

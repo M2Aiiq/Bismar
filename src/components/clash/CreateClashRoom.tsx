@@ -161,24 +161,8 @@ export function CreateClashRoomButton() {
                     max={300}
                     value={turnTimerSeconds}
                     onChange={(e) => setTurnTimerSeconds(Math.max(5, Math.min(300, Number(e.target.value) || 30)))}
-                    className="flex-1 bg-transparent px-3 py-2 text-sm text-[#F8FAFC] outline-none text-center font-bold font-mono"
+                    className="w-full bg-transparent px-3 py-2 text-sm text-[#F8FAFC] outline-none text-center font-bold font-mono"
                   />
-                  <div className="flex gap-1 pr-1.5">
-                    {[15, 30, 45, 60].map((sec) => (
-                      <button
-                        key={sec}
-                        type="button"
-                        onClick={() => setTurnTimerSeconds(sec)}
-                        className={`px-2 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
-                          turnTimerSeconds === sec
-                            ? "bg-rose-600 text-white shadow-sm"
-                            : "bg-slate-700 text-slate-400 hover:bg-slate-650"
-                        }`}
-                      >
-                        {sec}ث
-                      </button>
-                    ))}
-                  </div>
                 </div>
                 <div className="text-[10px] text-slate-500 mt-1 text-right">
                   الحد الأدنى 5 ثوانٍ، الأقصى 300 ثانية.

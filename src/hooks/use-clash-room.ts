@@ -901,6 +901,26 @@ export function useClashRoom(roomId: string) {
     });
   }, [roomId]);
 
+  const updateClashRoomSettings = useCallback(
+    async (maxPlayers: number, initialHandSize: number, turnTimerSeconds: number) => {
+      if (!roomId) return;
+
+      const database = getRealtimeDatabase() || getDatabase();
+      const settingsRef = ref(database, `clashRooms/${roomId}/settings`);
+
+      try {
+        await set(settingsRef, {
+          maxPlayers,
+          initialHandSize,
+          turnTimerSeconds,
+        });
+      } catch (err) {
+        console.error("Failed to update room settings:", err);
+      }
+    },
+    [roomId]
+  );
+
   return {
     room,
     playerId,
@@ -917,5 +937,6 @@ export function useClashRoom(roomId: string) {
     playInstantCounter,
     endClashTurn,
     resetClashGame,
+    updateClashRoomSettings,
   };
 }
