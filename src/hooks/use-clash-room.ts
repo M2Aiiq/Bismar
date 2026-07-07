@@ -734,16 +734,21 @@ export function useClashRoom(roomId: string) {
 
         // Core Combat Rules
         if (card.type === "attack" && targetPlayer && targetOrgan) {
-          // Immunity validation
-          const hasVaccine = targetOrgan.hasVaccine === true;
-          const hasOrganicDietImmunity =
-            targetOrgan.hasOrganicDiet === true &&
-            ["acuteInflammation", "tumor"].includes(card.subType);
+          const isGeneralAttack = ["acuteInflammation", "tumor"].includes(card.subType);
+
+          // General attacks nullify/remove Vaccine and Organic Diet
+          if (isGeneralAttack) {
+            targetOrgan.hasVaccine = false;
+            targetOrgan.hasOrganicDiet = false;
+          }
+
+          // Immunity validation (only normal attacks are blocked by Vaccine. Organic diet doesn't block normal/specific attacks).
+          const isImmune = !isGeneralAttack && targetOrgan.hasVaccine === true;
 
           const isLegitimateTarget =
             card.targetOrganId === "any" || card.targetOrganId === targetOrgan.id;
 
-          if (!hasVaccine && !hasOrganicDietImmunity && isLegitimateTarget && !targetOrgan.isDead) {
+          if (!isImmune && isLegitimateTarget && !targetOrgan.isDead) {
             const dmg = card.damage ?? 1;
             targetOrgan.hp = Math.max(0, targetOrgan.hp - dmg);
             if (targetOrgan.hp <= 0) {

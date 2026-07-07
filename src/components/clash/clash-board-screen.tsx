@@ -630,7 +630,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
               disabled={room.hasReplacedCardThisTurn}
               className="px-3 py-1 bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 text-amber-400 font-bold rounded-xl text-[9px] cursor-pointer transition disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              {room.hasReplacedCardThisTurn ? "تم الاستبدال" : "سحب واستبدال كارت"}
+              {room.hasReplacedCardThisTurn ? "تم السحب" : "سحب كارت"}
             </button>
           )}
         </div>
@@ -724,7 +724,8 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                       <span className="text-xs font-bold block mb-2 text-rose-300">{opp.name}</span>
                       <div className="grid grid-cols-2 gap-2">
                         {opp.organs?.map((o) => {
-                          const isImmune = o.hasVaccine || (o.hasOrganicDiet && ["acuteInflammation", "tumor"].includes(selectedCard.subType));
+                          const isGeneralAttack = ["acuteInflammation", "tumor"].includes(selectedCard.subType);
+                          const isImmune = !isGeneralAttack && o.hasVaccine;
                           const isLegitimate = selectedCard.targetOrganId === "any" || selectedCard.targetOrganId === o.id || selectedCard.subType === "infection";
                           const isClickable = !o.isDead && !isImmune && isLegitimate;
                           return (
