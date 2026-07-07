@@ -557,19 +557,30 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
 
               <div className="mt-3 w-full rounded-2xl border border-white/5 bg-slate-950/50 px-3 py-3 text-right">
                 <div className="mb-2 text-[10px] font-bold tracking-[0.18em] text-slate-500">اللاعبون</div>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {Object.values(room.players).map((roomPlayer) => (
-                    <span
-                      key={roomPlayer.id}
-                      className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-bold ${roomPlayer.isHost
-                          ? "border-amber-400/30 bg-amber-500/10 text-amber-300"
-                          : "border-white/10 bg-slate-800/80 text-slate-200"
-                        }`}
-                    >
-                      <span className="max-w-[10rem] truncate">{roomPlayer.name}</span>
-                      {roomPlayer.isHost ? <span className="text-[9px] uppercase tracking-widest text-amber-300">host</span> : null}
-                    </span>
-                  ))}
+                <div className="flex flex-col items-center gap-2">
+                  {Object.values(room.players)
+                    .filter((roomPlayer) => roomPlayer.isHost)
+                    .map((roomPlayer) => (
+                      <span
+                        key={roomPlayer.id}
+                        className="inline-flex items-center justify-center rounded-full border border-amber-400/30 bg-amber-500/10 px-4 py-1 text-[11px] font-bold text-amber-300"
+                      >
+                        <span className="max-w-[12rem] truncate">{roomPlayer.name}</span>
+                      </span>
+                    ))}
+
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {Object.values(room.players)
+                      .filter((roomPlayer) => !roomPlayer.isHost)
+                      .map((roomPlayer) => (
+                        <span
+                          key={roomPlayer.id}
+                          className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-slate-800/80 px-3 py-1 text-[11px] font-bold text-slate-200"
+                        >
+                          <span className="max-w-[10rem] truncate">{roomPlayer.name}</span>
+                        </span>
+                      ))}
+                  </div>
                 </div>
               </div>
             </div>
