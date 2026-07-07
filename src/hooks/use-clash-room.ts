@@ -944,7 +944,7 @@ export function useClashRoom(roomId: string) {
 
           Object.keys(currentRoom.players).forEach((pid) => {
             const p = currentRoom.players[pid];
-            const idx = p.hand.findIndex((c) => c.id === instantCardId && c.subType === "antibody");
+            const idx = p.hand.findIndex((c) => c.id === instantCardId && (c.subType === "antibody" || c.subType === "infection"));
             if (idx !== -1) {
               counterPlayerId = pid;
               cardIndex = idx;
@@ -959,10 +959,47 @@ export function useClashRoom(roomId: string) {
           counterPlayer.hand.splice(cardIndex, 1);
 
           if (!currentRoom.discardPile) currentRoom.discardPile = [];
-          currentRoom.discardPile.push(instantCard);
-          currentRoom.discardPile.push(currentRoom.pendingAction.card);
 
-          addRoomLog(currentRoom, `${counterPlayer.name}: إلغاء الهجوم بـ ${instantCard.name}`, "counter");
+          if (instantCard.subType === "antibody") {
+            currentRoom.discardPile.push(instantCard);
+            currentRoom.discardPile.push(currentRoom.pendingAction.card);
+            addRoomLog(currentRoom, `${counterPlayer.name}: إلغاء الهجوم بـ ${instantCard.name}`, "counter");
+          } else if (instantCard.subType === "infection") {
+            const originalAttackerId = currentRoom.pendingAction.playerId;
+            const originalAttacker = currentRoom.players[originalAttackerId];
+            const attackCard = currentRoom.pendingAction.card;
+
+            const targetOrganId = currentRoom.pendingAction.targetOrganId;
+            let finalTargetOrgan = originalAttacker.organs.find(o => o.id === targetOrganId && !o.isDead);
+            if (!finalTargetOrgan) {
+              finalTargetOrgan = originalAttacker.organs.find(o => !o.isDead);
+            }
+
+            if (finalTargetOrgan) {
+              const dmg = attackCard.damage ?? 1;
+              finalTargetOrgan.hp = Math.max(0, finalTargetOrgan.hp - dmg);
+              if (finalTargetOrgan.hp <= 0) {
+                finalTargetOrgan.isDead = true;
+                finalTargetOrgan.afflictions = [];
+                finalTargetOrgan.hasVaccine = false;
+                finalTargetOrgan.hasOrganicDiet = false;
+                addRoomLog(currentRoom, `💀 عُكس الهجوم! مات عضو ${finalTargetOrgan.name} لدى ${originalAttacker.name}!`, "death");
+              } else {
+                if (attackCard.subType !== "acuteInflammation") {
+                  finalTargetOrgan.afflictions = [...(finalTargetOrgan.afflictions || []), attackCard.subType];
+                }
+                addRoomLog(currentRoom, `🔄 عُكس الهجوم! أصيب ${finalTargetOrgan.name} (${originalAttacker.name}) بـ ${attackCard.name}`, "attack");
+              }
+
+              if (originalAttacker.organs.every(o => o.isDead)) {
+                originalAttacker.isZombie = true;
+              }
+            }
+
+            currentRoom.discardPile.push(instantCard);
+            currentRoom.discardPile.push(attackCard);
+            addRoomLog(currentRoom, `${counterPlayer.name}: عكست الهجوم بـ ${instantCard.name}`, "counter");
+          }
 
           currentRoom.pendingAction = null;
           transitionToNextTurn(currentRoom);
