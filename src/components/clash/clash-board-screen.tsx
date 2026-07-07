@@ -6,7 +6,13 @@ import { useClashRoom } from "../../hooks/use-clash-room";
 import { motion, AnimatePresence } from "framer-motion";
 import type { ActionCard, OrganCard, ClashPlayer } from "../../types/organClash";
 
-function MiniOrganBadge({ organ }: { organ: OrganCard }) {
+function MiniOrganBadge({ organ, size = "sm" }: { organ: OrganCard; size?: "sm" | "md" | "lg" }) {
+  const sizeClasses = {
+    sm: "h-7 w-7 rounded-lg p-0.5",
+    md: "h-10 w-10 rounded-xl p-1",
+    lg: "h-12 w-12 rounded-xl p-1",
+  };
+
   const hpColors = organ.isDead
     ? "bg-slate-900/60 border-slate-800 grayscale"
     : organ.hp === 2
@@ -17,7 +23,7 @@ function MiniOrganBadge({ organ }: { organ: OrganCard }) {
 
   return (
     <div
-      className={`h-7 w-7 rounded-lg flex items-center justify-center border transition relative overflow-hidden p-0.5 ${hpColors}`}
+      className={`${sizeClasses[size]} flex items-center justify-center border transition relative overflow-hidden ${hpColors}`}
       title={`${organ.name}: ${organ.hp} HP`}
     >
       <img
@@ -65,9 +71,9 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
             )}
           </div>
           {!isLobby && (
-            <div className="flex gap-2 w-48">
+            <div className="flex gap-2 max-w-[350px] flex-wrap justify-end">
               {opp.organs?.map((o) => (
-                <MiniOrganBadge key={o.id} organ={o} />
+                <MiniOrganBadge key={o.id} organ={o} size="md" />
               ))}
             </div>
           )}
