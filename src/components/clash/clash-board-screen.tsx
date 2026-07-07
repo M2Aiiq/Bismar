@@ -192,6 +192,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [localTimer, setLocalTimer] = useState(30);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [zoomedCard, setZoomedCard] = useState<ActionCard | null>(null);
 
   useEffect(() => {
     if (toastMessage) {
@@ -384,18 +385,13 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   const opponents = Object.values(room.players).filter((p) => p.id !== playerId);
 
   const handleCardClick = (card: ActionCard) => {
-    if (!isMyTurn || room.turnPhase !== "play" || room.pendingAction) return;
-
-    if (
-      card.subType === "sedative" ||
-      card.subType === "doubleDraw" ||
-      card.type === "useless"
-    ) {
-      void playActionCard(card.id);
-    } else {
-      setSelectedCard(card);
-      setTargetSelectorOpen(true);
+    if (!isMyTurn) {
+      setToastMessage("ليس دورك!");
+      return;
     }
+    if (room.turnPhase !== "play" || room.pendingAction) return;
+
+    setZoomedCard(card);
   };
 
   const executePlayOnTarget = (targetPid: string, targetOrganId: string) => {
@@ -1045,6 +1041,74 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
           >
             {toastMessage}
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* نافذة تكبير وفحص الكارت بوسط الشاشة */}
+      <AnimatePresence>
+        {zoomedCard && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm"
+            onClick={() => setZoomedCard(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0, y: 50 }}
+              animate={{ scale: 1.15, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: 50 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              onClick={(e) => {
+                e.stopPropagation(); // منع الإغلاق عند النقر على الكارت نفسه
+                const cardToPlay = zoomedCard;
+                setZoomedCard(null); // إغلاق نافذة التكبير
+
+                if (
+                  cardToPlay.subType === "sedative" ||
+                  cardToPlay.subType === "doubleDraw" ||
+                  cardToPlay.type === "useless"
+                ) {
+                  void playActionCard(cardToPlay.id);
+                } else {
+                  setSelectedCard(cardToPlay);
+                  setTargetSelectorOpen(true);
+                }
+              }}
+              className={`w-52 h-72 rounded-3xl border-2 bg-slate-900 p-5 flex flex-col justify-between cursor-pointer select-none shadow-2xl transition-all duration-200 text-right ${
+                zoomedCard.type === "attack" ? "border-rose-500 shadow-rose-950/50" :
+                zoomedCard.type === "cure" ? "border-emerald-500 shadow-emerald-950/50" :
+                zoomedCard.type === "instant" ? "border-sky-500 shadow-sky-950/50" :
+                zoomedCard.type === "tactical" ? "border-purple-500 shadow-purple-950/50" :
+                zoomedCard.type === "immunity" ? "border-amber-500 shadow-amber-950/50" :
+                "border-slate-500 shadow-slate-950/50"
+              }`}
+            >
+              <div className="flex flex-col gap-2 w-full">
+                <span className={`text-[8px] px-1.5 py-0.5 rounded font-black self-start ${
+                  zoomedCard.type === "attack" ? "bg-rose-500/20 text-rose-300 border border-rose-500/30" :
+                  zoomedCard.type === "cure" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" :
+                  zoomedCard.type === "instant" ? "bg-sky-500/20 text-sky-300 border border-sky-500/30" :
+                  zoomedCard.type === "tactical" ? "bg-purple-500/20 text-purple-300 border border-purple-500/30" :
+                  zoomedCard.type === "immunity" ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" :
+                  "bg-slate-800 text-slate-400 border border-slate-700/30"
+                }`}>
+                  {zoomedCard.type === "attack" && (zoomedCard.targetOrganId === "any" ? "هجوم عام" : "اعتلال")}
+                  {zoomedCard.type === "cure" && "علاج"}
+                  {zoomedCard.type === "instant" && "فوري"}
+                  {zoomedCard.type === "tactical" && "تكتيك"}
+                  {zoomedCard.type === "immunity" && "حصانة"}
+                  {zoomedCard.type === "useless" && "خردة"}
+                </span>
+                <span className="text-base font-black leading-tight text-white">{zoomedCard.name}</span>
+              </div>
+
+              <div className="text-xs text-slate-300 leading-relaxed my-auto">
+                {zoomedCard.description}
+              </div>
+
+              <div className="text-[10px] text-amber-400 text-center animate-pulse border-t border-white/5 pt-2 font-bold">
+                انقر على الكارت مجدداً للاستخدام
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>
