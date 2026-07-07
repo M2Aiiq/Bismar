@@ -646,7 +646,6 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
       {/* 3. منطقة اليد (Bottom Zone - Player Hand Cards) */}
       <div className="w-screen -mx-3 pb-2 bg-transparent select-none overflow-hidden">
         <div className="flex justify-between items-center px-3 mb-1.5 w-full">
-          <span className="text-[9px] text-slate-500 font-bold">كروت اليد الخاصة بك:</span>
           {room.status === "playing" && (
             <button
               onClick={async (e) => {
