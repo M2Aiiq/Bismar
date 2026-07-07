@@ -655,11 +655,12 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 <motion.div
                   key={card.id}
                   layoutId={`card-${card.id}`}
+                  whileHover={{ y: -6, scale: 1.02 }}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleCardClick(card);
                   }}
-                  className={`min-w-[95px] w-[95px] sm:min-w-[115px] sm:w-[115px] aspect-[2/3] rounded-2xl border-2 bg-slate-900/95 p-2 flex flex-col justify-between cursor-pointer snap-center relative overflow-hidden select-none hover:-translate-y-1 hover:scale-102 transition-all ${borderColors[card.type]}`}
+                  className={`min-w-[95px] w-[95px] sm:min-w-[115px] sm:w-[115px] aspect-[2/3] rounded-2xl border-2 bg-slate-900/95 p-2 flex flex-col justify-between cursor-pointer snap-center relative overflow-hidden select-none ${borderColors[card.type]}`}
                 >
                   <div className="flex flex-col gap-1 w-full text-right">
                     <span className={`text-[7px] sm:text-[8px] px-1.5 py-0.5 rounded font-black self-start ${badgeColors[card.type]}`}>

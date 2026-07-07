@@ -38,21 +38,21 @@ export function createInitialDeck(): ActionCard[] {
 
   // A. Afflictions (35 cards)
   const afflictionTypes = [
-    { subType: "caffeine", target: "heart", name: "جرعة كافيين زائدة", desc: "خفقان القلب، التوتر، واهتزاز اليدين." },
-    { subType: "brokenHeart", target: "heart", name: "قلب مكسور", desc: "حزن شديد، ضيق في الصدر، ورغبة مفرطة في السكريات." },
-    { subType: "cholesterol", target: "heart", name: "انسداد كوليسترول", desc: "انسداد الشرايين، ضيق التنفس، وضغط زائد على العضلة." },
-    { subType: "insomnia", target: "mind", name: "أرق", desc: "تشتت الذهن، هالات سوداء عميقة، وإرهاق مستمر للدماغ." },
-    { subType: "brainFreeze", target: "mind", name: "تجمد الدماغ", desc: "صداع حاد ومفاجئ، تجمد الرأس، وتوقف التفكير مؤقتاً." },
-    { subType: "forgetfulness", target: "mind", name: "نوبة نسيان", desc: "ضياع المفاتيح، تحديق في الفراغ، وااختفاء الكلمات من اللسان." },
-    { subType: "toxicDose", target: "liver", name: "جرعة سامة", desc: "تسمم حاد في الأنسجة، إجهاد خلوي، وفشل إنزيمي مفاجئ." },
-    { subType: "fattyLiver", target: "liver", name: "كبد دهني", desc: "خمول وإرهاق مستمر بسبب تراكم الدهون حول الخلايا." },
-    { subType: "smoke", target: "lung", name: "سحابة دخان", desc: "ضيق تنفس حاد وسعال جاف بسبب استنشاق الهواء الملوث." },
-    { subType: "cough", target: "lung", name: "نوبة سعال", desc: "تشنج مستمر في القصبة الهوائية وتمزق مؤلم في الحلق." },
-    { subType: "spicyFood", target: "stomach", name: "طعام حار", desc: "حرقة معوية شديدة، قرحة مفاجئة، والتهاب جدار المعدة." },
-    { subType: "foodPoisoning", target: "stomach", name: "تسمم غذائي", desc: "غثيان حاد، آلام وتقلصات معوية، وفقدان مفاجئ للطاقة." },
-    { subType: "kidneyStone", target: "kidney", name: "حصوة كلى", desc: "ألم حاد ومفاجئ في الجانب السفلي يمنع الحركة." },
-    { subType: "dehydration", target: "kidney", name: "جفاف", desc: "نقص حاد في السوائل يؤدي لإجهاد وتراجع وظائف الكلى." },
-    { subType: "appendicitis", target: "intestines", name: "التهاب زائدة", desc: "ألم مفاجئ وحاد في الجانب الأيمن يتطلب استئصالاً فورياً." }
+    { subType: "caffeine", target: "heart", name: "جرعة كافيين زائدة", desc: "ُنقص نقاط حياة (HP) قلب الخصم المستهدف بمقدار 1 HP." },
+    { subType: "brokenHeart", target: "heart", name: "قلب مكسور", desc: "يُنقص نقاط حياة (HP) قلب الخصم بمقدار 1 HP." },
+    { subType: "cholesterol", target: "heart", name: "انسداد كوليسترول", desc: "يُنقص نقاط حياة (HP) قلب الخصم بمقدار 1 HP." },
+    { subType: "insomnia", target: "mind", name: "أرق", desc: "يُنقص نقاط حياة (HP) عقل الخصم بمقدار 1 HP." },
+    { subType: "brainFreeze", target: "mind", name: "تجمد الدماغ", desc: "يُنقص نقاط حياة (HP) عقل الخصم بمقدار 1 HP." },
+    { subType: "forgetfulness", target: "mind", name: "نوبة نسيان", desc: "يُنقص نقاط حياة (HP) عقل الخصم بمقدار 1 HP." },
+    { subType: "toxicDose", target: "liver", name: "جرعة سامة", desc: "يُنقص نقاط حياة (HP) كبد الخصم بمقدار 1 HP." },
+    { subType: "fattyLiver", target: "liver", name: "كبد دهني", desc: "يُنقص نقاط حياة (HP) كبد الخصم بمقدار 1 HP." },
+    { subType: "smoke", target: "lung", name: "سحابة دخان", desc: "يُنقص نقاط حياة (HP) رئة الخصم بمقدار 1 HP." },
+    { subType: "cough", target: "lung", name: "نوبة سعال", desc: "يُنقص نقاط حياة (HP) رئة الخصم بمقدار 1 HP." },
+    { subType: "spicyFood", target: "stomach", name: "طعام حار", desc: "يُنقص نقاط حياة (HP) معدة الخصم بمقدار 1 HP." },
+    { subType: "foodPoisoning", target: "stomach", name: "تسمم غذائي", desc: "يُنقص نقاط حياة (HP) معدة الخصم بمقدار 1 HP." },
+    { subType: "kidneyStone", target: "kidney", name: "حصوة كلى", desc: "يُنقص نقاط حياة (HP) معدة الخصم بمقدار 1 HP." },
+    { subType: "dehydration", target: "kidney", name: "جفاف", desc: "يُنقص نقاط حياة (HP) كلية الخصم بمقدار 1 HP." },
+    { subType: "appendicitis", target: "intestines", name: "التهاب زائدة", desc: "يُنقص نقاط حياة (HP) الزائدة الدودية للخصم بمقدار 1 HP." }
   ] as const;
 
   let affIndex = 0;
@@ -74,10 +74,10 @@ export function createInitialDeck(): ActionCard[] {
 
   // B. Cures (25 cards)
   const cureTypes = [
-    { subType: "antibiotic", name: "مضاد حيوي", desc: "يزيل اعتلالاً واحداً نشطاً من أي عضو ويعالجه +1 صحة." },
+    { subType: "antibiotic", name: "مضاد حيوي", desc: "يزيل هجوماً واحداً نشطاً من أي عضو ويعالجه +1 صحة." },
     { subType: "vitamin", name: "جرعة فيتامين", desc: "يضيف +1 صحة لأي عضو (بحد أقصى 2 صحة)." },
     { subType: "icu", name: "عناية مركزة", desc: "يعيد فوراً عضواً بصحة 1 إلى كامل صحته القصوى (2 صحة)." },
-    { subType: "surgery", name: "عملية جراحية", desc: "يحيي عضواً مدمراً بالكامل بصحة 1، أو يزيل اعتلالاً خطيراً (كالورم)." }
+    { subType: "surgery", name: "عملية جراحية", desc: "يحيي عضواً مدمراً بالكامل بصحة 1، أو يزيل هجوماً خطيراً (كالورم)." }
   ] as const;
 
   let cureIndex = 0;
@@ -97,8 +97,8 @@ export function createInitialDeck(): ActionCard[] {
 
   // C. Tactical (20 cards)
   const tacticalTypes = [
-    { subType: "antibody", type: "instant" as const, name: "أجسام مضادة", desc: "يلعب فوراً خارج دورك لتقويض وإلغاء أي اعتلال/هجوم قادم." },
-    { subType: "infection", type: "tactical" as const, name: "عدوى متحورة", desc: "ينقل اعتلالاً نشطاً من أحد أعضائك إلى عضو صالح للخصم." },
+    { subType: "antibody", type: "instant" as const, name: "أجسام مضادة", desc: "يلعب فوراً خارج دورك لتقويض وإلغاء أي هجوم قادم." },
+    { subType: "infection", type: "tactical" as const, name: "عدوى متحورة", desc: "ينقل هجوماً نشطاً من أحد أعضائك إلى عضو صالح للخصم." },
     { subType: "steal", type: "tactical" as const, name: "سرقة", desc: "يسرق كارت عشوائي واحد من يد الخصم ويضيفه ليدك." },
     { subType: "sedative", type: "tactical" as const, name: "تخدير عام", desc: "يجبر اللاعب التالي على تخطي دوره تماماً." },
     { subType: "swap", type: "tactical" as const, name: "تبادل الأيدي", desc: "يجبر كلا اللاعبين على تبادل كامل أيديهما." },
@@ -142,8 +142,8 @@ export function createInitialDeck(): ActionCard[] {
 
   // E. Immunity (8 cards)
   const immunityTypes = [
-    { subType: "vaccine", name: "لقاح / تطعيم", desc: "يرتبط بشكل دائم بعضو محدد. يصبح هذا العضو محصناً ضد أي اعتلالات." },
-    { subType: "organicDiet", name: "نظام غذائي عضوي", desc: "حصانة دائمة ضد جميع كروت المعدة والكبد والكوليسترول." }
+    { subType: "vaccine", name: "لقاح", desc: "يرتبط بشكل دائم بعضو محدد. يصبح هذا العضو محصناً ضد أي اعتلالات." },
+    { subType: "organicDiet", name: "نظام غذائي", desc: "حصانة دائمة ضد جميع كروت المعدة والكبد والكوليسترول." }
   ] as const;
 
   let immIndex = 0;
@@ -231,7 +231,7 @@ function transitionToNextTurn(currentRoom: ClashRoomState) {
         const liveOrgans = randomOpponent.organs.filter((o) => !o.isDead);
         if (liveOrgans.length > 0) {
           const randomOrgan = liveOrgans[Math.floor(Math.random() * liveOrgans.length)];
-          
+
           if (!randomOrgan.hasVaccine) {
             randomOrgan.hp = Math.max(0, randomOrgan.hp - 1);
             if (randomOrgan.hp <= 0) {
@@ -589,7 +589,7 @@ export function useClashRoom(roomId: string) {
               targetOrganId,
               expiresAt: Date.now() + 5000,
             };
-          } 
+          }
           // 2. الكروت التكتيكية والعلاجية والحصانة والخردة تنفذ فوراً دون انتظار وتمرر الدور
           else {
             player.hand.splice(cardIndex, 1);
@@ -625,7 +625,7 @@ export function useClashRoom(roomId: string) {
                   }
                 }
               }
-            } 
+            }
             // ب. الحصانة
             else if (card.type === "immunity") {
               if (card.subType === "vaccine" && targetOrganId) {
@@ -640,7 +640,7 @@ export function useClashRoom(roomId: string) {
                   targetOrgan.hasOrganicDiet = true;
                 }
               }
-            } 
+            }
             // ج. التكتيكات
             else if (card.type === "tactical") {
               if (card.subType === "steal" && targetPlayerId) {
