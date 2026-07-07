@@ -852,7 +852,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
 
       {/* 5. شاشة حالة المقاطعة والحدث المعلق (Pending Action Countdown Panel) */}
       <AnimatePresence>
-        {room.pendingAction && (
+        {room.pendingAction && room.pendingAction.playerId !== playerId && (
           <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/85 p-6 backdrop-blur-md">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
