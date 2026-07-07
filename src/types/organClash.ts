@@ -4,6 +4,7 @@ export interface OrganCard {
   hp: number;      // يبدأ بـ 2، الأقصى 2
   isDead: boolean;
   hasVaccine?: boolean; // لقاح يمنع الاعتلالات
+  vaccineTurnsLeft?: number;
   hasOrganicDiet?: boolean; // نظام غذائي عضوي يمنع الاعتلالات العامة
   afflictions?: string[]; // قائمة بالاعتلالات النشطة على العضو
 }
@@ -34,6 +35,7 @@ export interface ClashPlayer {
   isZombie: boolean;
   isHost: boolean;
   hasOrganicDiet?: boolean; // حصانة ضد المعدة، الكبد، والكوليسترول
+  organicDietTurnsLeft?: number;
 }
 
 export interface PendingAction {
