@@ -445,12 +445,17 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   const handleCardClick = (card: ActionCard) => {
     if (!isMyTurn || room.turnPhase !== "play" || room.pendingAction) return;
 
-    if (card.type === "attack" || card.type === "cure") {
+    if (
+      card.subType === "organicDiet" ||
+      card.subType === "sedative" ||
+      card.subType === "swap" ||
+      card.subType === "doubleDraw" ||
+      card.type === "useless"
+    ) {
+      void playActionCard(card.id);
+    } else {
       setSelectedCard(card);
       setTargetSelectorOpen(true);
-    } else {
-      // كروت بلا فائدة أو فوري ملعوب كخردة
-      void playActionCard(card.id);
     }
   };
 
@@ -599,6 +604,8 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 cure: "border-emerald-600/50 hover:border-emerald-500 shadow-emerald-900/10",
                 instant: "border-sky-600/50 hover:border-sky-500 shadow-sky-900/10",
                 useless: "border-slate-700 hover:border-slate-600 shadow-slate-950/10",
+                tactical: "border-purple-600/50 hover:border-purple-500 shadow-purple-900/10",
+                immunity: "border-amber-500/50 hover:border-amber-400 shadow-amber-900/10",
               };
 
               const badgeColors = {
@@ -606,6 +613,8 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 cure: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
                 instant: "bg-sky-500/20 text-sky-300 border border-sky-500/30",
                 useless: "bg-slate-800 text-slate-400 border border-slate-700/30",
+                tactical: "bg-purple-500/20 text-purple-300 border border-purple-500/30",
+                immunity: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
               };
 
               const isHovered = hoveredCardIndex === index;
@@ -639,9 +648,11 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 >
                   <div className="flex flex-col gap-1.5">
                     <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-md self-start ${badgeColors[card.type]}`}>
-                      {card.type === "attack" && "هجوم"}
+                      {card.type === "attack" && (card.targetOrganId === "any" ? "هجوم عام" : "اعتلال")}
                       {card.type === "cure" && "علاج"}
                       {card.type === "instant" && "فوري"}
+                      {card.type === "tactical" && "تكتيك"}
+                      {card.type === "immunity" && "حصانة"}
                       {card.type === "useless" && "خردة"}
                     </span>
                     <span className="text-[11px] font-black leading-tight text-white">{card.name}</span>
@@ -670,41 +681,74 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
               <p className="text-xs text-slate-400 mb-6">لتطبيق كارت: {selectedCard.name}</p>
 
               <div className="space-y-4 max-h-[300px] overflow-y-auto">
-                {selectedCard.type === "attack"
-                  ? opponents.map((opp) => (
-                      <div key={opp.id} className="rounded-2xl border border-white/5 bg-[#181E2F]/40 p-3">
-                        <span className="text-xs font-bold block mb-2 text-rose-300">{opp.name}</span>
-                        <div className="grid grid-cols-2 gap-2">
-                          {opp.organs?.map((o) => (
+                {(selectedCard.type === "attack" || selectedCard.subType === "infection") &&
+                  opponents.map((opp) => (
+                    <div key={opp.id} className="rounded-2xl border border-white/5 bg-[#181E2F]/40 p-3 text-right">
+                      <span className="text-xs font-bold block mb-2 text-rose-300">{opp.name}</span>
+                      <div className="grid grid-cols-2 gap-2">
+                        {opp.organs?.map((o) => {
+                          const isImmune = o.hasVaccine || (opp.hasOrganicDiet && ["spicyFood", "foodPoisoning", "toxicDose", "fattyLiver", "cholesterol"].includes(selectedCard.subType));
+                          const isLegitimate = selectedCard.targetOrganId === "any" || selectedCard.targetOrganId === o.id || selectedCard.subType === "infection";
+                          const isClickable = !o.isDead && !isImmune && isLegitimate;
+                          return (
                             <button
                               key={o.id}
-                              disabled={o.isDead}
+                              disabled={!isClickable}
                               onClick={() => executePlayOnTarget(opp.id, o.id)}
-                              className="rounded-xl border border-white/5 bg-slate-800/80 py-2 text-xs font-bold hover:bg-rose-900/30 hover:border-rose-500 disabled:opacity-30 transition"
+                              className="rounded-xl border border-white/5 bg-slate-800/80 py-2 text-xs font-bold hover:bg-rose-900/30 hover:border-rose-500 disabled:opacity-30 transition flex flex-col items-center justify-center gap-0.5"
                             >
-                              {o.name} {o.isDead ? "🔒" : `${o.hp}/2HP`}
+                              <span>{o.name}</span>
+                              <span className="text-[9px] text-slate-400">{o.isDead ? "🔒" : `${o.hp}/2HP`} {o.hasVaccine && "🛡️"}</span>
                             </button>
-                          ))}
-                        </div>
+                          );
+                        })}
                       </div>
-                    ))
-                  : me && (
-                      <div className="rounded-2xl border border-white/5 bg-[#181E2F]/40 p-3">
-                        <span className="text-xs font-bold block mb-2 text-emerald-300">أعضاؤك الشخصية</span>
-                        <div className="grid grid-cols-2 gap-2">
-                          {me.organs?.map((o) => (
-                            <button
-                              key={o.id}
-                              disabled={o.isDead || o.hp === 2}
-                              onClick={() => executePlayOnTarget(playerId, o.id)}
-                              className="rounded-xl border border-white/5 bg-slate-800/80 py-2 text-xs font-bold hover:bg-emerald-900/30 hover:border-emerald-500 disabled:opacity-30 transition"
-                            >
-                              {o.name} {o.hp}/2HP
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    </div>
+                  ))}
+
+                {(selectedCard.type === "cure" || selectedCard.subType === "vaccine") && me && (
+                  <div className="rounded-2xl border border-white/5 bg-[#181E2F]/40 p-3 text-right">
+                    <span className="text-xs font-bold block mb-2 text-emerald-300">أعضاؤك الشخصية</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      {me.organs?.map((o) => {
+                        const isSurgery = selectedCard.subType === "surgery";
+                        const isVitamin = selectedCard.subType === "vitamin";
+                        const isIcu = selectedCard.subType === "icu";
+
+                        const isClickable = isSurgery
+                          ? true
+                          : !o.isDead && (isVitamin ? o.hp < 3 : (isIcu ? o.hp === 1 : o.hp < 2 || (o.afflictions && o.afflictions.length > 0)));
+
+                        return (
+                          <button
+                            key={o.id}
+                            disabled={!isClickable}
+                            onClick={() => executePlayOnTarget(playerId, o.id)}
+                            className="rounded-xl border border-white/5 bg-slate-800/80 py-2 text-xs font-bold hover:bg-emerald-900/30 hover:border-emerald-500 disabled:opacity-30 transition flex flex-col items-center justify-center gap-0.5"
+                          >
+                            <span>{o.name}</span>
+                            <span className="text-[9px] text-slate-400">{o.isDead ? "ميت 💀" : `${o.hp}HP`} {o.hasVaccine && "🛡️"}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {(selectedCard.subType === "steal" || selectedCard.subType === "swap") && (
+                  <div className="space-y-2">
+                    {opponents.map((opp) => (
+                      <button
+                        key={opp.id}
+                        onClick={() => executePlayOnTarget(opp.id, "")}
+                        disabled={opp.isZombie}
+                        className="w-full rounded-2xl bg-slate-800 border border-white/5 py-3.5 text-xs font-bold hover:bg-rose-900/20 hover:border-rose-500 disabled:opacity-30 transition"
+                      >
+                        {opp.name} (عدد الكروت: {opp.hand?.length || 0}) {opp.isZombie && "🧟"}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <button
@@ -751,15 +795,15 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 <span className="font-bold text-white">
                   {room.players?.[room.pendingAction.targetPlayerId || ""]?.name || "نفسه"}
                 </span>{" "}
-                (عضو{" "}
-                <span className="font-bold text-white">
-                  {room.pendingAction.targetOrganId === "heart" && "القلب"}
-                  {room.pendingAction.targetOrganId === "mind" && "العقل"}
-                  {room.pendingAction.targetOrganId === "lung" && "الرئة"}
-                  {room.pendingAction.targetOrganId === "liver" && "الكبد"}
-                  {room.pendingAction.targetOrganId === "kidney" && "الكلية"}
-                </span>
-                )
+                {room.pendingAction.targetOrganId ? (
+                  <>
+                    (عضو{" "}
+                    <span className="font-bold text-white">
+                      {room.players?.[room.pendingAction.targetPlayerId || ""]?.organs?.find((o) => o.id === room.pendingAction!.targetOrganId)?.name || room.pendingAction.targetOrganId}
+                    </span>
+                    )
+                  </>
+                ) : null}
               </p>
 
               {/* شريط المؤقت التنازلي */}

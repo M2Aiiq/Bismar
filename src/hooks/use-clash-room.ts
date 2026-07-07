@@ -36,90 +36,142 @@ function saveSession(playerId: string, playerName: string) {
 export function createInitialDeck(): ActionCard[] {
   const deck: ActionCard[] = [];
 
-  // 38 Attacks
-  const attackTypes = [
-    { name: "ضربة جرثومية", desc: "تسبب 1 ضرر لعضو مستهدف", dmg: 1 },
-    { name: "تسمم غذائي", desc: "تسبب 1 ضرر لعضو مستهدف", dmg: 1 },
-    { name: "فشل كلوي", desc: "تسبب 1 ضرر لعضو مستهدف", dmg: 1 },
-    { name: "التهاب رئوي", desc: "تسبب 1 ضرر لعضو مستهدف", dmg: 1 },
-    { name: "التهاب الكبد الحاد", desc: "تسبب 1 ضرر لعضو مستهدف", dmg: 1 },
-    { name: "سرطان خبيث", desc: "تسبب 2 ضرر لعضو مستهدف", dmg: 2 },
-    { name: "سكتة قلبية مفاجئة", desc: "تسبب 2 ضرر لعضو مستهدف", dmg: 2 },
-  ];
-  for (let i = 0; i < 38; i++) {
-    const type = attackTypes[i % attackTypes.length];
-    deck.push({
-      id: `att_${i}`,
-      name: type.name,
-      type: "attack",
-      description: type.desc,
-      damage: type.dmg,
-    });
-  }
+  // A. Afflictions (35 cards)
+  const afflictionTypes = [
+    { subType: "caffeine", target: "heart", name: "جرعة كافيين زائدة", desc: "خفقان القلب، التوتر، واهتزاز اليدين." },
+    { subType: "brokenHeart", target: "heart", name: "قلب مكسور", desc: "حزن شديد، ضيق في الصدر، ورغبة مفرطة في السكريات." },
+    { subType: "cholesterol", target: "heart", name: "انسداد كوليسترول", desc: "انسداد الشرايين، ضيق التنفس، وضغط زائد على العضلة." },
+    { subType: "insomnia", target: "brain", name: "أرق", desc: "تشتت الذهن، هالات سوداء عميقة، وإرهاق مستمر للدماغ." },
+    { subType: "brainFreeze", target: "brain", name: "تجمد الدماغ", desc: "صداع حاد ومفاجئ، تجمد الرأس، وتوقف التفكير مؤقتاً." },
+    { subType: "forgetfulness", target: "brain", name: "نوبة نسيان", desc: "ضياع المفاتيح، تحديق في الفراغ، واختفاء الكلمات من اللسان." },
+    { subType: "toxicDose", target: "liver", name: "جرعة سامة", desc: "تسمم حاد في الأنسجة، إجهاد خلوي، وفشل إنزيمي مفاجئ." },
+    { subType: "fattyLiver", target: "liver", name: "كبد دهني", desc: "خمول وإرهاق مستمر بسبب تراكم الدهون حول الخلايا." },
+    { subType: "smoke", target: "lungs", name: "سحابة دخان", desc: "ضيق تنفس حاد وسعال جاف بسبب استنشاق الهواء الملوث." },
+    { subType: "cough", target: "lungs", name: "نوبة سعال", desc: "تشنج مستمر في القصبة الهوائية وتمزق مؤلم في الحلق." },
+    { subType: "spicyFood", target: "stomach", name: "طعام حار", desc: "حرقة معوية شديدة، قرحة مفاجئة، والتهاب جدار المعدة." },
+    { subType: "foodPoisoning", target: "stomach", name: "تسمم غذائي", desc: "غثيان حاد، آلام وتقلصات معوية، وفقدان مفاجئ للطاقة." },
+    { subType: "kidneyStone", target: "kidneys", name: "حصوة كلى", desc: "ألم حاد ومفاجئ في الجانب السفلي يمنع الحركة." },
+    { subType: "dehydration", target: "kidneys", name: "جفاف", desc: "نقص حاد في السوائل يؤدي لإجهاد وتراجع وظائف الكلى." },
+    { subType: "appendicitis", target: "intestines", name: "التهاب زائدة", desc: "ألم مفاجئ وحاد في الجانب الأيمن يتطلب استئصالاً فورياً." }
+  ] as const;
 
-  // 24 Cures
+  let affIndex = 0;
+  afflictionTypes.forEach((aff) => {
+    const isThreeCopies = ["cholesterol", "smoke", "foodPoisoning", "dehydration", "appendicitis"].includes(aff.subType);
+    const count = isThreeCopies ? 3 : 2;
+    for (let k = 0; k < count; k++) {
+      deck.push({
+        id: `aff_${aff.subType}_${affIndex++}`,
+        name: aff.name,
+        type: "attack",
+        subType: aff.subType,
+        description: aff.desc,
+        targetOrganId: aff.target,
+        damage: 1
+      });
+    }
+  });
+
+  // B. Cures (25 cards)
   const cureTypes = [
-    { name: "مضاد حيوي قوي", desc: "يعالج 1 نقطة صحة لعضو مستهدف", cure: 1 },
-    { name: "تطعيم ولقاح", desc: "يعالج 1 نقطة صحة لعضو مستهدف", cure: 1 },
-    { name: "مسكن آلام سريع", desc: "يعالج 1 نقطة صحة لعضو مستهدف", cure: 1 },
-    { name: "أوكسجين نقي", desc: "يعالج 1 نقطة صحة لعضو مستهدف", cure: 1 },
-    { name: "عملية جراحية كبرى", desc: "يعالج 2 نقطة صحة لعضو مستهدف", cure: 2 },
-    { name: "عملية زرع عضو", desc: "يعالج 2 نقطة صحة لعضو مستهدف", cure: 2 },
-  ];
-  for (let i = 0; i < 24; i++) {
-    const type = cureTypes[i % cureTypes.length];
-    deck.push({
-      id: `cure_${i}`,
-      name: type.name,
-      type: "cure",
-      description: type.desc,
-      cureAmount: type.cure,
-    });
-  }
+    { subType: "antibiotic", name: "مضاد حيوي", desc: "يزيل اعتلالاً واحداً نشطاً من أي عضو ويعالجه +1 صحة." },
+    { subType: "vitamin", name: "جرعة فيتامين", desc: "يضيف +1 صحة لأي عضو (يمكنه الشفاء الزائد حتى 3 صحة)." },
+    { subType: "icu", name: "عناية مركزة", desc: "يعيد فوراً عضواً بصحة 1 إلى كامل صحته القصوى (2 صحة)." },
+    { subType: "surgery", name: "عملية جراحية", desc: "يحيي عضواً مدمراً بالكامل بصحة 1، أو يزيل اعتلالاً خطيراً (كالورم)." }
+  ] as const;
 
-  // 16 Instants
-  const instantTypes = [
-    { name: "رفض التأمين الصحي", desc: "إلغاء إجراء الخصم المعلق فوراً خارج الدور" },
-    { name: "حقنة طوارئ سريعة", desc: "إلغاء إجراء الخصم المعلق فوراً خارج الدور" },
-  ];
-  for (let i = 0; i < 16; i++) {
-    const type = instantTypes[i % instantTypes.length];
-    deck.push({
-      id: `inst_${i}`,
-      name: type.name,
-      type: "instant",
-      description: type.desc,
-    });
-  }
+  let cureIndex = 0;
+  cureTypes.forEach((cure) => {
+    const count = cure.subType === "antibiotic" ? 7 : 6;
+    for (let k = 0; k < count; k++) {
+      deck.push({
+        id: `cure_${cure.subType}_${cureIndex++}`,
+        name: cure.name,
+        type: "cure",
+        subType: cure.subType,
+        description: cure.desc,
+        cureAmount: 1
+      });
+    }
+  });
 
-  // 6 Useless
-  const uselessTypes = [
-    { name: "علكة مستعملة", desc: "لا فائدة منها، تملأ يدك فقط" },
-    { name: "صورة أشعة قديمة", desc: "لا فائدة منها، تملأ يدك فقط" },
-    { name: "بروشور طبي منتهي", desc: "لا فائدة منها، تملأ يدك فقط" },
-  ];
-  for (let i = 0; i < 6; i++) {
-    const type = uselessTypes[i % uselessTypes.length];
-    deck.push({
-      id: `useless_${i}`,
-      name: type.name,
-      type: "useless",
-      description: type.desc,
-    });
-  }
+  // C. Tactical (20 cards)
+  const tacticalTypes = [
+    { subType: "antibody", type: "instant" as const, name: "أجسام مضادة", desc: "يلعب فوراً خارج دورك لتقويض وإلغاء أي اعتلال/هجوم قادم." },
+    { subType: "infection", type: "tactical" as const, name: "عدوى متحورة", desc: "ينقل اعتلالاً نشطاً من أحد أعضائك إلى عضو صالح للخصم." },
+    { subType: "steal", type: "tactical" as const, name: "سرقة", desc: "يسرق كارت عشوائي واحد من يد الخصم ويضيفه ليدك." },
+    { subType: "sedative", type: "tactical" as const, name: "تخدير عام", desc: "يجبر اللاعب التالي على تخطي دوره تماماً." },
+    { subType: "swap", type: "tactical" as const, name: "تبادل الأيدي", desc: "يجبر كلا اللاعبين على تبادل كامل أيديهما." },
+    { subType: "doubleDraw", type: "tactical" as const, name: "السحب المزدوج", desc: "يسمح لك بسحب كارتين إضافيين من كومة السحب خلال دورك." }
+  ] as const;
+
+  let tacIndex = 0;
+  tacticalTypes.forEach((tac) => {
+    const count = (tac.subType === "antibody" || tac.subType === "doubleDraw") ? 4 : 3;
+    for (let k = 0; k < count; k++) {
+      deck.push({
+        id: `tac_${tac.subType}_${tacIndex++}`,
+        name: tac.name,
+        type: tac.type,
+        subType: tac.subType,
+        description: tac.desc
+      });
+    }
+  });
+
+  // D. General Attack (12 cards)
+  const generalAttackTypes = [
+    { subType: "acuteInflammation", name: "التهاب حاد", desc: "يستهدف أي عضو من اختيارك على لوحة الخصم. يسبب -1 صحة." },
+    { subType: "tumor", name: "ورم", desc: "يستهدف أي عضو. يسبب -2 صحة فوراً. لا يعالج إلا بالعملية الجراحية أو العناية المركزة." }
+  ] as const;
+
+  let genIndex = 0;
+  generalAttackTypes.forEach((gen) => {
+    for (let k = 0; k < 6; k++) {
+      deck.push({
+        id: `gen_${gen.subType}_${genIndex++}`,
+        name: gen.name,
+        type: "attack",
+        subType: gen.subType,
+        description: gen.desc,
+        targetOrganId: "any",
+        damage: gen.subType === "tumor" ? 2 : 1
+      });
+    }
+  });
+
+  // E. Immunity (8 cards)
+  const immunityTypes = [
+    { subType: "vaccine", name: "لقاح / تطعيم", desc: "يرتبط بشكل دائم بعضو محدد. يصبح هذا العضو محصناً ضد أي اعتلالات." },
+    { subType: "organicDiet", name: "نظام غذائي عضوي", desc: "حصانة دائمة ضد جميع كروت المعدة والكبد والكوليسترول." }
+  ] as const;
+
+  let immIndex = 0;
+  immunityTypes.forEach((imm) => {
+    for (let k = 0; k < 4; k++) {
+      deck.push({
+        id: `imm_${imm.subType}_${immIndex++}`,
+        name: imm.name,
+        type: "immunity",
+        subType: imm.subType,
+        description: imm.desc
+      });
+    }
+  });
 
   return deck;
 }
 
 export function createInitialOrgans(): OrganCard[] {
-  const allOrgans: OrganCard[] = [
+  return [
     { id: "heart", name: "القلب", hp: 2, isDead: false },
-    { id: "mind", name: "العقل", hp: 2, isDead: false },
-    { id: "lung", name: "الرئة", hp: 2, isDead: false },
+    { id: "brain", name: "الدماغ", hp: 2, isDead: false },
     { id: "liver", name: "الكبد", hp: 2, isDead: false },
-    { id: "kidney", name: "الكلية", hp: 2, isDead: false },
+    { id: "lungs", name: "الرئتين", hp: 2, isDead: false },
+    { id: "stomach", name: "المعدة", hp: 2, isDead: false },
+    { id: "kidneys", name: "الكلى", hp: 2, isDead: false },
+    { id: "intestines", name: "الأمعاء", hp: 2, isDead: false },
   ];
-  return shuffleList(allOrgans).slice(0, 4);
 }
 
 function shuffleList<T>(list: T[]): T[] {
@@ -140,7 +192,6 @@ export function useClashRoom(roomId: string) {
   const [error, setError] = useState<string | null>(null);
   const isLeavingRef = useRef(false);
 
-  // 1. تهيئة الجلسة المحلية عند البدء
   useEffect(() => {
     const session = readSession();
     const nextPlayerId = session?.playerId ?? crypto.randomUUID();
@@ -152,7 +203,6 @@ export function useClashRoom(roomId: string) {
     setIsReady(true);
   }, []);
 
-  // 2. الاتصال اللحظي ومزامنة البيانات
   useEffect(() => {
     if (!isReady || !roomId) return;
 
@@ -172,13 +222,11 @@ export function useClashRoom(roomId: string) {
 
         const data = snapshot.val() as ClashRoomState;
 
-        // تهيئة الهياكل الفارغة
         if (!data.players) data.players = {};
         if (!data.presence) data.presence = {};
         if (!data.drawPile) data.drawPile = [];
         if (!data.discardPile) data.discardPile = [];
 
-        // التأكد من تطبيع أيدي اللاعبين
         Object.keys(data.players).forEach((pid) => {
           if (!data.players[pid].hand) {
             data.players[pid].hand = [];
@@ -192,7 +240,7 @@ export function useClashRoom(roomId: string) {
       },
       (err) => {
         console.error("Firebase connection error:", err);
-        setError("فشل الاتصال اللحظي بقاعدة البيانات.");
+        setError("Failing sync.");
       }
     );
 
@@ -201,7 +249,6 @@ export function useClashRoom(roomId: string) {
     };
   }, [isReady, roomId]);
 
-  // 3. إدارة الحضور والاتصال
   useEffect(() => {
     if (!isReady || !roomId || !playerId) return;
 
@@ -223,7 +270,6 @@ export function useClashRoom(roomId: string) {
     };
   }, [isReady, roomId, playerId]);
 
-  // 4. الانضمام إلى الغرفة
   const joinClashRoom = useCallback(
     async (name: string) => {
       if (!roomId || !playerId) return;
@@ -260,7 +306,6 @@ export function useClashRoom(roomId: string) {
     [roomId, playerId]
   );
 
-  // 5. مغادرة الغرفة
   const leaveClashRoom = useCallback(async () => {
     if (!roomId || !playerId) return;
 
@@ -279,12 +324,10 @@ export function useClashRoom(roomId: string) {
           delete currentRoom.presence[playerId];
         }
 
-        // إذا لم يتبق أحد، نحذف الغرفة
         if (!currentRoom.players || Object.keys(currentRoom.players).length === 0) {
           return null;
         }
 
-        // تعيين مضيف جديد إذا كان المغادر هو المضيف
         const playerIds = Object.keys(currentRoom.players);
         const hasHost = playerIds.some((pid) => currentRoom.players[pid].isHost);
         if (!hasHost && playerIds.length > 0) {
@@ -301,7 +344,6 @@ export function useClashRoom(roomId: string) {
     }
   }, [roomId, playerId, router]);
 
-  // 6. طرد لاعب
   const kickClashPlayer = useCallback(
     async (targetPlayerId: string) => {
       if (!roomId || !playerId) return;
@@ -321,7 +363,6 @@ export function useClashRoom(roomId: string) {
     [roomId, playerId]
   );
 
-  // 7. بدء اللعب
   const startClashGame = useCallback(
     async (maxPlayers: number, initialHandSize: number, turnTimerSeconds?: number) => {
       if (!roomId || !room) return;
@@ -338,10 +379,8 @@ export function useClashRoom(roomId: string) {
             throw new Error("تحتاج إلى لاعبين على الأقل لبدء اللعبة.");
           }
 
-          // توليد وخلط حزمة كروت الأكشن
           let deck = shuffleList(createInitialDeck());
 
-          // توزيع الكروت والأعضاء لكل لاعب
           playerIds.forEach((pid) => {
             const playerHand: ActionCard[] = [];
             for (let i = 0; i < initialHandSize; i++) {
@@ -353,6 +392,7 @@ export function useClashRoom(roomId: string) {
             currentRoom.players[pid].organs = createInitialOrgans();
             currentRoom.players[pid].hand = playerHand;
             currentRoom.players[pid].isZombie = false;
+            currentRoom.players[pid].hasOrganicDiet = false;
           });
 
           currentRoom.drawPile = deck;
@@ -360,13 +400,12 @@ export function useClashRoom(roomId: string) {
           currentRoom.status = "playing";
           currentRoom.winnerId = null;
           currentRoom.pendingAction = null;
+          currentRoom.skipNextTurn = false;
 
-          // تعيين أول لاعب
           const hostId = playerIds.find((pid) => currentRoom.players[pid].isHost) || playerIds[0];
           currentRoom.currentTurnPlayerId = hostId;
           currentRoom.turnPhase = "draw";
 
-          // تعيين مؤقت الجولة الأولى
           const timerVal = turnTimerSeconds || 30;
           currentRoom.turnEndsAt = Date.now() + timerVal * 1000;
 
@@ -385,7 +424,6 @@ export function useClashRoom(roomId: string) {
     [roomId, room]
   );
 
-  // 8. سحب كارت تلقائياً في بداية الدور
   const drawCardAuto = useCallback(async () => {
     if (!roomId || !room || room.status !== "playing" || room.turnPhase !== "draw") return;
     if (room.currentTurnPlayerId !== playerId) return;
@@ -401,7 +439,6 @@ export function useClashRoom(roomId: string) {
         const player = currentRoom.players[activePid];
         if (!player) return currentRoom;
 
-        // إعادة خلط كروت الديسكارد إذا نفذت كروت السحب
         let drawPile = currentRoom.drawPile || [];
         const discardPile = currentRoom.discardPile || [];
         if (drawPile.length === 0) {
@@ -409,7 +446,6 @@ export function useClashRoom(roomId: string) {
             drawPile = shuffleList(discardPile);
             currentRoom.discardPile = [];
           } else {
-            // لا توجد كروت تماماً
             currentRoom.turnPhase = "play";
             return currentRoom;
           }
@@ -429,13 +465,10 @@ export function useClashRoom(roomId: string) {
     });
   }, [roomId, room, playerId]);
 
-  // 9. لعب كارت أكشن عادي (هجوم، علاج، أو بلا فائدة)
   const playActionCard = useCallback(
     async (cardId: string, targetPlayerId?: string, targetOrganId?: string) => {
       if (!roomId || !room || room.status !== "playing" || room.turnPhase !== "play") return;
       if (room.currentTurnPlayerId !== playerId) return;
-
-      // تحقق من وجود حركة معلقة بالفعل
       if (room.pendingAction) return;
 
       const database = getRealtimeDatabase() || getDatabase();
@@ -454,20 +487,22 @@ export function useClashRoom(roomId: string) {
 
           const card = player.hand[cardIndex];
 
-          // إزالة الكارت من اليد
           player.hand.splice(cardIndex, 1);
 
-          if (card.type === "attack" || card.type === "cure") {
-            // كروت تفاعلية تحتاج مقاطعة: نضعها في pendingAction
+          if (
+            card.type === "attack" ||
+            card.type === "cure" ||
+            card.type === "tactical" ||
+            card.type === "immunity"
+          ) {
             currentRoom.pendingAction = {
               playerId,
               card,
               targetPlayerId,
               targetOrganId,
-              expiresAt: Date.now() + 5000, // 5 ثوانٍ مقاطعة
+              expiresAt: Date.now() + 5000,
             };
           } else {
-            // كرت بلا فائدة أو فوري ملعوب كخردة: يُلقى في discard مباشرة وينتهي الدور
             if (!currentRoom.discardPile) currentRoom.discardPile = [];
             currentRoom.discardPile.push(card);
             currentRoom.turnPhase = "pass";
@@ -482,7 +517,6 @@ export function useClashRoom(roomId: string) {
     [roomId, room, playerId]
   );
 
-  // 10. تطبيق الحركة المعلقة بعد انتهاء وقت المقاطعة
   const commitPendingAction = useCallback(async () => {
     if (!roomId || !room || !room.pendingAction) return;
 
@@ -495,43 +529,164 @@ export function useClashRoom(roomId: string) {
       try {
         const pending = currentRoom.pendingAction;
         const card = pending.card;
+        const targetPid = pending.targetPlayerId;
+        const targetOid = pending.targetOrganId;
 
-        if (card.type === "attack" && pending.targetPlayerId && pending.targetOrganId) {
-          const targetPlayer = currentRoom.players[pending.targetPlayerId];
-          if (targetPlayer) {
-            const organ = targetPlayer.organs.find((o) => o.id === pending.targetOrganId);
-            if (organ && !organ.isDead) {
-              organ.hp = Math.max(0, organ.hp - (card.damage || 1));
-              if (organ.hp <= 0) {
-                organ.isDead = true;
+        const activePlayer = currentRoom.players[pending.playerId];
+
+        let resolvedTargetPid = targetPid;
+        if (!resolvedTargetPid && activePlayer) {
+          const opponents = Object.keys(currentRoom.players).filter((pid) => pid !== pending.playerId);
+          if (opponents.length === 1) {
+            resolvedTargetPid = opponents[0];
+          }
+        }
+
+        const targetPlayer = resolvedTargetPid ? currentRoom.players[resolvedTargetPid] : null;
+        const targetOrgan = (targetPlayer && targetOid) ? targetPlayer.organs.find((o) => o.id === targetOid) : null;
+
+        // Core Combat Rules
+        if (card.type === "attack" && targetPlayer && targetOrgan) {
+          // Immunity validation
+          const hasVaccine = targetOrgan.hasVaccine === true;
+          const hasOrganicDietImmunity =
+            targetPlayer.hasOrganicDiet === true &&
+            ["spicyFood", "foodPoisoning", "toxicDose", "fattyLiver", "cholesterol"].includes(card.subType);
+
+          const isLegitimateTarget =
+            card.targetOrganId === "any" || card.targetOrganId === targetOrgan.id;
+
+          if (!hasVaccine && !hasOrganicDietImmunity && isLegitimateTarget && !targetOrgan.isDead) {
+            const dmg = card.damage ?? 1;
+            targetOrgan.hp = Math.max(0, targetOrgan.hp - dmg);
+            if (targetOrgan.hp <= 0) {
+              targetOrgan.isDead = true;
+              targetOrgan.afflictions = [];
+              targetOrgan.hasVaccine = false;
+            } else {
+              if (card.subType !== "acuteInflammation") {
+                targetOrgan.afflictions = [...(targetOrgan.afflictions || []), card.subType];
               }
             }
 
-            // التحقق مما إذا أصبح الخصم زومبي
             const allDead = targetPlayer.organs.every((o) => o.isDead);
             if (allDead) {
               targetPlayer.isZombie = true;
             }
           }
-        } else if (card.type === "cure" && pending.targetPlayerId && pending.targetOrganId) {
-          const targetPlayer = currentRoom.players[pending.targetPlayerId];
-          if (targetPlayer) {
-            const organ = targetPlayer.organs.find((o) => o.id === pending.targetOrganId);
-            if (organ && !organ.isDead) {
-              organ.hp = Math.min(2, organ.hp + (card.cureAmount || 1));
+        }
+        // Cures Rules
+        else if (card.type === "cure" && targetPlayer && targetOrgan) {
+          if (card.subType === "antibiotic") {
+            if (!targetOrgan.isDead) {
+              if (targetOrgan.afflictions && targetOrgan.afflictions.length > 0) {
+                targetOrgan.afflictions.pop();
+              }
+              targetOrgan.hp = Math.min(2, targetOrgan.hp + 1);
+            }
+          } else if (card.subType === "vitamin") {
+            if (!targetOrgan.isDead) {
+              targetOrgan.hp = Math.min(3, targetOrgan.hp + 1); // Can overheal up to 3 HP
+            }
+          } else if (card.subType === "icu") {
+            if (!targetOrgan.isDead && targetOrgan.hp === 1) {
+              targetOrgan.hp = 2;
+            }
+          } else if (card.subType === "surgery") {
+            if (targetOrgan.isDead) {
+              targetOrgan.isDead = false;
+              targetOrgan.hp = 1;
+              targetOrgan.afflictions = [];
+              targetOrgan.hasVaccine = false;
+
+              // Re-check target zombie state
+              targetPlayer.isZombie = targetPlayer.organs.every((o) => o.isDead);
+            } else {
+              if (targetOrgan.afflictions && targetOrgan.afflictions.length > 0) {
+                targetOrgan.afflictions = targetOrgan.afflictions.filter((a) => a !== "tumor");
+                if (targetOrgan.afflictions.length > 0) {
+                  targetOrgan.afflictions.pop();
+                }
+              }
             }
           }
         }
+        // Tactical Rules
+        else if (card.type === "tactical" && activePlayer) {
+          if (card.subType === "infection" && targetPlayer && targetOrgan && !targetOrgan.isDead) {
+            // Find active affliction from own organs
+            let extractedAffliction: string | undefined;
+            for (const organ of activePlayer.organs) {
+              if (organ.afflictions && organ.afflictions.length > 0) {
+                extractedAffliction = organ.afflictions.pop();
+                break;
+              }
+            }
 
-        // رمي الكارت المستهلك في discard
+            if (extractedAffliction && !targetOrgan.hasVaccine) {
+              const isDietImmune =
+                targetPlayer.hasOrganicDiet === true &&
+                ["spicyFood", "foodPoisoning", "toxicDose", "fattyLiver", "cholesterol"].includes(extractedAffliction);
+
+              if (!isDietImmune) {
+                targetOrgan.hp = Math.max(0, targetOrgan.hp - 1);
+                if (targetOrgan.hp <= 0) {
+                  targetOrgan.isDead = true;
+                  targetOrgan.afflictions = [];
+                  targetOrgan.hasVaccine = false;
+                } else {
+                  targetOrgan.afflictions = [...(targetOrgan.afflictions || []), extractedAffliction];
+                }
+
+                if (targetPlayer.organs.every((o) => o.isDead)) {
+                  targetPlayer.isZombie = true;
+                }
+              }
+            }
+          } else if (card.subType === "steal" && targetPlayer && targetPlayer.hand && targetPlayer.hand.length > 0) {
+            const randIndex = Math.floor(Math.random() * targetPlayer.hand.length);
+            const stolen = targetPlayer.hand.splice(randIndex, 1)[0];
+            if (!activePlayer.hand) activePlayer.hand = [];
+            activePlayer.hand.push(stolen);
+          } else if (card.subType === "sedative") {
+            currentRoom.skipNextTurn = true;
+          } else if (card.subType === "swap" && targetPlayer) {
+            const temp = activePlayer.hand || [];
+            activePlayer.hand = targetPlayer.hand || [];
+            targetPlayer.hand = temp;
+          } else if (card.subType === "doubleDraw") {
+            let drawPile = currentRoom.drawPile || [];
+            let discardPile = currentRoom.discardPile || [];
+            for (let i = 0; i < 2; i++) {
+              if (drawPile.length === 0 && discardPile.length > 0) {
+                drawPile = shuffleList(discardPile);
+                currentRoom.discardPile = [];
+              }
+              if (drawPile.length > 0) {
+                const drawn = drawPile.pop()!;
+                if (!activePlayer.hand) activePlayer.hand = [];
+                activePlayer.hand.push(drawn);
+              }
+            }
+            currentRoom.drawPile = drawPile;
+          }
+        }
+        // Immunity Rules
+        else if (card.type === "immunity" && activePlayer) {
+          if (card.subType === "vaccine" && targetOrgan && !targetOrgan.isDead) {
+            targetOrgan.hasVaccine = true;
+            targetOrgan.afflictions = []; // clear afflictions when vaccinated
+          } else if (card.subType === "organicDiet") {
+            activePlayer.hasOrganicDiet = true;
+          }
+        }
+
         if (!currentRoom.discardPile) currentRoom.discardPile = [];
         currentRoom.discardPile.push(card);
 
-        // تنظيف الحركة المعلقة
         currentRoom.pendingAction = null;
         currentRoom.turnPhase = "pass";
 
-        // فحص الفائز باللعبة
         const playerIds = Object.keys(currentRoom.players);
         const alivePlayers = playerIds.filter((pid) => !currentRoom.players[pid].isZombie);
         if (alivePlayers.length === 1) {
@@ -539,7 +694,7 @@ export function useClashRoom(roomId: string) {
           currentRoom.winnerId = alivePlayers[0];
         } else if (alivePlayers.length === 0) {
           currentRoom.status = "ended";
-          currentRoom.winnerId = pending.playerId; // فوز افتراضي لمن سبب الضربة القاضية
+          currentRoom.winnerId = pending.playerId;
         }
       } catch (err) {
         console.error("Error committing action:", err);
@@ -549,7 +704,6 @@ export function useClashRoom(roomId: string) {
     });
   }, [roomId, room]);
 
-  // 11. لعب كارت مقاطعة فوري من قبل أي لاعب خارج دوره لإلغاء الحركة المعلقة
   const playInstantCounter = useCallback(
     async (instantCardId: string) => {
       if (!roomId || !room || !room.pendingAction) return;
@@ -561,13 +715,12 @@ export function useClashRoom(roomId: string) {
         if (!currentRoom || !currentRoom.pendingAction) return currentRoom;
 
         try {
-          // البحث عن اللاعب صاحب الكارت الفوري
           let counterPlayerId: string | null = null;
           let cardIndex = -1;
 
           Object.keys(currentRoom.players).forEach((pid) => {
             const p = currentRoom.players[pid];
-            const idx = p.hand.findIndex((c) => c.id === instantCardId && c.type === "instant");
+            const idx = p.hand.findIndex((c) => c.id === instantCardId && c.subType === "antibody");
             if (idx !== -1) {
               counterPlayerId = pid;
               cardIndex = idx;
@@ -579,18 +732,13 @@ export function useClashRoom(roomId: string) {
           const counterPlayer = currentRoom.players[counterPlayerId];
           const instantCard = counterPlayer.hand[cardIndex];
 
-          // إزالة كارت المقاطعة من يد اللاعب
           counterPlayer.hand.splice(cardIndex, 1);
 
-          // إلقاء كارت المقاطعة والكارت المُلغى في سلة المهملات
           if (!currentRoom.discardPile) currentRoom.discardPile = [];
           currentRoom.discardPile.push(instantCard);
           currentRoom.discardPile.push(currentRoom.pendingAction.card);
 
-          // إلغاء الحركة المعلقة تماماً
           currentRoom.pendingAction = null;
-
-          // تحويل الفاز (Phase) للاعب صاحب الدور الحالي إلى pass ليتمكن من إنهاء دوره
           currentRoom.turnPhase = "pass";
         } catch (err) {
           console.error("Error executing instant counter:", err);
@@ -602,11 +750,9 @@ export function useClashRoom(roomId: string) {
     [roomId, room]
   );
 
-  // 12. إنهاء الدور الحالي والانتقال للاعب التالي (مع دعم التجاوز الإجباري من المضيف forceByHost)
   const endClashTurn = useCallback(async (forceByHost = false) => {
     if (!roomId || !room || room.status !== "playing") return;
-    
-    // التحقق من أنه دور اللاعب الحالي أو فرض من المضيف
+
     const isMyTurn = room.currentTurnPlayerId === playerId;
     const isHost = room.players?.[playerId]?.isHost || false;
     if (!isMyTurn && !(forceByHost && isHost)) return;
@@ -622,23 +768,25 @@ export function useClashRoom(roomId: string) {
         const currentIndex = playerIds.indexOf(currentRoom.currentTurnPlayerId);
         if (currentIndex === -1) return currentRoom;
 
-        // البحث عن التالي بالتناوب
         let nextIndex = (currentIndex + 1) % playerIds.length;
         let nextPlayerId = playerIds[nextIndex];
 
-        // تعيين الدور الجديد
+        // Antibody/Sedative turn skip trigger
+        if (currentRoom.skipNextTurn) {
+          currentRoom.skipNextTurn = false;
+          nextIndex = (nextIndex + 1) % playerIds.length;
+          nextPlayerId = playerIds[nextIndex];
+        }
+
         currentRoom.currentTurnPlayerId = nextPlayerId;
         currentRoom.turnPhase = "draw";
         currentRoom.pendingAction = null;
 
-        // تعيين مؤقت الدور الجديد للاعب التالي
         const timerSeconds = currentRoom.settings?.turnTimerSeconds || 30;
         currentRoom.turnEndsAt = Date.now() + timerSeconds * 1000;
 
-        // معالجة دور الزومبي تلقائياً إذا كان اللاعب زومبي
         const nextPlayer = currentRoom.players[nextPlayerId];
         if (nextPlayer && nextPlayer.isZombie) {
-          // دور الزومبي التلقائي السريع لإثارة الفوضى دون الخضوع للمقاطعة
           let drawPile = currentRoom.drawPile || [];
           let discardPile = currentRoom.discardPile || [];
           if (drawPile.length === 0 && discardPile.length > 0) {
@@ -646,16 +794,15 @@ export function useClashRoom(roomId: string) {
             currentRoom.discardPile = [];
           }
 
-          // سحب كرت هجوم عشوائي للزومبي وتطبيقه فوراً
           const zombieAttack = drawPile.pop() || {
             id: `zombie_att_${Date.now()}`,
-            name: "عضة زومبي عشوائية",
+            name: "التهاب حاد",
             type: "attack" as const,
+            subType: "acuteInflammation" as const,
             description: "تسبب 1 ضرر لعضو عشوائي للخصم",
             damage: 1,
           };
 
-          // البحث عن هدف حي عشوائي
           const liveOpponents = playerIds.filter((pid) => pid !== nextPlayerId && !currentRoom.players[pid].isZombie);
           if (liveOpponents.length > 0) {
             const randomOpponentId = liveOpponents[Math.floor(Math.random() * liveOpponents.length)];
@@ -663,33 +810,33 @@ export function useClashRoom(roomId: string) {
             const liveOrgans = randomOpponent.organs.filter((o) => !o.isDead);
             if (liveOrgans.length > 0) {
               const randomOrgan = liveOrgans[Math.floor(Math.random() * liveOrgans.length)];
-              randomOrgan.hp = Math.max(0, randomOrgan.hp - (zombieAttack.damage || 1));
-              if (randomOrgan.hp <= 0) {
-                randomOrgan.isDead = true;
-              }
+              
+              // Validate vaccine
+              if (!randomOrgan.hasVaccine) {
+                randomOrgan.hp = Math.max(0, randomOrgan.hp - 1);
+                if (randomOrgan.hp <= 0) {
+                  randomOrgan.isDead = true;
+                  randomOrgan.afflictions = [];
+                  randomOrgan.hasVaccine = false;
+                }
 
-              // التحقق مما إذا مات الخصم بعد عضة الزومبي
-              const allDead = randomOpponent.organs.every((o) => o.isDead);
-              if (allDead) {
-                randomOpponent.isZombie = true;
+                if (randomOpponent.organs.every((o) => o.isDead)) {
+                  randomOpponent.isZombie = true;
+                }
               }
             }
           }
 
-          // إلقاء كرت الزومبي
           if (!currentRoom.discardPile) currentRoom.discardPile = [];
           currentRoom.discardPile.push(zombieAttack);
           currentRoom.drawPile = drawPile;
 
-          // تمرير دور الزومبي فوراً للاعب الذي يليه
           let nextNextIndex = (nextIndex + 1) % playerIds.length;
           currentRoom.currentTurnPlayerId = playerIds[nextNextIndex];
           currentRoom.turnPhase = "draw";
 
-          // تعيين مؤقت الدور الجديد للاعب بعد الزومبي
           currentRoom.turnEndsAt = Date.now() + timerSeconds * 1000;
 
-          // إعادة فحص الفائز
           const alivePlayers = playerIds.filter((pid) => !currentRoom.players[pid].isZombie);
           if (alivePlayers.length === 1) {
             currentRoom.status = "ended";
@@ -704,7 +851,6 @@ export function useClashRoom(roomId: string) {
     });
   }, [roomId, room, playerId]);
 
-  // 13. إعادة اللعب للوبي من جديد
   const resetClashGame = useCallback(async () => {
     if (!roomId) return;
 
@@ -722,12 +868,13 @@ export function useClashRoom(roomId: string) {
         currentRoom.pendingAction = null;
         currentRoom.currentTurnPlayerId = "";
         currentRoom.turnPhase = "draw";
+        currentRoom.skipNextTurn = false;
 
-        // تفريغ اليد والأعضاء للكل
         Object.keys(currentRoom.players || {}).forEach((pid) => {
           currentRoom.players[pid].hand = [];
           currentRoom.players[pid].organs = [];
           currentRoom.players[pid].isZombie = false;
+          currentRoom.players[pid].hasOrganicDiet = false;
         });
       } catch (err) {
         console.error("Error resetting Clash room:", err);

@@ -1,17 +1,28 @@
 export interface OrganCard {
-  id: string;      // "heart" | "mind" | "lung" | "liver" | "kidney"
-  name: string;    // "القلب" | "العقل" | "الرئة" | "الكبد" | "الكلية"
-  hp: number;      // يبدأ بـ 2، الحد الأقصى 2
-  isDead: boolean; // true إذا كان hp <= 0
+  id: string;      // "heart" | "brain" | "liver" | "lungs" | "stomach" | "kidneys" | "intestines"
+  name: string;    // "القلب" | "الدماغ" | "الكبد" | "الرئتين" | "المعدة" | "الكلى" | "الأمعاء"
+  hp: number;      // يبدأ بـ 2، الأقصى 2 (أو 3 مع فيتامينات)
+  isDead: boolean;
+  hasVaccine?: boolean; // لقاح يمنع الاعتلالات
+  afflictions?: string[]; // قائمة بالاعتلالات النشطة على العضو
 }
 
 export interface ActionCard {
   id: string;
   name: string;
-  type: "attack" | "cure" | "instant" | "useless";
+  type: "attack" | "cure" | "instant" | "useless" | "tactical" | "immunity";
+  subType:
+    | "caffeine" | "brokenHeart" | "cholesterol" | "insomnia" | "brainFreeze" | "forgetfulness"
+    | "toxicDose" | "fattyLiver" | "smoke" | "cough" | "spicyFood" | "foodPoisoning"
+    | "kidneyStone" | "dehydration" | "appendicitis"
+    | "antibiotic" | "vitamin" | "icu" | "surgery"
+    | "antibody" | "infection" | "steal" | "sedative" | "swap" | "doubleDraw"
+    | "acuteInflammation" | "tumor"
+    | "vaccine" | "organicDiet";
   description: string;
-  damage?: number;     // لبطاقات الهجوم
-  cureAmount?: number; // لبطاقات العلاج
+  targetOrganId?: string; // العضو المحدد للاعتلال مثل "heart"، أو "any" للهجوم العام
+  damage?: number;
+  cureAmount?: number;
 }
 
 export interface ClashPlayer {
@@ -19,8 +30,9 @@ export interface ClashPlayer {
   name: string;
   organs: OrganCard[];
   hand: ActionCard[];
-  isZombie: boolean;   // true إذا ماتت جميع أعضائه
+  isZombie: boolean;
   isHost: boolean;
+  hasOrganicDiet?: boolean; // حصانة ضد المعدة، الكبد، والكوليسترول
 }
 
 export interface PendingAction {
@@ -28,7 +40,7 @@ export interface PendingAction {
   card: ActionCard;
   targetPlayerId?: string;
   targetOrganId?: string;
-  expiresAt: number;   // وقت انتهاء المهلة للمقاطعة (بالملي ثانية)
+  expiresAt: number;
 }
 
 export interface ClashRoomState {
@@ -43,6 +55,7 @@ export interface ClashRoomState {
   pendingAction?: PendingAction | null;
   winnerId: string | null;
   turnEndsAt?: number | null;
+  skipNextTurn?: boolean | null;
   settings: {
     maxPlayers: number;
     initialHandSize: number;
