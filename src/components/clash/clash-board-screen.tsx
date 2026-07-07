@@ -466,7 +466,6 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
     if (
       card.subType === "organicDiet" ||
       card.subType === "sedative" ||
-      card.subType === "swap" ||
       card.subType === "doubleDraw" ||
       card.type === "useless"
     ) {

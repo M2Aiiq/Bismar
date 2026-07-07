@@ -579,14 +579,9 @@ export function useClashRoom(roomId: string) {
 
           const card = player.hand[cardIndex];
 
-          player.hand.splice(cardIndex, 1);
-
-          if (
-            card.type === "attack" ||
-            card.type === "cure" ||
-            card.type === "tactical" ||
-            card.type === "immunity"
-          ) {
+          // 1. كروت الهجوم والاعتلال والعدوى فقط تذهب لـ pendingAction للفرصة المقاطعة
+          if (card.type === "attack" || card.subType === "infection") {
+            player.hand.splice(cardIndex, 1);
             currentRoom.pendingAction = {
               playerId,
               card,
@@ -594,10 +589,110 @@ export function useClashRoom(roomId: string) {
               targetOrganId,
               expiresAt: Date.now() + 5000,
             };
-          } else {
+          } 
+          // 2. الكروت التكتيكية والعلاجية والحصانة والخردة تنفذ فوراً دون انتظار وتمرر الدور
+          else {
+            player.hand.splice(cardIndex, 1);
+
+            // أ. العلاجات
+            if (card.type === "cure" && targetOrganId) {
+              const targetPlayer = currentRoom.players[targetPlayerId || playerId];
+              const targetOrgan = targetPlayer?.organs?.find(o => o.id === targetOrganId);
+              if (targetOrgan) {
+                if (card.subType === "antibiotic") {
+                  if (!targetOrgan.isDead) {
+                    if (targetOrgan.afflictions && targetOrgan.afflictions.length > 0) {
+                      targetOrgan.afflictions.pop();
+                    }
+                    targetOrgan.hp = Math.min(2, targetOrgan.hp + 1);
+                  }
+                } else if (card.subType === "vitamin") {
+                  if (!targetOrgan.isDead) {
+                    targetOrgan.hp = Math.min(2, targetOrgan.hp + 1);
+                  }
+                } else if (card.subType === "icu") {
+                  if (!targetOrgan.isDead && targetOrgan.hp === 1) {
+                    targetOrgan.hp = 2;
+                  }
+                } else if (card.subType === "surgery") {
+                  if (targetOrgan.isDead && targetPlayer) {
+                    targetOrgan.isDead = false;
+                    targetOrgan.hp = 1;
+                    targetOrgan.afflictions = [];
+                    targetOrgan.hasVaccine = false;
+                    targetPlayer.isZombie = targetPlayer.organs.every(o => o.isDead);
+                  } else if (!targetOrgan.isDead) {
+                    targetOrgan.afflictions = targetOrgan.afflictions?.filter(a => a !== "tumor") || [];
+                    if (targetOrgan.afflictions.length > 0) {
+                      targetOrgan.afflictions.pop();
+                    }
+                  }
+                }
+              }
+            } 
+            // ب. الحصانة
+            else if (card.type === "immunity") {
+              if (card.subType === "vaccine" && targetOrganId) {
+                const targetOrgan = player.organs.find(o => o.id === targetOrganId);
+                if (targetOrgan && !targetOrgan.isDead) {
+                  targetOrgan.hasVaccine = true;
+                  targetOrgan.afflictions = [];
+                }
+              } else if (card.subType === "organicDiet") {
+                player.hasOrganicDiet = true;
+              }
+            } 
+            // ج. التكتيكات
+            else if (card.type === "tactical") {
+              if (card.subType === "steal" && targetPlayerId) {
+                const targetPlayer = currentRoom.players[targetPlayerId];
+                if (targetPlayer && targetPlayer.hand && targetPlayer.hand.length > 0) {
+                  const randIndex = Math.floor(Math.random() * targetPlayer.hand.length);
+                  const stolen = targetPlayer.hand.splice(randIndex, 1)[0];
+                  player.hand.push(stolen);
+                }
+              } else if (card.subType === "swap" && targetPlayerId) {
+                const targetPlayer = currentRoom.players[targetPlayerId];
+                if (targetPlayer) {
+                  const temp = player.hand || [];
+                  player.hand = targetPlayer.hand || [];
+                  targetPlayer.hand = temp;
+                }
+              } else if (card.subType === "sedative") {
+                currentRoom.skipNextTurn = true;
+              } else if (card.subType === "doubleDraw") {
+                let drawPile = currentRoom.drawPile || [];
+                let discardPile = currentRoom.discardPile || [];
+                for (let i = 0; i < 2; i++) {
+                  if (drawPile.length === 0 && discardPile.length > 0) {
+                    drawPile = shuffleList(discardPile);
+                    currentRoom.discardPile = [];
+                  }
+                  if (drawPile.length > 0) {
+                    const drawn = drawPile.pop()!;
+                    player.hand.push(drawn);
+                  }
+                }
+                currentRoom.drawPile = drawPile;
+                currentRoom.discardPile = discardPile;
+              }
+            }
+
+            // إضافته للكومة المستهلكة
             if (!currentRoom.discardPile) currentRoom.discardPile = [];
             currentRoom.discardPile.push(card);
-            transitionToNextTurn(currentRoom);
+
+            // فحص حالة الفوز
+            const playerIds = Object.keys(currentRoom.players);
+            const alivePlayers = playerIds.filter((pid) => !currentRoom.players[pid].isZombie);
+            if (alivePlayers.length === 1) {
+              currentRoom.status = "ended";
+              currentRoom.winnerId = alivePlayers[0];
+            }
+
+            if (currentRoom.status === "playing") {
+              transitionToNextTurn(currentRoom);
+            }
           }
         } catch (err) {
           console.error("Error playing action card:", err);
