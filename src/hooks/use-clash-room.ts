@@ -1006,6 +1006,51 @@ export function useClashRoom(roomId: string) {
     [roomId]
   );
 
+  const drawAndReplaceCard = useCallback(async () => {
+    if (!roomId || !room || room.status !== "playing") return;
+    if (room.currentTurnPlayerId !== playerId) return;
+
+    const database = getRealtimeDatabase() || getDatabase();
+    const roomPathRef = ref(database, `clashRooms/${roomId}`);
+
+    await runTransaction(roomPathRef, (currentRoom: ClashRoomState | null) => {
+      if (!currentRoom || currentRoom.status !== "playing") return currentRoom;
+
+      try {
+        const player = currentRoom.players[playerId];
+        if (!player || !player.hand || player.hand.length === 0) return currentRoom;
+
+        // 1. Pick a random card from hand and remove it
+        const randomIndex = Math.floor(Math.random() * player.hand.length);
+        const discardedCard = player.hand.splice(randomIndex, 1)[0];
+
+        // Put the discarded card back into discardPile
+        if (!currentRoom.discardPile) currentRoom.discardPile = [];
+        currentRoom.discardPile.push(discardedCard);
+
+        // 2. Draw a new card from drawPile
+        let drawPile = currentRoom.drawPile || [];
+        let discardPile = currentRoom.discardPile || [];
+
+        if (drawPile.length === 0 && discardPile.length > 0) {
+          drawPile = shuffleList(discardPile);
+          currentRoom.discardPile = [];
+        }
+
+        if (drawPile.length > 0) {
+          const drawnCard = drawPile.pop()!;
+          player.hand.push(drawnCard);
+        }
+
+        currentRoom.drawPile = drawPile;
+      } catch (err) {
+        console.error("Error in drawAndReplaceCard transaction:", err);
+      }
+
+      return currentRoom;
+    });
+  }, [roomId, room, playerId]);
+
   return {
     room,
     playerId,
@@ -1023,5 +1068,6 @@ export function useClashRoom(roomId: string) {
     endClashTurn,
     resetClashGame,
     updateClashRoomSettings,
+    drawAndReplaceCard,
   };
 }

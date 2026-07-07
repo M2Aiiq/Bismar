@@ -181,6 +181,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
     endClashTurn,
     resetClashGame,
     updateClashRoomSettings,
+    drawAndReplaceCard,
   } = useClashRoom(roomId);
 
   const [lobbyName, setLobbyName] = useState("");
@@ -609,7 +610,25 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
 
       {/* 3. منطقة اليد (Bottom Zone - Player Hand Cards) */}
       <div className="w-screen -mx-3 pb-2 bg-transparent select-none overflow-hidden">
-        <span className="text-[9px] text-slate-500 block mb-1 text-right px-3">كروت اليد الخاصة بك:</span>
+        <div className="flex justify-between items-center px-3 mb-1.5 w-full">
+          {room.status === "playing" && (
+            <button
+              onClick={async (e) => {
+                e.stopPropagation();
+                if (!isMyTurn) {
+                  setToastMessage("ليس دورك!");
+                  return;
+                }
+                await drawAndReplaceCard();
+                setToastMessage("تم استبدال كارت عشوائي!");
+              }}
+              className="px-3 py-1 bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 text-amber-400 font-bold rounded-xl text-[9px] cursor-pointer transition"
+            >
+              سحب واستبدال كارت
+            </button>
+          )}
+          <span className="text-[9px] text-slate-500 font-bold">كروت اليد الخاصة بك:</span>
+        </div>
         {room.status !== "lobby" && me?.hand && me.hand.length > 0 ? (
           <div className="flex gap-2 overflow-x-auto py-2 scrollbar-none snap-x dir-rtl justify-start md:justify-center">
             {me.hand.map((card) => {
