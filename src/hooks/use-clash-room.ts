@@ -524,23 +524,30 @@ export function useClashRoom(roomId: string) {
         const player = currentRoom.players[activePid];
         if (!player) return currentRoom;
 
-        let drawPile = currentRoom.drawPile || [];
-        const discardPile = currentRoom.discardPile || [];
-        if (drawPile.length === 0) {
-          if (discardPile.length > 0) {
-            drawPile = shuffleList(discardPile);
-            currentRoom.discardPile = [];
-          } else {
-            currentRoom.turnPhase = "play";
-            return currentRoom;
+        const limit = currentRoom.settings?.initialHandSize || 5;
+        const cardsToDraw = Math.max(0, limit - (player.hand || []).length);
+
+        if (cardsToDraw > 0) {
+          let drawPile = currentRoom.drawPile || [];
+          let discardPile = currentRoom.discardPile || [];
+          if (!player.hand) player.hand = [];
+
+          for (let i = 0; i < cardsToDraw; i++) {
+            if (drawPile.length === 0) {
+              if (discardPile.length > 0) {
+                drawPile = shuffleList(discardPile);
+                currentRoom.discardPile = [];
+              } else {
+                break;
+              }
+            }
+            const drawnCard = drawPile.pop()!;
+            player.hand.push(drawnCard);
           }
+          currentRoom.drawPile = drawPile;
+          currentRoom.discardPile = discardPile;
         }
 
-        const drawnCard = drawPile.pop()!;
-        if (!player.hand) player.hand = [];
-        player.hand.push(drawnCard);
-
-        currentRoom.drawPile = drawPile;
         currentRoom.turnPhase = "play";
       } catch (err) {
         console.error("Error drawing card:", err);
