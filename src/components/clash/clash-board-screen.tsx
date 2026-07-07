@@ -520,8 +520,6 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
         {room.status === "lobby" ? (
           <div className="flex w-full flex-1 flex-col items-center justify-start px-3 pt-4 pb-24 sm:px-4 sm:pt-6 sm:pb-28">
             <div className="w-full max-w-2xl rounded-[1.75rem] border border-white/5 bg-slate-900/30 px-5 py-4 text-center shadow-2xl sm:px-6 sm:py-5">
-              <h3 className="mb-1 text-base font-black text-rose-400 sm:text-lg">غرفة انتظار صراع الأعضاء</h3>
-
               <div className="mb-3">
                 <span className="text-[10px] text-slate-400 block mb-1">رمز الغرفة:</span>
                 <span className="text-xl font-black font-mono tracking-[0.35em] text-[#F8FAFC] sm:text-2xl">{room.roomId}</span>
@@ -553,24 +551,6 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
 
               <div className="w-full rounded-lg border border-white/5 bg-slate-950/80 px-3 py-1.5 font-mono text-xs text-slate-400">
                 عدد المتصلين: {Object.keys(room.players).length} / {room.settings?.maxPlayers || 4}
-              </div>
-
-              <div className="mt-3 w-full rounded-2xl border border-white/5 bg-slate-950/50 px-3 py-3 text-right">
-                <div className="mb-2 text-[10px] font-bold tracking-[0.18em] text-slate-500">اللاعبون</div>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {Object.values(room.players).map((roomPlayer) => (
-                    <span
-                      key={roomPlayer.id}
-                      className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-bold ${roomPlayer.isHost
-                          ? "border-amber-400/30 bg-amber-500/10 text-amber-300"
-                          : "border-white/10 bg-slate-800/80 text-slate-200"
-                        }`}
-                    >
-                      <span className="max-w-[10rem] truncate">{roomPlayer.name}</span>
-                      {roomPlayer.isHost ? <span className="text-[9px] uppercase tracking-widest text-amber-300">host</span> : null}
-                    </span>
-                  ))}
-                </div>
               </div>
             </div>
 
