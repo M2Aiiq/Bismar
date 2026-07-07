@@ -449,8 +449,8 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
 
               return (
                 <div className={`w-full py-2.5 px-4 rounded-xl border text-center transition-all relative overflow-hidden ${isMyTurn
-                    ? "border-emerald-500/30 bg-emerald-950/20 text-emerald-400 font-black shadow-[0_0_15px_rgba(16,185,129,0.08)]"
-                    : "border-slate-800 bg-slate-900/50 text-slate-400 font-medium"
+                  ? "border-emerald-500/30 bg-emerald-950/20 text-emerald-400 font-black shadow-[0_0_15px_rgba(16,185,129,0.08)]"
+                  : "border-slate-800 bg-slate-900/50 text-slate-400 font-medium"
                   }`}>
                   <span className="text-xs uppercase tracking-wider flex items-center justify-center gap-1.5">
                     {isMyTurn ? "🔔 حان دورك الآن! العب بحكمة" : `🕒 دور اللاعب الحالي: ${activePlayerName}`}
@@ -475,7 +475,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
         {room.status === "lobby" ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-slate-900/30 border border-white/5 rounded-3xl w-full max-w-md my-auto">
             <h3 className="text-lg font-black text-rose-400 mb-2">غرفة انتظار صراع الأعضاء</h3>
-            
+
             {/* كود الغرفة في الأعلى */}
             <div className="mb-4">
               <span className="text-[10px] text-slate-400 block mb-1">رمز الغرفة:</span>
@@ -542,10 +542,10 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 <div
                   key={o.id}
                   className={`relative overflow-hidden rounded-xl border p-1.5 sm:p-2 flex flex-col justify-between transition-all aspect-square ${isDead
-                      ? "border-slate-800 bg-slate-950/60 text-slate-600 grayscale contrast-75 opacity-60 pointer-events-none"
-                      : o.hp === 2
-                        ? "border-emerald-500/20 bg-emerald-950/10 shadow-lg shadow-emerald-500/5 text-emerald-200"
-                        : "border-amber-500/20 bg-amber-950/10 shadow-lg shadow-amber-500/5 text-amber-200"
+                    ? "border-slate-800 bg-slate-950/60 text-slate-600 grayscale contrast-75 opacity-60 pointer-events-none"
+                    : o.hp === 2
+                      ? "border-emerald-500/20 bg-emerald-950/10 shadow-lg shadow-emerald-500/5 text-emerald-200"
+                      : "border-amber-500/20 bg-amber-950/10 shadow-lg shadow-amber-500/5 text-amber-200"
                     }`}
                 >
                   {/* Vaccine badge */}
@@ -924,7 +924,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 {/* تفاصيل اللعبة (إعدادات المباراة) */}
                 <div className="rounded-xl border border-white/5 bg-slate-950 p-3.5 mb-6 space-y-3 text-xs text-right">
                   <span className="text-[10px] text-slate-400 block border-b border-white/5 pb-1.5 mb-2 font-black">إعدادات الجولة</span>
-                  
+
                   {isHost ? (
                     <div className="space-y-3 animate-fadeIn">
                       <div>
@@ -941,11 +941,10 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                                   room.settings?.turnTimerSeconds || 30
                                 );
                               }}
-                              className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${
-                                room.settings?.maxPlayers === num
+                              className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${room.settings?.maxPlayers === num
                                   ? "bg-rose-600 text-white shadow-sm"
                                   : "bg-slate-800 text-slate-400 hover:bg-slate-700"
-                              }`}
+                                }`}
                             >
                               {num}
                             </button>
@@ -1024,10 +1023,8 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 {isHost && (
                   <button
                     onClick={async () => {
-                      if (confirm("هل أنت متأكد من رغبتك في بدء لعبة جديدة؟")) {
-                        await resetClashGame();
-                        setSettingsOpen(false);
-                      }
+                      await resetClashGame();
+                      setSettingsOpen(false);
                     }}
                     className="w-full rounded-xl border border-amber-600/30 bg-amber-600/10 py-2.5 text-xs font-black text-amber-400 hover:bg-amber-600/20 transition text-center cursor-pointer"
                   >
@@ -1037,13 +1034,11 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
 
                 <button
                   onClick={async () => {
-                    if (confirm("هل أنت متأكد من مغادرة اللعبة؟")) {
-                      await leaveClashRoom();
-                    }
+                    await leaveClashRoom();
                   }}
                   className="w-full rounded-xl bg-rose-600 py-2.5 text-xs font-black text-white hover:bg-rose-500 transition text-center shadow-lg shadow-rose-600/20 cursor-pointer"
                 >
-                  مغادرة الغرفة والعودة للرئيسية
+                  مغادرة الغرفة
                 </button>
               </div>
             </motion.div>
