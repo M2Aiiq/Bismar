@@ -191,6 +191,14 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [localTimer, setLocalTimer] = useState(30);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
 
   useEffect(() => {
     if (settingsOpen && room?.settings?.turnTimerSeconds) {
@@ -480,7 +488,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 type="button"
                 onClick={() => {
                   navigator.clipboard.writeText(room.roomId);
-                  alert("تم نسخ رمز الغرفة بنجاح!");
+                  setToastMessage("تم نسخ رمز الغرفة بنجاح!");
                 }}
                 className="flex-1 rounded-xl bg-slate-800 border border-white/5 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-700 transition cursor-pointer"
               >
@@ -491,7 +499,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 onClick={() => {
                   const joinUrl = `${window.location.origin}/clash/${room.roomId}`;
                   navigator.clipboard.writeText(joinUrl);
-                  alert("تم نسخ رابط الغرفة بنجاح!");
+                  setToastMessage("تم نسخ رابط الغرفة بنجاح!");
                 }}
                 className="flex-1 rounded-xl bg-slate-800 border border-white/5 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-700 transition cursor-pointer"
               >
@@ -911,43 +919,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   <h3 className="text-base font-black text-rose-400">إعدادات الغرفة</h3>
                 </div>
 
-                {/* تفاصيل الغرفة والكود */}
-                <div className="space-y-4 mb-6">
-                  <div>
-                    <label className="text-[10px] text-slate-400 block mb-1">كود الغرفة</label>
-                    <div className="flex items-center gap-2 bg-slate-950 p-2.5 rounded-xl border border-white/5">
-                      <button
-                        onClick={() => {
-                          void navigator.clipboard.writeText(room.roomId);
-                          alert("تم نسخ كود الغرفة!");
-                        }}
-                        className="px-2.5 py-1 bg-rose-600/20 text-rose-400 border border-rose-500/30 rounded-lg text-[10px] font-bold hover:bg-rose-600/30 transition cursor-pointer"
-                      >
-                        نسخ الكود
-                      </button>
-                      <span className="flex-1 font-mono text-center text-xs font-bold text-white tracking-widest">{room.roomId}</span>
-                    </div>
-                  </div>
 
-                  <div>
-                    <label className="text-[10px] text-slate-400 block mb-1">رابط الدعوة</label>
-                    <div className="flex items-center gap-2 bg-slate-950 p-2.5 rounded-xl border border-white/5">
-                      <button
-                        onClick={() => {
-                          const link = `${window.location.origin}/clash/${room.roomId}`;
-                          void navigator.clipboard.writeText(link);
-                          alert("تم نسخ رابط الدعوة!");
-                        }}
-                        className="px-2.5 py-1 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-[10px] font-bold hover:bg-emerald-600/30 transition cursor-pointer"
-                      >
-                        نسخ الرابط
-                      </button>
-                      <span className="flex-1 text-center text-[10px] text-slate-400 truncate dir-ltr select-all">
-                        {typeof window !== "undefined" ? `${window.location.origin}/clash/${room.roomId}` : ""}
-                      </span>
-                    </div>
-                  </div>
-                </div>
 
                 {/* تفاصيل اللعبة (إعدادات المباراة) */}
                 <div className="rounded-xl border border-white/5 bg-slate-950 p-3.5 mb-6 space-y-3 text-xs text-right">
@@ -1076,6 +1048,20 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* التوست الاحترافي العائم */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 bg-emerald-600 border border-emerald-500/30 text-white rounded-2xl font-black text-xs shadow-xl shadow-emerald-950/40 text-center select-none"
+          >
+            {toastMessage}
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
