@@ -6,13 +6,7 @@ import { useClashRoom } from "../../hooks/use-clash-room";
 import { motion, AnimatePresence } from "framer-motion";
 import type { ActionCard, OrganCard, ClashPlayer } from "../../types/organClash";
 
-function MiniOrganBadge({ organ, size = "sm" }: { organ: OrganCard; size?: "sm" | "md" | "lg" }) {
-  const sizeClasses = {
-    sm: "h-7 w-7 rounded-lg p-0.5",
-    md: "h-10 w-10 rounded-xl p-1",
-    lg: "h-12 w-12 rounded-xl p-1",
-  };
-
+function MiniOrganBadge({ organ, className = "h-7 w-7" }: { organ: OrganCard; className?: string }) {
   const hpColors = organ.isDead
     ? "bg-slate-900/60 border-slate-800 grayscale"
     : organ.hp === 2
@@ -23,7 +17,7 @@ function MiniOrganBadge({ organ, size = "sm" }: { organ: OrganCard; size?: "sm" 
 
   return (
     <div
-      className={`${sizeClasses[size]} flex items-center justify-center border transition relative overflow-hidden ${hpColors}`}
+      className={`rounded-lg flex items-center justify-center border transition relative overflow-hidden p-0.5 ${className} ${hpColors}`}
       title={`${organ.name}: ${organ.hp} HP`}
     >
       <img
@@ -71,9 +65,9 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
             )}
           </div>
           {!isLobby && (
-            <div className="flex gap-2 max-w-[350px] flex-wrap justify-end">
+            <div className="flex gap-1.5 justify-end flex-wrap max-w-[70%]">
               {opp.organs?.map((o) => (
-                <MiniOrganBadge key={o.id} organ={o} size="md" />
+                <MiniOrganBadge key={o.id} organ={o} className="h-8 w-8 sm:h-10 sm:w-10" />
               ))}
             </div>
           )}
@@ -101,7 +95,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
               {!isLobby && (
                 <div className="grid grid-cols-4 gap-1 mt-2">
                   {opp.organs?.map((o) => (
-                    <MiniOrganBadge key={o.id} organ={o} />
+                    <MiniOrganBadge key={o.id} organ={o} className="h-7 w-7 sm:h-8 sm:w-8" />
                   ))}
                 </div>
               )}
@@ -131,7 +125,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
               {!isLobby && (
                 <div className="grid grid-cols-4 gap-0.5 mt-1.5">
                   {opp.organs?.map((o) => (
-                    <MiniOrganBadge key={o.id} organ={o} />
+                    <MiniOrganBadge key={o.id} organ={o} className="h-7 w-7" />
                   ))}
                 </div>
               )}
@@ -161,7 +155,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
             {!isLobby && (
               <div className="grid grid-cols-4 gap-1 mt-1">
                 {opp.organs?.map((o) => (
-                  <MiniOrganBadge key={o.id} organ={o} />
+                  <MiniOrganBadge key={o.id} organ={o} className="h-6 w-6 sm:h-7 sm:w-7" />
                 ))}
               </div>
             )}
