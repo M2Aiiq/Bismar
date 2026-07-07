@@ -32,9 +32,10 @@ function MiniOrganBadge({ organ }: { organ: OrganCard }) {
 interface OpponentsRadarProps {
   opponents: ClashPlayer[];
   currentTurnPlayerId: string;
+  gameStatus: "lobby" | "playing" | "ended";
 }
 
-function OpponentsRadar({ opponents, currentTurnPlayerId }: OpponentsRadarProps) {
+function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: OpponentsRadarProps) {
   if (opponents.length === 0) {
     return (
       <div className="w-full max-w-3xl mx-auto h-20 flex items-center justify-center text-xs font-semibold text-slate-500 select-none">
@@ -42,6 +43,8 @@ function OpponentsRadar({ opponents, currentTurnPlayerId }: OpponentsRadarProps)
       </div>
     );
   }
+
+  const isLobby = gameStatus === "lobby";
 
   if (opponents.length === 1) {
     const opp = opponents[0];
@@ -55,13 +58,17 @@ function OpponentsRadar({ opponents, currentTurnPlayerId }: OpponentsRadarProps)
               <span className="text-sm font-black text-white">{opp.name}</span>
               {opp.isZombie && <span className="text-[9px] bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 px-1.5 py-0.5 rounded-md animate-pulse">Zombie 🧟</span>}
             </div>
-            <span className="text-[10px] text-slate-400 mt-1">🎴 يد اللاعب: {opp.hand?.length || 0} كروت</span>
+            <span className="text-[10px] text-slate-400 mt-1">
+              {isLobby ? "🟢 متصل - في الانتظار" : `🎴 يد اللاعب: ${opp.hand?.length || 0} كروت`}
+            </span>
           </div>
-          <div className="flex gap-2 w-48">
-            {opp.organs?.map((o) => (
-              <MiniOrganBadge key={o.id} organ={o} />
-            ))}
-          </div>
+          {!isLobby && (
+            <div className="flex gap-2 w-48">
+              {opp.organs?.map((o) => (
+                <MiniOrganBadge key={o.id} organ={o} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -77,13 +84,17 @@ function OpponentsRadar({ opponents, currentTurnPlayerId }: OpponentsRadarProps)
               }`}>
               <div className="flex justify-between items-center">
                 <span className="text-xs font-bold text-white truncate max-w-[80px]">{opp.name}</span>
-                <span className="text-[9px] text-slate-400 font-mono">🎴 {opp.hand?.length || 0}</span>
+                <span className="text-[9px] text-slate-400 font-mono">
+                  {isLobby ? "🟢 متصل" : `🎴 ${opp.hand?.length || 0}`}
+                </span>
               </div>
-              <div className="grid grid-cols-4 gap-1 mt-2">
-                {opp.organs?.map((o) => (
-                  <MiniOrganBadge key={o.id} organ={o} />
-                ))}
-              </div>
+              {!isLobby && (
+                <div className="grid grid-cols-4 gap-1 mt-2">
+                  {opp.organs?.map((o) => (
+                    <MiniOrganBadge key={o.id} organ={o} />
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}
@@ -101,13 +112,17 @@ function OpponentsRadar({ opponents, currentTurnPlayerId }: OpponentsRadarProps)
               }`}>
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-black text-white truncate max-w-[65px]">{opp.name}</span>
-                <span className="text-[8px] text-slate-400 font-mono">🎴 {opp.hand?.length || 0}</span>
+                <span className="text-[8px] text-slate-400 font-mono">
+                  {isLobby ? "🟢 متصل" : `🎴 ${opp.hand?.length || 0}`}
+                </span>
               </div>
-              <div className="grid grid-cols-4 gap-0.5 mt-1.5">
-                {opp.organs?.map((o) => (
-                  <MiniOrganBadge key={o.id} organ={o} />
-                ))}
-              </div>
+              {!isLobby && (
+                <div className="grid grid-cols-4 gap-0.5 mt-1.5">
+                  {opp.organs?.map((o) => (
+                    <MiniOrganBadge key={o.id} organ={o} />
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}
@@ -125,13 +140,17 @@ function OpponentsRadar({ opponents, currentTurnPlayerId }: OpponentsRadarProps)
             }`}>
             <div className="flex justify-between items-center">
               <span className="text-[10px] font-black text-white truncate max-w-[70px]">{opp.name}</span>
-              <span className="text-[8px] text-slate-400 font-mono">🎴 {opp.hand?.length || 0}</span>
+              <span className="text-[8px] text-slate-400 font-mono">
+                {isLobby ? "🟢 متصل" : `🎴 ${opp.hand?.length || 0}`}
+              </span>
             </div>
-            <div className="grid grid-cols-4 gap-1 mt-1">
-              {opp.organs?.map((o) => (
-                <MiniOrganBadge key={o.id} organ={o} />
-              ))}
-            </div>
+            {!isLobby && (
+              <div className="grid grid-cols-4 gap-1 mt-1">
+                {opp.organs?.map((o) => (
+                  <MiniOrganBadge key={o.id} organ={o} />
+                ))}
+              </div>
+            )}
           </div>
         );
       })}
@@ -216,9 +235,21 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   // 1. الانضمام التلقائي للوبي إذا لم نكن مسجلين
   useEffect(() => {
     if (isReady && room && !me && playerName) {
-      void joinClashRoom(playerName);
+      joinClashRoom(playerName).catch((err) => {
+        if (err.message === "ROOM_FULL" || err.message?.includes("ROOM_FULL")) {
+          alert("تنبيه: هذه الغرفة ممتلئة ولا يمكنك الانضمام إليها!");
+          router.replace("/");
+        }
+      });
     }
-  }, [isReady, room, me, playerName, joinClashRoom]);
+  }, [isReady, room, me, playerName, joinClashRoom, router]);
+
+  // 1.5. المضيف يفتح الإعدادات تلقائياً عند أول دخول إذا كانت الغرفة في حالة انتظار
+  useEffect(() => {
+    if (isReady && room?.status === "lobby" && isHost) {
+      setSettingsOpen(true);
+    }
+  }, [isReady, room?.status, isHost]);
 
   // 2. السحب التلقائي للكارت عند بدء دور اللاعب
   useEffect(() => {
@@ -325,8 +356,13 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   await joinClashRoom(name);
                   setNameError(null);
                   window.location.reload();
-                } catch (err) {
-                  setNameError(err instanceof Error ? err.message : "حدث خطأ غير معروف");
+                } catch (err: any) {
+                  if (err.message === "ROOM_FULL" || err.message?.includes("ROOM_FULL")) {
+                    alert("تنبيه: هذه الغرفة ممتلئة ولا يمكنك الانضمام إليها!");
+                    router.replace("/");
+                  } else {
+                    setNameError(err instanceof Error ? err.message : "حدث خطأ غير معروف");
+                  }
                 }
               }}
               className="w-full rounded-2xl bg-rose-600 px-5 py-3 text-sm font-bold text-[#F8FAFC] transition hover:bg-rose-500"
@@ -339,123 +375,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
     );
   }
 
-  // 4. واجهة اللوبي (Lobby State)
-  if (room.status === "lobby") {
-    return (
-      <div className="flex h-screen flex-col bg-[#0F172A] text-[#F8FAFC] overflow-hidden">
-        {/* شريط علوي */}
-        <div className="flex items-center justify-between border-b border-white/5 bg-[#1E293B]/50 px-6 py-4">
-          <div className="flex items-center gap-3">
-            <span className="rounded-xl bg-rose-600/20 px-3 py-1 text-sm font-bold text-rose-400 border border-rose-600/30">
-              صراع الأعضاء
-            </span>
-            <span className="text-sm font-medium text-slate-400">كود الغرفة: {room.roomId}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            {isHost && (
-              <button
-                onClick={() => setSettingsOpen(true)}
-                className="p-2 rounded-xl border border-white/10 bg-slate-805 text-slate-300 hover:bg-slate-700 hover:text-white transition cursor-pointer"
-                title="تعديل الإعدادات"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.43l-1.003.828c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.43l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                </svg>
-              </button>
-            )}
-            <button
-              onClick={leaveClashRoom}
-              className="rounded-xl border border-white/10 px-4 py-2 text-sm font-bold text-slate-400 transition hover:bg-white/5 hover:text-white cursor-pointer"
-            >
-              خروج
-            </button>
-          </div>
-        </div>
 
-        {/* جسم اللوبي الرئيسي */}
-        <div className="flex-1 flex flex-col md:flex-row gap-6 p-6 max-w-6xl mx-auto w-full overflow-y-auto">
-          {/* قائمة اللاعبين */}
-          <div className="flex-1 rounded-3xl border border-white/5 bg-[#1E293B]/30 p-6 flex flex-col">
-            <h3 className="text-xl font-black text-rose-400 mb-4">اللاعبون المتصلون</h3>
-            <div className="flex-1 flex flex-col gap-3">
-              {Object.values(room.players).map((p) => (
-                <div
-                  key={p.id}
-                  className="flex items-center justify-between rounded-2xl bg-[#0F172A] p-4 border border-white/5"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="font-bold">{p.name}</span>
-                    {p.isHost && (
-                      <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-md border border-amber-500/30">
-                        مضيف
-                      </span>
-                    )}
-                  </div>
-                  {isHost && p.id !== playerId && (
-                    <button
-                      onClick={() => kickClashPlayer(p.id)}
-                      className="text-xs font-bold text-rose-500 hover:text-rose-400"
-                    >
-                      طرد
-                    </button>
-                  )}
-                </div>
-              ))}
-
-              {/* خانات انتظار خالية */}
-              {Array.from({ length: Math.max(0, (room.settings?.maxPlayers || 4) - Object.keys(room.players).length) }).map((_, i) => (
-                <div
-                  key={i}
-                  className="rounded-2xl border border-dashed border-white/10 p-4 text-center text-sm font-semibold text-slate-600"
-                >
-                  بانتظار لاعب آخر...
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* لوحة التحكم والإعدادات */}
-          <div className="w-full md:w-80 rounded-3xl border border-white/5 bg-[#1E293B]/30 p-6 flex flex-col justify-between">
-            <div>
-              <h3 className="text-xl font-black text-slate-300 mb-4">تفاصيل المباراة</h3>
-              <div className="space-y-4 text-sm font-medium text-slate-400">
-                <div className="flex justify-between">
-                  <span>الحد الأقصى للاعبين:</span>
-                  <span className="text-[#F8FAFC]">{room.settings?.maxPlayers || 4} لاعبين</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>الكروت البدائية باليد:</span>
-                  <span className="text-[#F8FAFC]">{room.settings?.initialHandSize || 5} كروت</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>مؤقت الجولة:</span>
-                  <span className="text-[#F8FAFC]">{room.settings?.turnTimerSeconds || 30} ثانية</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-8 space-y-3">
-              {isHost ? (
-                <button
-                  onClick={() => startClashGame(room.settings.maxPlayers, room.settings.initialHandSize, room.settings.turnTimerSeconds)}
-                  disabled={Object.keys(room.players).length < 2}
-                  className="w-full rounded-2xl bg-rose-600 py-4 font-bold text-white transition hover:bg-rose-500 disabled:bg-rose-900 disabled:cursor-not-allowed"
-                >
-                  بدء المعركة الآن
-                </button>
-              ) : (
-                <div className="text-center text-sm text-slate-500 font-semibold py-4 animate-pulse">
-                  بانتظار مضيف الغرفة لبدء اللعب...
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // 5. واجهة اللعب الأساسية (Playing State)
   const opponents = Object.values(room.players).filter((p) => p.id !== playerId);
@@ -509,101 +429,129 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
       </div>
 
       {/* 1. منطقة الخصوم (Top Zone - Enemy Radar) */}
-      <OpponentsRadar opponents={opponents} currentTurnPlayerId={room.currentTurnPlayerId} />
+      <OpponentsRadar opponents={opponents} currentTurnPlayerId={room.currentTurnPlayerId} gameStatus={room.status} />
 
       {/* 2. منطقة المعركة واللاعب الحالي (Middle Zone - Player Battlefield & Turn Ticker) */}
       <div className="flex-1 flex flex-col items-center justify-center py-2 relative w-full max-w-3xl mx-auto">
         {/* Turn Ticker */}
-        <div className="w-full max-w-md md:max-w-xl flex justify-center mb-3">
-          {(() => {
-            const timePercent = Math.min(100, Math.max(0, (localTimeRemaining / totalDuration) * 100));
-            const barColor = timePercent > 50
-              ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
-              : timePercent > 20
-                ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]"
-                : "bg-rose-600 shadow-[0_0_8px_rgba(225,29,72,0.4)] animate-pulse";
+        {room.status === "playing" && (
+          <div className="w-full max-w-md md:max-w-xl flex justify-center mb-3">
+            {(() => {
+              const timePercent = Math.min(100, Math.max(0, (localTimeRemaining / totalDuration) * 100));
+              const barColor = timePercent > 50
+                ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+                : timePercent > 20
+                  ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]"
+                  : "bg-rose-600 shadow-[0_0_8px_rgba(225,29,72,0.4)] animate-pulse";
 
-            return (
-              <div className={`w-full py-2.5 px-4 rounded-xl border text-center transition-all relative overflow-hidden ${isMyTurn
-                  ? "border-emerald-500/30 bg-emerald-950/20 text-emerald-400 font-black shadow-[0_0_15px_rgba(16,185,129,0.08)]"
-                  : "border-slate-800 bg-slate-900/50 text-slate-400 font-medium"
-                }`}>
-                <span className="text-xs uppercase tracking-wider flex items-center justify-center gap-1.5">
-                  {isMyTurn ? "🔔 حان دورك الآن! العب بحكمة" : `🕒 دور اللاعب الحالي: ${activePlayerName}`}
-                </span>
-
-                {/* مؤقت الدور - الشريط السفلي التفاعلي (ينكمش للمنتصف بدون عداد) */}
-                {room.status === "playing" && room.turnEndsAt && (
-                  <div
-                    className={`absolute bottom-0 h-1 transition-all duration-100 ${barColor}`}
-                    style={{
-                      width: `${timePercent}%`,
-                      left: `${(100 - timePercent) / 2}%`,
-                    }}
-                  />
-                )}
-              </div>
-            );
-          })()}
-        </div>
-
-        {/* Player Organs Grid */}
-        <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5 sm:gap-2.5 my-auto max-h-[30vh] md:max-h-[22vh] w-full max-w-sm sm:max-w-4xl px-2">
-          {me?.organs?.map((o) => {
-            const isDead = o.isDead;
-            const hpColor = o.hp === 2
-              ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
-              : o.hp === 1
-                ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]"
-                : "bg-slate-800";
-
-            return (
-              <div
-                key={o.id}
-                className={`relative overflow-hidden rounded-xl border p-1.5 sm:p-2 flex flex-col justify-between transition-all aspect-square ${isDead
-                    ? "border-slate-800 bg-slate-950/60 text-slate-600 grayscale contrast-75 opacity-60 pointer-events-none"
-                    : o.hp === 2
-                      ? "border-emerald-500/20 bg-emerald-950/10 shadow-lg shadow-emerald-500/5 text-emerald-200"
-                      : "border-amber-500/20 bg-amber-950/10 shadow-lg shadow-amber-500/5 text-amber-200"
-                  }`}
-              >
-                {/* Vaccine badge */}
-                {o.hasVaccine && (
-                  <span className="absolute top-1 left-1 text-[9px] sm:text-[11px]" title="محصن باللقاح">🛡️</span>
-                )}
-
-                {/* Afflictions count badge */}
-                {o.afflictions && o.afflictions.length > 0 && (
-                  <span className="absolute top-1 right-1 text-[8px] sm:text-[9px] bg-rose-600 text-white px-1.5 py-0.5 rounded-full font-black animate-pulse">
-                    {o.afflictions.length}
+              return (
+                <div className={`w-full py-2.5 px-4 rounded-xl border text-center transition-all relative overflow-hidden ${isMyTurn
+                    ? "border-emerald-500/30 bg-emerald-950/20 text-emerald-400 font-black shadow-[0_0_15px_rgba(16,185,129,0.08)]"
+                    : "border-slate-800 bg-slate-900/50 text-slate-400 font-medium"
+                  }`}>
+                  <span className="text-xs uppercase tracking-wider flex items-center justify-center gap-1.5">
+                    {isMyTurn ? "🔔 حان دورك الآن! العب بحكمة" : `🕒 دور اللاعب الحالي: ${activePlayerName}`}
                   </span>
-                )}
 
-                <div className="flex justify-center items-center w-full">
-                  <span className="text-[9px] sm:text-[11px] font-black text-slate-300 tracking-wide truncate">{o.name}</span>
+                  {room.turnEndsAt && (
+                    <div
+                      className={`absolute bottom-0 h-1 transition-all duration-100 ${barColor}`}
+                      style={{
+                        width: `${timePercent}%`,
+                        left: `${(100 - timePercent) / 2}%`,
+                      }}
+                    />
+                  )}
                 </div>
+              );
+            })()}
+          </div>
+        )}
 
-                {/* Organ Image Display */}
-                <div className="flex-1 flex items-center justify-center my-0.5 select-none w-full h-full min-h-0">
-                  <img
-                    src={o.isDead ? `/${o.id}_died.png` : `/${o.id}.png`}
-                    alt={o.name}
-                    className="w-10 h-10 sm:w-14 sm:h-14 object-contain max-h-full"
-                  />
-                </div>
+        {/* Player Organs Grid / Lobby waiting card */}
+        {room.status === "lobby" ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-slate-900/30 border border-white/5 rounded-3xl w-full max-w-md my-auto">
+            <span className="text-4xl mb-4 animate-bounce">🎮</span>
+            <h3 className="text-lg font-black text-rose-400 mb-2">غرفة انتظار صراع الأعضاء</h3>
+            <p className="text-xs text-slate-400 max-w-xs leading-relaxed mb-4 text-center">
+              بانتظار اللاعبين للانضمام. المضيف يمكنه ضبط إعدادات المباراة وتعديلها عبر أيقونة الترس بالعلّي.
+            </p>
+            <div className="text-xs font-mono bg-slate-950/80 px-3 py-1.5 rounded-lg border border-white/5 text-slate-400 mb-6">
+              عدد المتصلين: {Object.keys(room.players).length} / {room.settings?.maxPlayers || 4}
+            </div>
 
-                {/* 2-segment HP bar */}
-                <div className="flex gap-1 w-full mt-0.5">
-                  <div className={`h-1 flex-1 rounded-full ${o.hp >= 1 ? hpColor : "bg-slate-800"}`} />
-                  <div className={`h-1 flex-1 rounded-full ${o.hp === 2 ? hpColor : "bg-slate-800"}`} />
-                </div>
+            {isHost ? (
+              <button
+                onClick={() => startClashGame(room.settings.maxPlayers, room.settings.initialHandSize, room.settings.turnTimerSeconds)}
+                disabled={Object.keys(room.players).length < 2}
+                className="w-full rounded-2xl bg-rose-600 py-3.5 font-bold text-white transition hover:bg-rose-500 disabled:bg-rose-900/40 disabled:text-white/40 disabled:cursor-not-allowed text-xs shadow-lg shadow-rose-600/20 cursor-pointer"
+              >
+                بدء المعركة الآن ➔
+              </button>
+            ) : (
+              <div className="text-xs text-slate-500 font-semibold animate-pulse">
+                بانتظار المضيف لبدء اللعبة...
               </div>
-            );
-          })}
-        </div>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5 sm:gap-2.5 my-auto max-h-[30vh] md:max-h-[22vh] w-full max-w-sm sm:max-w-4xl px-2">
+            {me?.organs?.map((o) => {
+              const isDead = o.isDead;
+              const hpColor = o.hp === 2
+                ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+                : o.hp === 1
+                  ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]"
+                  : "bg-slate-800";
+
+              return (
+                <div
+                  key={o.id}
+                  className={`relative overflow-hidden rounded-xl border p-1.5 sm:p-2 flex flex-col justify-between transition-all aspect-square ${isDead
+                      ? "border-slate-800 bg-slate-950/60 text-slate-600 grayscale contrast-75 opacity-60 pointer-events-none"
+                      : o.hp === 2
+                        ? "border-emerald-500/20 bg-emerald-950/10 shadow-lg shadow-emerald-500/5 text-emerald-200"
+                        : "border-amber-500/20 bg-amber-950/10 shadow-lg shadow-amber-500/5 text-amber-200"
+                    }`}
+                >
+                  {/* Vaccine badge */}
+                  {o.hasVaccine && (
+                    <span className="absolute top-1 left-1 text-[9px] sm:text-[11px]" title="محصن باللقاح">🛡️</span>
+                  )}
+
+                  {/* Afflictions count badge */}
+                  {o.afflictions && o.afflictions.length > 0 && (
+                    <span className="absolute top-1 right-1 text-[8px] sm:text-[9px] bg-rose-600 text-white px-1.5 py-0.5 rounded-full font-black animate-pulse">
+                      {o.afflictions.length}
+                    </span>
+                  )}
+
+                  <div className="flex justify-center items-center w-full">
+                    <span className="text-[9px] sm:text-[11px] font-black text-slate-300 tracking-wide truncate">{o.name}</span>
+                  </div>
+
+                  {/* Organ Image Display */}
+                  <div className="flex-1 flex items-center justify-center my-0.5 select-none w-full h-full min-h-0">
+                    <img
+                      src={o.isDead ? `/${o.id}_died.png` : `/${o.id}.png`}
+                      alt={o.name}
+                      className="w-10 h-10 sm:w-14 sm:h-14 object-contain max-h-full"
+                    />
+                  </div>
+
+                  {/* 2-segment HP bar */}
+                  <div className="flex gap-1 w-full mt-0.5">
+                    <div className={`h-1 flex-1 rounded-full ${o.hp >= 1 ? hpColor : "bg-slate-800"}`} />
+                    <div className={`h-1 flex-1 rounded-full ${o.hp === 2 ? hpColor : "bg-slate-800"}`} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Turn Phase manual action */}
-        {room.turnPhase === "play" && isMyTurn && !room.pendingAction && (
+        {room.status === "playing" && room.turnPhase === "play" && isMyTurn && !room.pendingAction && (
           <button
             onClick={() => void endClashTurn(false)}
             className="mt-3 rounded-2xl bg-slate-800 border border-slate-700 px-6 py-2.5 font-bold text-slate-300 transition hover:bg-slate-700 hover:text-white shadow-lg text-xs cursor-pointer"
@@ -615,7 +563,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
 
       {/* 3. منطقة اليد المروحية (Bottom Zone - The Fan Deck) */}
       <div className="relative pb-4 w-full h-[25vh] md:h-[28vh] flex items-end justify-center">
-        {me?.hand && me.hand.length > 0 ? (
+        {room.status !== "lobby" && me?.hand && me.hand.length > 0 ? (
           <div className="relative w-full max-w-xl h-full flex justify-center items-end">
             {me.hand.map((card, index) => {
               const totalCards = me.hand.length;
