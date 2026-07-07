@@ -58,9 +58,11 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
               <span className="text-sm font-black text-white">{opp.name}</span>
               {opp.isZombie && <span className="text-[9px] bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 px-1.5 py-0.5 rounded-md animate-pulse">Zombie 🧟</span>}
             </div>
-            <span className="text-[10px] text-slate-400 mt-1">
-              {isLobby ? "🟢 متصل - في الانتظار" : "🟢 متصل"}
-            </span>
+            {isLobby && (
+              <span className="text-[10px] text-slate-400 mt-1">
+                🟢 متصل - في الانتظار
+              </span>
+            )}
           </div>
           {!isLobby && (
             <div className="flex gap-2 w-48">
@@ -84,9 +86,11 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
               }`}>
               <div className="flex justify-between items-center">
                 <span className="text-xs font-bold text-white truncate max-w-[80px]">{opp.name}</span>
-                <span className="text-[9px] text-slate-400 font-mono">
-                  {isLobby ? "🟢 متصل" : "🟢 متصل"}
-                </span>
+                {isLobby && (
+                  <span className="text-[9px] text-slate-400 font-mono">
+                    🟢 متصل
+                  </span>
+                )}
               </div>
               {!isLobby && (
                 <div className="grid grid-cols-4 gap-1 mt-2">
@@ -112,9 +116,11 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
               }`}>
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-black text-white truncate max-w-[65px]">{opp.name}</span>
-                <span className="text-[8px] text-slate-400 font-mono">
-                  {isLobby ? "🟢 متصل" : "🟢 متصل"}
-                </span>
+                {isLobby && (
+                  <span className="text-[8px] text-slate-400 font-mono">
+                    🟢 متصل
+                  </span>
+                )}
               </div>
               {!isLobby && (
                 <div className="grid grid-cols-4 gap-0.5 mt-1.5">
@@ -140,9 +146,11 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
             }`}>
             <div className="flex justify-between items-center">
               <span className="text-[10px] font-black text-white truncate max-w-[70px]">{opp.name}</span>
-              <span className="text-[8px] text-slate-400 font-mono">
-                {isLobby ? "🟢 متصل" : "🟢 متصل"}
-              </span>
+              {isLobby && (
+                <span className="text-[8px] text-slate-400 font-mono">
+                  🟢 متصل
+                </span>
+              )}
             </div>
             {!isLobby && (
               <div className="grid grid-cols-4 gap-1 mt-1">
