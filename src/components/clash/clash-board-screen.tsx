@@ -417,7 +417,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   };
 
   // كروت المقاطعة المتوفرة في يد اللاعب الحالي
-  const counterCardsInHand = me?.hand?.filter((c) => c.type === "instant") || [];
+  const counterCardsInHand = me?.hand?.filter((c) => c.type === "instant" || c.subType === "infection") || [];
 
   return (
     <div
@@ -914,9 +914,13 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                     <button
                       key={c.id}
                       onClick={() => void playInstantCounter(c.id)}
-                      className="w-full rounded-2xl bg-sky-600 py-4 font-bold text-white transition hover:bg-sky-500 shadow-lg shadow-sky-600/30 text-sm"
+                      className={`w-full rounded-2xl py-4 font-bold text-white transition shadow-lg text-sm ${
+                        c.subType === "infection"
+                          ? "bg-rose-600 hover:bg-rose-500 shadow-rose-600/30"
+                          : "bg-sky-600 hover:bg-sky-500 shadow-sky-600/30"
+                      }`}
                     >
-                      إلغاء الإجراء باستخدام كارت: {c.name}
+                      {c.subType === "infection" ? `🔄 عكس الهجوم بـ ${c.name}` : `🛡️ إلغاء الهجوم بـ ${c.name}`}
                     </button>
                   ))}
                 </div>

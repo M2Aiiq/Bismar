@@ -596,20 +596,46 @@ export function useClashRoom(roomId: string) {
           // 1. كروت الهجوم والاعتلال والعدوى فقط تذهب لـ pendingAction للفرصة المقاطعة
           if (card.type === "attack" || card.subType === "infection") {
             player.hand.splice(cardIndex, 1);
-            currentRoom.pendingAction = {
-              playerId,
-              card,
-              targetPlayerId,
-              targetOrganId,
-              expiresAt: Date.now() + 5000,
-            };
 
             const targetPlayer = targetPlayerId ? currentRoom.players[targetPlayerId] : null;
             const targetOrgan = (targetPlayer && targetOrganId) ? targetPlayer.organs.find(o => o.id === targetOrganId) : null;
-            if (targetPlayer && targetOrgan) {
-              addRoomLog(currentRoom, `${player.name}: ${card.name} على ${targetOrgan.name} (${targetPlayer.name})`, "attack");
+
+            // فحص: هل يملك أي خصم كارت أجسام مضادة أو عدوى متحورة؟
+            const anyOpponentHasCounter = Object.keys(currentRoom.players)
+              .filter(pid => pid !== playerId)
+              .some(pid => {
+                const p = currentRoom.players[pid];
+                return p.hand?.some(c => c.subType === "antibody" || c.subType === "infection");
+              });
+
+            if (anyOpponentHasCounter) {
+              // يوجد كارت دفاعي لدى خصم → أنشئ حدثاً معلقاً لمنح فرصة المقاطعة
+              currentRoom.pendingAction = {
+                playerId,
+                card,
+                targetPlayerId,
+                targetOrganId,
+                expiresAt: Date.now() + 5000,
+              };
+              if (targetPlayer && targetOrgan) {
+                addRoomLog(currentRoom, `${player.name}: ${card.name} على ${targetOrgan.name} (${targetPlayer.name})`, "attack");
+              } else {
+                addRoomLog(currentRoom, `${player.name}: لعب ${card.name}`, "attack");
+              }
             } else {
-              addRoomLog(currentRoom, `${player.name}: لعب ${card.name}`, "attack");
+              // لا يوجد كارت دفاعي → نفذ الهجوم مباشرة
+              currentRoom.pendingAction = {
+                playerId,
+                card,
+                targetPlayerId,
+                targetOrganId,
+                expiresAt: Date.now(),
+              };
+              if (targetPlayer && targetOrgan) {
+                addRoomLog(currentRoom, `${player.name}: ${card.name} على ${targetOrgan.name} (${targetPlayer.name})`, "attack");
+              } else {
+                addRoomLog(currentRoom, `${player.name}: لعب ${card.name}`, "attack");
+              }
             }
           }
           // 2. الكروت التكتيكية والعلاجية والحصانة والخردة تنفذ فوراً دون انتظار وتمرر الدور
@@ -955,50 +981,45 @@ export function useClashRoom(roomId: string) {
 
           const counterPlayer = currentRoom.players[counterPlayerId];
           const instantCard = counterPlayer.hand[cardIndex];
+          const pendingCard = currentRoom.pendingAction.card;
+          const attackerPid = currentRoom.pendingAction.playerId;
 
           counterPlayer.hand.splice(cardIndex, 1);
 
           if (!currentRoom.discardPile) currentRoom.discardPile = [];
+          currentRoom.discardPile.push(instantCard);
 
-          if (instantCard.subType === "antibody") {
-            currentRoom.discardPile.push(instantCard);
-            currentRoom.discardPile.push(currentRoom.pendingAction.card);
-            addRoomLog(currentRoom, `${counterPlayer.name}: إلغاء الهجوم بـ ${instantCard.name}`, "counter");
-          } else if (instantCard.subType === "infection") {
-            const originalAttackerId = currentRoom.pendingAction.playerId;
-            const originalAttacker = currentRoom.players[originalAttackerId];
-            const attackCard = currentRoom.pendingAction.card;
-
-            const targetOrganId = currentRoom.pendingAction.targetOrganId;
-            let finalTargetOrgan = originalAttacker.organs.find(o => o.id === targetOrganId && !o.isDead);
-            if (!finalTargetOrgan) {
-              finalTargetOrgan = originalAttacker.organs.find(o => !o.isDead);
-            }
-
-            if (finalTargetOrgan) {
-              const dmg = attackCard.damage ?? 1;
-              finalTargetOrgan.hp = Math.max(0, finalTargetOrgan.hp - dmg);
-              if (finalTargetOrgan.hp <= 0) {
-                finalTargetOrgan.isDead = true;
-                finalTargetOrgan.afflictions = [];
-                finalTargetOrgan.hasVaccine = false;
-                finalTargetOrgan.hasOrganicDiet = false;
-                addRoomLog(currentRoom, `💀 عُكس الهجوم! مات عضو ${finalTargetOrgan.name} لدى ${originalAttacker.name}!`, "death");
-              } else {
-                if (attackCard.subType !== "acuteInflammation") {
-                  finalTargetOrgan.afflictions = [...(finalTargetOrgan.afflictions || []), attackCard.subType];
+          if (instantCard.subType === "infection") {
+            // عدوى متحورة: عكس الهجوم على المهاجم نفسه
+            const attacker = currentRoom.players[attackerPid];
+            if (attacker) {
+              // اختر عضواً عشوائياً حياً من أعضاء المهاجم
+              const aliveOrgans = attacker.organs.filter(o => !o.isDead);
+              if (aliveOrgans.length > 0) {
+                const randomOrgan = aliveOrgans[Math.floor(Math.random() * aliveOrgans.length)];
+                const dmg = pendingCard.damage ?? 1;
+                randomOrgan.hp = Math.max(0, randomOrgan.hp - dmg);
+                if (randomOrgan.hp <= 0) {
+                  randomOrgan.isDead = true;
+                  randomOrgan.afflictions = [];
+                  randomOrgan.hasVaccine = false;
+                  randomOrgan.hasOrganicDiet = false;
+                  addRoomLog(currentRoom, `🔄 ${counterPlayer.name}: عكس الهجوم! 💀 مات ${randomOrgan.name} لدى ${attacker.name}`, "counter");
+                } else {
+                  addRoomLog(currentRoom, `🔄 ${counterPlayer.name}: عكس الهجوم! 💥 أصيب ${randomOrgan.name} (${attacker.name})`, "counter");
                 }
-                addRoomLog(currentRoom, `🔄 عُكس الهجوم! أصيب ${finalTargetOrgan.name} (${originalAttacker.name}) بـ ${attackCard.name}`, "attack");
-              }
-
-              if (originalAttacker.organs.every(o => o.isDead)) {
-                originalAttacker.isZombie = true;
+                if (attacker.organs.every(o => o.isDead)) {
+                  attacker.isZombie = true;
+                }
+              } else {
+                addRoomLog(currentRoom, `🔄 ${counterPlayer.name}: عكس الهجوم بعدوى متحورة!`, "counter");
               }
             }
-
-            currentRoom.discardPile.push(instantCard);
-            currentRoom.discardPile.push(attackCard);
-            addRoomLog(currentRoom, `${counterPlayer.name}: عكست الهجوم بـ ${instantCard.name}`, "counter");
+            currentRoom.discardPile.push(pendingCard);
+          } else {
+            // أجسام مضادة: إلغاء الهجوم تماماً
+            currentRoom.discardPile.push(pendingCard);
+            addRoomLog(currentRoom, `${counterPlayer.name}: إلغاء الهجوم بـ ${instantCard.name}`, "counter");
           }
 
           currentRoom.pendingAction = null;
