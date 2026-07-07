@@ -448,7 +448,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
       <div className="flex-1 flex flex-col items-center justify-center py-2 relative w-full max-w-3xl mx-auto">
         {/* Turn Ticker */}
         {room.status === "playing" && (
-          <div className="w-full max-w-md md:max-w-xl flex justify-center mb-3">
+          <div className="w-full max-w-md md:max-w-xl flex flex-col items-center mb-3">
             {(() => {
               const timePercent = Math.min(100, Math.max(0, (localTimeRemaining / totalDuration) * 100));
               const barColor = timePercent > 50
@@ -478,6 +478,27 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 </div>
               );
             })()}
+
+            {/* سجل التنبيهات الحديثة تحت بطاقة الدور مباشرة */}
+            {room.logs && room.logs.length > 0 && (
+              <div className="w-full mt-2 space-y-1 text-center select-none max-h-[60px] overflow-hidden">
+                {room.logs.slice(-3).map((logMsg, i, arr) => {
+                  const isLatest = i === arr.length - 1;
+                  return (
+                    <motion.div
+                      key={`${i}-${logMsg}`}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: isLatest ? 1 : 0.4, y: 0 }}
+                      className={`text-[10px] font-bold ${
+                        isLatest ? "text-amber-400" : "text-slate-500"
+                      }`}
+                    >
+                      {logMsg}
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
