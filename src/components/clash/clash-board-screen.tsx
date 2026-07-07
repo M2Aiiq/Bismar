@@ -594,19 +594,12 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
         )}
       </div>
 
-      {/* 3. منطقة اليد المروحية (Bottom Zone - The Fan Deck) */}
-      <div className="relative pb-4 w-full h-[25vh] md:h-[28vh] flex items-end justify-center">
+      {/* 3. منطقة اليد (Bottom Zone - Player Hand Cards) */}
+      <div className="w-full max-w-3xl mx-auto px-2 pb-2 bg-transparent select-none">
+        <span className="text-[9px] text-slate-500 block mb-1 text-right">كروت اليد الخاصة بك:</span>
         {room.status !== "lobby" && me?.hand && me.hand.length > 0 ? (
-          <div className="relative w-full max-w-xl h-full flex justify-center items-end">
-            {me.hand.map((card, index) => {
-              const totalCards = me.hand.length;
-              const angleStep = Math.min(30 / Math.max(1, totalCards - 1), 6);
-              const startAngle = -((totalCards - 1) * angleStep) / 2;
-              const rotate = startAngle + index * angleStep;
-
-              const translateY = Math.abs(rotate) * 0.9;
-              const translateX = rotate * 2.8;
-
+          <div className="flex gap-2 overflow-x-auto py-2 scrollbar-none snap-x dir-rtl justify-start md:justify-center">
+            {me.hand.map((card) => {
               const borderColors = {
                 attack: "border-rose-600/50 hover:border-rose-500 shadow-rose-900/10",
                 cure: "border-emerald-600/50 hover:border-emerald-500 shadow-emerald-900/10",
@@ -625,52 +618,36 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 immunity: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
               };
 
-              const isHovered = hoveredCardIndex === index;
-              const isAnyHovered = hoveredCardIndex !== null;
+              const cardTypeLabels = {
+                attack: card.targetOrganId === "any" ? "هجوم عام" : "اعتلال",
+                cure: "علاج",
+                instant: "فوري",
+                useless: "خردة",
+                tactical: "تكتيك",
+                immunity: "حصانة",
+              };
 
               return (
-                <motion.div
+                <div
                   key={card.id}
-                  style={{
-                    position: "absolute",
-                    bottom: 0,
-                    transformOrigin: "bottom center",
-                  }}
-                  animate={{
-                    rotate: rotate,
-                    y: isHovered ? -35 : translateY,
-                    x: translateX,
-                    scale: isHovered ? 1.12 : 1.0,
-                    zIndex: isHovered ? 100 : index,
-                    opacity: isAnyHovered && !isHovered ? 0.5 : 1.0,
-                  }}
-                  transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                  onMouseEnter={() => setHoveredCardIndex(index)}
-                  onMouseLeave={() => setHoveredCardIndex(null)}
-                  onTouchStart={() => setHoveredCardIndex(index)}
-                  onTouchEnd={() => setHoveredCardIndex(null)}
                   onClick={() => handleCardClick(card)}
-                  className={`w-28 h-40 rounded-2xl border-2 bg-slate-900 p-2.5 flex flex-col justify-between cursor-pointer select-none shadow-2xl transition-all duration-200 ${borderColors[card.type]
-                    }`}
+                  className={`min-w-[95px] w-[95px] sm:min-w-[115px] sm:w-[115px] aspect-[2/3] rounded-2xl border-2 bg-slate-900/90 p-2 flex flex-col justify-between transition-all duration-200 transform hover:-translate-y-1.5 hover:shadow-lg cursor-pointer snap-center relative overflow-hidden select-none ${borderColors[card.type]}`}
                 >
-                  <div className="flex flex-col gap-1.5">
-                    <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-md self-start ${badgeColors[card.type]}`}>
-                      {card.type === "attack" && (card.targetOrganId === "any" ? "هجوم عام" : "هجوم")}
-                      {card.type === "cure" && "علاج"}
-                      {card.type === "instant" && "فوري"}
-                      {card.type === "tactical" && "تكتيك"}
-                      {card.type === "immunity" && "حصانة"}
-                      {card.type === "useless" && "خردة"}
+                  <div className="flex flex-col gap-1 w-full text-right">
+                    <span className={`text-[7px] sm:text-[8px] px-1.5 py-0.5 rounded font-black self-start ${badgeColors[card.type]}`}>
+                      {cardTypeLabels[card.type]}
                     </span>
-                    <span className="text-[11px] font-black leading-tight text-white">{card.name}</span>
+                    <span className="text-[10px] sm:text-[12px] font-black leading-tight text-white">{card.name}</span>
                   </div>
-                  <span className="text-[8px] text-slate-400 leading-normal">{card.description}</span>
-                </motion.div>
+                  <span className="text-[7px] sm:text-[8.5px] text-slate-400 leading-normal line-clamp-3 text-right">{card.description}</span>
+                </div>
               );
             })}
           </div>
         ) : (
-          <div className="text-[10px] font-bold text-slate-600 animate-pulse pb-6">لا توجد كروت في يدك حالياً</div>
+          room.status !== "lobby" && (
+            <div className="text-[10px] font-bold text-slate-600 animate-pulse text-center py-4">لا توجد كروت في يدك حالياً</div>
+          )
         )}
       </div>
 
