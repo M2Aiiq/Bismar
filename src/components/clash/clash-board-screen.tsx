@@ -532,10 +532,12 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
         </div>
 
         {/* Player Organs Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 my-auto max-h-[40vh] md:max-h-[30vh] w-full max-w-md md:max-w-3xl px-2">
+        <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5 sm:gap-2.5 my-auto max-h-[30vh] md:max-h-[22vh] w-full max-w-sm sm:max-w-4xl px-2">
           {me?.organs?.map((o) => {
             const isDead = o.isDead;
-            const hpColor = o.hp === 2
+            const hpColor = o.hp >= 3
+              ? "bg-sky-500 shadow-[0_0_8px_rgba(56,189,248,0.4)]"
+              : o.hp === 2
               ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
               : o.hp === 1
               ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]"
@@ -544,31 +546,46 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
             return (
               <div
                 key={o.id}
-                className={`relative overflow-hidden rounded-2xl border p-3 flex flex-col justify-between transition-all aspect-square ${
+                className={`relative overflow-hidden rounded-xl border p-1.5 sm:p-2 flex flex-col justify-between transition-all aspect-square ${
                   isDead
                     ? "border-slate-800 bg-slate-950/60 text-slate-600 grayscale contrast-75 opacity-60 pointer-events-none"
+                    : o.hp >= 3
+                    ? "border-sky-500/20 bg-sky-950/10 shadow-lg shadow-sky-500/5 text-sky-200"
                     : o.hp === 2
                     ? "border-emerald-500/20 bg-emerald-950/10 shadow-lg shadow-emerald-500/5 text-emerald-200"
                     : "border-amber-500/20 bg-amber-950/10 shadow-lg shadow-amber-500/5 text-amber-200"
                 }`}
               >
+                {/* Vaccine badge */}
+                {o.hasVaccine && (
+                  <span className="absolute top-1 left-1 text-[9px] sm:text-[11px]" title="محصن باللقاح">🛡️</span>
+                )}
+
+                {/* Afflictions count badge */}
+                {o.afflictions && o.afflictions.length > 0 && (
+                  <span className="absolute top-1 right-1 text-[8px] sm:text-[9px] bg-rose-600 text-white px-1.5 py-0.5 rounded-full font-black animate-pulse">
+                    {o.afflictions.length}
+                  </span>
+                )}
+
                 <div className="flex justify-center items-center w-full">
-                  <span className="text-sm font-black text-slate-300 tracking-wide">{o.name}</span>
+                  <span className="text-[9px] sm:text-[11px] font-black text-slate-300 tracking-wide truncate">{o.name}</span>
                 </div>
 
                 {/* Organ Image Display */}
-                <div className="flex-1 flex items-center justify-center my-2 select-none w-full h-full">
+                <div className="flex-1 flex items-center justify-center my-0.5 select-none w-full h-full min-h-0">
                   <img
                     src={o.isDead ? `/${o.id}_died.png` : `/${o.id}.png`}
                     alt={o.name}
-                    className="w-20 h-20 md:w-24 md:h-24 object-contain"
+                    className="w-10 h-10 sm:w-14 sm:h-14 object-contain max-h-full"
                   />
                 </div>
 
-                {/* 2-segment HP bar */}
-                <div className="flex gap-1.5 w-full">
-                  <div className={`h-1.5 flex-1 rounded-full ${o.hp >= 1 ? hpColor : "bg-slate-800"}`} />
-                  <div className={`h-1.5 flex-1 rounded-full ${o.hp === 2 ? hpColor : "bg-slate-800"}`} />
+                {/* 3-segment HP bar */}
+                <div className="flex gap-1 w-full mt-0.5">
+                  <div className={`h-1 flex-1 rounded-full ${o.hp >= 1 ? hpColor : "bg-slate-800"}`} />
+                  <div className={`h-1 flex-1 rounded-full ${o.hp >= 2 ? hpColor : "bg-slate-800"}`} />
+                  <div className={`h-1 flex-1 rounded-full ${o.hp >= 3 ? hpColor : "bg-slate-800"}`} />
                 </div>
               </div>
             );
