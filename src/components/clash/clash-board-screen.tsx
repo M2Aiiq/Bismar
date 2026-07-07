@@ -642,18 +642,24 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
 
               const isSelected = selectedHandCardId === card.id;
 
+              if (isSelected) {
+                return (
+                  <div
+                    key={card.id}
+                    className="min-w-[95px] w-[95px] sm:min-w-[115px] sm:w-[115px] aspect-[2/3] rounded-2xl border-2 border-dashed border-slate-800 bg-slate-950/40"
+                  />
+                );
+              }
+
               return (
-                <div
+                <motion.div
                   key={card.id}
+                  layoutId={`card-${card.id}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleCardClick(card);
                   }}
-                  className={`min-w-[95px] w-[95px] sm:min-w-[115px] sm:w-[115px] aspect-[2/3] rounded-2xl border-2 bg-slate-900/90 p-2 flex flex-col justify-between transition-all duration-300 transform cursor-pointer snap-center relative overflow-hidden select-none ${borderColors[card.type]} ${
-                    isSelected
-                      ? "-translate-y-12 sm:-translate-y-16 scale-110 sm:scale-115 z-30 ring-2 ring-amber-500 shadow-2xl shadow-amber-500/30"
-                      : "hover:-translate-y-1.5 hover:scale-102 z-10"
-                  }`}
+                  className={`min-w-[95px] w-[95px] sm:min-w-[115px] sm:w-[115px] aspect-[2/3] rounded-2xl border-2 bg-slate-900/95 p-2 flex flex-col justify-between cursor-pointer snap-center relative overflow-hidden select-none hover:-translate-y-1 hover:scale-102 transition-all ${borderColors[card.type]}`}
                 >
                   <div className="flex flex-col gap-1 w-full text-right">
                     <span className={`text-[7px] sm:text-[8px] px-1.5 py-0.5 rounded font-black self-start ${badgeColors[card.type]}`}>
@@ -662,7 +668,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                     <span className="text-[10px] sm:text-[12px] font-black leading-tight text-white">{card.name}</span>
                   </div>
                   <span className="text-[7px] sm:text-[8.5px] text-slate-400 leading-normal line-clamp-3 text-right">{card.description}</span>
-                </div>
+                </motion.div>
               );
             })}
           </div>
@@ -1068,6 +1074,76 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
             {toastMessage}
           </motion.div>
         )}
+      </AnimatePresence>
+
+      {/* نافذة تكبير وفحص الكارت الطائر بوسط الشاشة */}
+      <AnimatePresence>
+        {selectedHandCardId && (() => {
+          const card = me?.hand?.find(c => c.id === selectedHandCardId);
+          if (!card) return null;
+
+          const borderColors = {
+            attack: "border-rose-600/50 shadow-rose-950/40",
+            cure: "border-emerald-600/50 shadow-emerald-950/40",
+            instant: "border-sky-600/50 shadow-sky-950/40",
+            useless: "border-slate-700 shadow-slate-950/40",
+            tactical: "border-purple-600/50 shadow-purple-950/40",
+            immunity: "border-amber-500/50 shadow-amber-900/40",
+          };
+
+          const badgeColors = {
+            attack: "bg-rose-500/20 text-rose-300 border border-rose-500/30",
+            cure: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
+            instant: "bg-sky-500/20 text-sky-300 border border-sky-500/30",
+            useless: "bg-slate-800 text-slate-400 border border-slate-700/30",
+            tactical: "bg-purple-500/20 text-purple-300 border border-purple-500/30",
+            immunity: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
+          };
+
+          const cardTypeLabels = {
+            attack: card.targetOrganId === "any" ? "هجوم عام" : "اعتلال",
+            cure: "علاج",
+            instant: "فوري",
+            useless: "خردة",
+            tactical: "تكتيك",
+            immunity: "حصانة",
+          };
+
+          return (
+            <div
+              className="fixed inset-0 z-40 flex items-center justify-center bg-transparent pointer-events-auto"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedHandCardId(null);
+              }}
+            >
+              <motion.div
+                layoutId={`card-${card.id}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCardClick(card);
+                }}
+                className={`w-48 h-64 rounded-3xl border-2 bg-slate-900/98 p-4 flex flex-col justify-between cursor-pointer select-none shadow-2xl text-right ${borderColors[card.type]}`}
+                transition={{ type: "spring", stiffness: 350, damping: 25 }}
+              >
+                <div className="flex flex-col gap-1.5 w-full text-right">
+                  <span className={`text-[7px] sm:text-[8px] px-1.5 py-0.5 rounded font-black self-start ${badgeColors[card.type]}`}>
+                    {cardTypeLabels[card.type]}
+                  </span>
+                  <span className="text-sm font-black leading-tight text-white">{card.name}</span>
+                </div>
+
+                <div className="text-[10px] sm:text-[11px] text-slate-300 leading-normal my-auto text-right">
+                  {card.description}
+                </div>
+
+                <div className="text-[9px] text-amber-400 text-center animate-pulse border-t border-white/5 pt-1.5 font-bold">
+                  انقر على الكارت مجدداً للاستخدام
+                </div>
+              </motion.div>
+            </div>
+          );
+        })()}
       </AnimatePresence>
     </div>
   );
