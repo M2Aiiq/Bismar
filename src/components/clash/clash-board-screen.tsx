@@ -481,19 +481,33 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
 
             {/* سجل التنبيهات الحديثة تحت بطاقة الدور مباشرة */}
             {room.logs && room.logs.length > 0 && (
-              <div className="w-full mt-2 space-y-1 text-center select-none max-h-[60px] overflow-hidden">
-                {room.logs.slice(-3).map((logMsg, i, arr) => {
+              <div className="w-full mt-2 space-y-1 text-center select-none max-h-[65px] overflow-hidden">
+                {room.logs.slice(-3).map((logItem, i, arr) => {
                   const isLatest = i === arr.length - 1;
+                  const typeColors = {
+                    system: "text-sky-400",
+                    attack: "text-rose-400",
+                    death: "text-red-500 font-extrabold animate-pulse",
+                    counter: "text-purple-400",
+                    cure: "text-emerald-400",
+                    immunity: "text-yellow-400",
+                    tactical: "text-indigo-400",
+                    swap: "text-fuchsia-400",
+                    draw: "text-orange-400",
+                  };
+
+                  const text = typeof logItem === "string" ? logItem : logItem.text;
+                  const logType = typeof logItem === "string" ? "system" : logItem.type;
+                  const colorClass = typeColors[logType] || "text-slate-300";
+
                   return (
                     <motion.div
-                      key={`${i}-${logMsg}`}
+                      key={typeof logItem === "string" ? `${i}-${logItem}` : logItem.id || `${i}-${logItem.text}`}
                       initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: isLatest ? 1 : 0.4, y: 0 }}
-                      className={`text-[10px] font-bold ${
-                        isLatest ? "text-amber-400" : "text-slate-500"
-                      }`}
+                      animate={{ opacity: isLatest ? 1 : 0.45, y: 0 }}
+                      className={`text-[10.5px] font-bold ${colorClass}`}
                     >
-                      {logMsg}
+                      {text}
                     </motion.div>
                   );
                 })}

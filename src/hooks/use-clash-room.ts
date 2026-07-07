@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getDatabase, ref, onValue, set, runTransaction, onDisconnect } from "firebase/database";
 import { getRealtimeDatabase } from "../lib/firebase";
-import type { ClashRoomState, ClashPlayer, ActionCard, OrganCard, PendingAction } from "../types/organClash";
+import type { ClashRoomState, ClashPlayer, ActionCard, OrganCard, PendingAction, GameLog } from "../types/organClash";
 
 const SESSION_STORAGE_KEY = "iraqi-codenames-session";
 
@@ -183,9 +183,13 @@ function shuffleList<T>(list: T[]): T[] {
   return arr;
 }
 
-function addRoomLog(currentRoom: ClashRoomState, msg: string) {
+function addRoomLog(currentRoom: ClashRoomState, text: string, type: GameLog["type"] = "system") {
   if (!currentRoom.logs) currentRoom.logs = [];
-  currentRoom.logs.push(msg);
+  currentRoom.logs.push({
+    id: `${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    text,
+    type,
+  });
   if (currentRoom.logs.length > 5) {
     currentRoom.logs.shift();
   }
@@ -508,7 +512,7 @@ export function useClashRoom(roomId: string) {
             initialHandSize,
             turnTimerSeconds: timerVal,
           };
-          currentRoom.logs = ["بدأت المعركة الآن!"];
+          currentRoom.logs = [{ id: "start", text: "بدأت المعركة الآن!", type: "system" }];
         } catch (err) {
           console.error("Error inside startClashGame Transaction:", err);
         }
@@ -603,9 +607,9 @@ export function useClashRoom(roomId: string) {
             const targetPlayer = targetPlayerId ? currentRoom.players[targetPlayerId] : null;
             const targetOrgan = (targetPlayer && targetOrganId) ? targetPlayer.organs.find(o => o.id === targetOrganId) : null;
             if (targetPlayer && targetOrgan) {
-              addRoomLog(currentRoom, `${player.name}: ${card.name} على ${targetOrgan.name} (${targetPlayer.name})`);
+              addRoomLog(currentRoom, `${player.name}: ${card.name} على ${targetOrgan.name} (${targetPlayer.name})`, "attack");
             } else {
-              addRoomLog(currentRoom, `${player.name}: لعب ${card.name}`);
+              addRoomLog(currentRoom, `${player.name}: لعب ${card.name}`, "attack");
             }
           }
           // 2. الكروت التكتيكية والعلاجية والحصانة والخردة تنفذ فوراً دون انتظار وتمرر الدور
@@ -699,15 +703,15 @@ export function useClashRoom(roomId: string) {
             const targetPlayer = targetPlayerId ? currentRoom.players[targetPlayerId] : null;
             const targetOrgan = (targetPlayer && targetOrganId) ? targetPlayer.organs.find(o => o.id === targetOrganId) : null;
             if (card.type === "cure" && targetOrgan) {
-              addRoomLog(currentRoom, `${player.name}: علاج ${targetOrgan.name} بـ ${card.name}`);
+              addRoomLog(currentRoom, `${player.name}: علاج ${targetOrgan.name} بـ ${card.name}`, "cure");
             } else if (card.type === "immunity" && targetOrgan) {
-              addRoomLog(currentRoom, `${player.name}: حصّن ${targetOrgan.name} بـ ${card.name}`);
+              addRoomLog(currentRoom, `${player.name}: حصّن ${targetOrgan.name} بـ ${card.name}`, "immunity");
             } else if (card.subType === "steal" && targetPlayer) {
-              addRoomLog(currentRoom, `${player.name}: سرق كارت من ${targetPlayer.name}`);
+              addRoomLog(currentRoom, `${player.name}: سرق كارت من ${targetPlayer.name}`, "tactical");
             } else if (card.subType === "swap" && targetPlayer) {
-              addRoomLog(currentRoom, `${player.name}: تبادل الأيدي مع ${targetPlayer.name}`);
+              addRoomLog(currentRoom, `${player.name}: تبادل الأيدي مع ${targetPlayer.name}`, "swap");
             } else {
-              addRoomLog(currentRoom, `${player.name}: لعب كارت ${card.name}`);
+              addRoomLog(currentRoom, `${player.name}: لعب كارت ${card.name}`, "tactical");
             }
 
             // إضافته للكومة المستهلكة
@@ -788,12 +792,12 @@ export function useClashRoom(roomId: string) {
               targetOrgan.afflictions = [];
               targetOrgan.hasVaccine = false;
               targetOrgan.hasOrganicDiet = false;
-              addRoomLog(currentRoom, `💀 مات عضو ${targetOrgan.name} لدى ${targetPlayer.name}!`);
+              addRoomLog(currentRoom, `💀 مات عضو ${targetOrgan.name} لدى ${targetPlayer.name}!`, "death");
             } else {
               if (card.subType !== "acuteInflammation") {
                 targetOrgan.afflictions = [...(targetOrgan.afflictions || []), card.subType];
               }
-              addRoomLog(currentRoom, `💥 أصيب ${targetOrgan.name} (${targetPlayer.name}) بـ ${card.name}`);
+              addRoomLog(currentRoom, `💥 أصيب ${targetOrgan.name} (${targetPlayer.name}) بـ ${card.name}`, "attack");
             }
 
             const allDead = targetPlayer.organs.every((o) => o.isDead);
@@ -958,7 +962,7 @@ export function useClashRoom(roomId: string) {
           currentRoom.discardPile.push(instantCard);
           currentRoom.discardPile.push(currentRoom.pendingAction.card);
 
-          addRoomLog(currentRoom, `${counterPlayer.name}: إلغاء الهجوم بـ ${instantCard.name}`);
+          addRoomLog(currentRoom, `${counterPlayer.name}: إلغاء الهجوم بـ ${instantCard.name}`, "counter");
 
           currentRoom.pendingAction = null;
           transitionToNextTurn(currentRoom);
@@ -1089,7 +1093,7 @@ export function useClashRoom(roomId: string) {
 
         currentRoom.drawPile = drawPile;
         currentRoom.hasReplacedCardThisTurn = true;
-        addRoomLog(currentRoom, `${player.name}: سحب واستبدل كارت`);
+        addRoomLog(currentRoom, `${player.name}: سحب واستبدل كارت`, "draw");
       } catch (err) {
         console.error("Error in drawAndReplaceCard transaction:", err);
       }

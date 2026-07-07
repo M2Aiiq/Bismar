@@ -58,10 +58,16 @@ export interface ClashRoomState {
   turnEndsAt?: number | null;
   skipNextTurn?: boolean | null;
   hasReplacedCardThisTurn?: boolean;
-  logs?: string[];
+  logs?: GameLog[];
   settings: {
     maxPlayers: number;
     initialHandSize: number;
     turnTimerSeconds: number;
   };
+}
+
+export interface GameLog {
+  id: string;
+  text: string;
+  type: "system" | "attack" | "counter" | "cure" | "immunity" | "tactical" | "death" | "swap" | "draw";
 }
