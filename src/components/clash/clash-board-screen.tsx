@@ -244,12 +244,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
     }
   }, [isReady, room, me, playerName, joinClashRoom, router]);
 
-  // 1.5. المضيف يفتح الإعدادات تلقائياً عند أول دخول إذا كانت الغرفة في حالة انتظار
-  useEffect(() => {
-    if (isReady && room?.status === "lobby" && isHost) {
-      setSettingsOpen(true);
-    }
-  }, [isReady, room?.status, isHost]);
+
 
   // 2. السحب التلقائي للكارت عند بدء دور اللاعب
   useEffect(() => {
@@ -471,12 +466,43 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
         {/* Player Organs Grid / Lobby waiting card */}
         {room.status === "lobby" ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-slate-900/30 border border-white/5 rounded-3xl w-full max-w-md my-auto">
-            <span className="text-4xl mb-4 animate-bounce">🎮</span>
             <h3 className="text-lg font-black text-rose-400 mb-2">غرفة انتظار صراع الأعضاء</h3>
+            
+            {/* كود الغرفة في الأعلى */}
+            <div className="mb-4">
+              <span className="text-[10px] text-slate-400 block mb-1">رمز الغرفة:</span>
+              <span className="text-2xl font-black font-mono tracking-widest text-[#F8FAFC]">{room.roomId}</span>
+            </div>
+
+            {/* زري نسخ الكود ونسخ الرابط بدون أيقونات */}
+            <div className="flex gap-2 w-full mb-6">
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(room.roomId);
+                  alert("تم نسخ رمز الغرفة بنجاح!");
+                }}
+                className="flex-1 rounded-xl bg-slate-800 border border-white/5 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-700 transition cursor-pointer"
+              >
+                نسخ الكود
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const joinUrl = `${window.location.origin}/clash/${room.roomId}`;
+                  navigator.clipboard.writeText(joinUrl);
+                  alert("تم نسخ رابط الغرفة بنجاح!");
+                }}
+                className="flex-1 rounded-xl bg-slate-800 border border-white/5 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-700 transition cursor-pointer"
+              >
+                نسخ الرابط
+              </button>
+            </div>
+
             <p className="text-xs text-slate-400 max-w-xs leading-relaxed mb-4 text-center">
               بانتظار اللاعبين للانضمام. المضيف يمكنه ضبط إعدادات المباراة وتعديلها عبر أيقونة الترس بالعلّي.
             </p>
-            <div className="text-xs font-mono bg-slate-950/80 px-3 py-1.5 rounded-lg border border-white/5 text-slate-400 mb-6">
+            <div className="text-xs font-mono bg-slate-950/80 px-3 py-1.5 rounded-lg border border-white/5 text-slate-400 mb-6 w-full">
               عدد المتصلين: {Object.keys(room.players).length} / {room.settings?.maxPlayers || 4}
             </div>
 
@@ -486,7 +512,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 disabled={Object.keys(room.players).length < 2}
                 className="w-full rounded-2xl bg-rose-600 py-3.5 font-bold text-white transition hover:bg-rose-500 disabled:bg-rose-900/40 disabled:text-white/40 disabled:cursor-not-allowed text-xs shadow-lg shadow-rose-600/20 cursor-pointer"
               >
-                بدء المعركة الآن ➔
+                بدء المعركة الآن
               </button>
             ) : (
               <div className="text-xs text-slate-500 font-semibold animate-pulse">
@@ -556,7 +582,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
             onClick={() => void endClashTurn(false)}
             className="mt-3 rounded-2xl bg-slate-800 border border-slate-700 px-6 py-2.5 font-bold text-slate-300 transition hover:bg-slate-700 hover:text-white shadow-lg text-xs cursor-pointer"
           >
-            تخطي الدور وتمرير اللعب ➔
+            تخطي الدور وتمرير اللعب
           </button>
         )}
       </div>
@@ -805,7 +831,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                       onClick={() => void playInstantCounter(c.id)}
                       className="w-full rounded-2xl bg-sky-600 py-4 font-bold text-white transition hover:bg-sky-500 shadow-lg shadow-sky-600/30 text-sm"
                     >
-                      إلغاء الإجراء باستخدام كارت: {c.name} 🚫
+                      إلغاء الإجراء باستخدام كارت: {c.name}
                     </button>
                   ))}
                 </div>
@@ -843,7 +869,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                     onClick={resetClashGame}
                     className="w-full rounded-2xl bg-amber-600 py-3 text-sm font-bold text-white transition hover:bg-amber-500 shadow-lg shadow-amber-600/20"
                   >
-                    العودة للوبي لبدء لعبة جديدة
+                    لعبة جديدة
                   </button>
                 ) : (
                   <p className="text-xs text-slate-500 animate-pulse">
@@ -1026,14 +1052,14 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 {isHost && (
                   <button
                     onClick={async () => {
-                      if (confirm("هل أنت متأكد من رغبتك في إنهاء المباراة الحالية والعودة للوبي؟")) {
+                      if (confirm("هل أنت متأكد من رغبتك في بدء لعبة جديدة؟")) {
                         await resetClashGame();
                         setSettingsOpen(false);
                       }
                     }}
                     className="w-full rounded-xl border border-amber-600/30 bg-amber-600/10 py-2.5 text-xs font-black text-amber-400 hover:bg-amber-600/20 transition text-center cursor-pointer"
                   >
-                    إعادة تعيين المباراة والعودة للوبي 🔄
+                    لعبة جديدة
                   </button>
                 )}
 
@@ -1045,7 +1071,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   }}
                   className="w-full rounded-xl bg-rose-600 py-2.5 text-xs font-black text-white hover:bg-rose-500 transition text-center shadow-lg shadow-rose-600/20 cursor-pointer"
                 >
-                  مغادرة الغرفة والعودة للرئيسية ➔
+                  مغادرة الغرفة والعودة للرئيسية
                 </button>
               </div>
             </motion.div>
