@@ -202,6 +202,7 @@ function transitionToNextTurn(currentRoom: ClashRoomState) {
     currentRoom.currentTurnPlayerId = nextPlayerId;
     currentRoom.turnPhase = "draw";
     currentRoom.pendingAction = null;
+    currentRoom.hasReplacedCardThisTurn = false;
 
     const timerSeconds = currentRoom.settings?.turnTimerSeconds || 30;
     currentRoom.turnEndsAt = Date.now() + timerSeconds * 1000;
@@ -1009,12 +1010,14 @@ export function useClashRoom(roomId: string) {
   const drawAndReplaceCard = useCallback(async () => {
     if (!roomId || !room || room.status !== "playing") return;
     if (room.currentTurnPlayerId !== playerId) return;
+    if (room.hasReplacedCardThisTurn) return;
 
     const database = getRealtimeDatabase() || getDatabase();
     const roomPathRef = ref(database, `clashRooms/${roomId}`);
 
     await runTransaction(roomPathRef, (currentRoom: ClashRoomState | null) => {
       if (!currentRoom || currentRoom.status !== "playing") return currentRoom;
+      if (currentRoom.hasReplacedCardThisTurn) return currentRoom;
 
       try {
         const player = currentRoom.players[playerId];
@@ -1043,6 +1046,7 @@ export function useClashRoom(roomId: string) {
         }
 
         currentRoom.drawPile = drawPile;
+        currentRoom.hasReplacedCardThisTurn = true;
       } catch (err) {
         console.error("Error in drawAndReplaceCard transaction:", err);
       }

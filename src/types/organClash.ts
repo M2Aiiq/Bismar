@@ -57,6 +57,7 @@ export interface ClashRoomState {
   winnerId: string | null;
   turnEndsAt?: number | null;
   skipNextTurn?: boolean | null;
+  hasReplacedCardThisTurn?: boolean;
   settings: {
     maxPlayers: number;
     initialHandSize: number;

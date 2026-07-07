@@ -611,6 +611,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
       {/* 3. منطقة اليد (Bottom Zone - Player Hand Cards) */}
       <div className="w-screen -mx-3 pb-2 bg-transparent select-none overflow-hidden">
         <div className="flex justify-between items-center px-3 mb-1.5 w-full">
+          <span className="text-[9px] text-slate-500 font-bold">كروت اليد الخاصة بك:</span>
           {room.status === "playing" && (
             <button
               onClick={async (e) => {
@@ -619,15 +620,19 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   setToastMessage("ليس دورك!");
                   return;
                 }
+                if (room.hasReplacedCardThisTurn) {
+                  setToastMessage("لقد استبدلت كارتاً بالفعل هذا الدور!");
+                  return;
+                }
                 await drawAndReplaceCard();
                 setToastMessage("تم استبدال كارت عشوائي!");
               }}
-              className="px-3 py-1 bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 text-amber-400 font-bold rounded-xl text-[9px] cursor-pointer transition"
+              disabled={room.hasReplacedCardThisTurn}
+              className="px-3 py-1 bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 text-amber-400 font-bold rounded-xl text-[9px] cursor-pointer transition disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              سحب واستبدال كارت
+              {room.hasReplacedCardThisTurn ? "تم الاستبدال" : "سحب واستبدال كارت"}
             </button>
           )}
-          <span className="text-[9px] text-slate-500 font-bold">كروت اليد الخاصة بك:</span>
         </div>
         {room.status !== "lobby" && me?.hand && me.hand.length > 0 ? (
           <div className="flex gap-2 overflow-x-auto py-2 scrollbar-none snap-x dir-rtl justify-start md:justify-center">
@@ -752,16 +757,16 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                         const isClickable = isSurgery
                           ? true
                           : !o.isDead && (
-                              isOrganicDiet
-                                ? !o.hasOrganicDiet
-                                : isVaccine
-                                  ? !o.hasVaccine
-                                  : isVitamin
+                            isOrganicDiet
+                              ? !o.hasOrganicDiet
+                              : isVaccine
+                                ? !o.hasVaccine
+                                : isVitamin
+                                  ? o.hp < 2
+                                  : isIcu
                                     ? o.hp < 2
-                                    : isIcu
-                                      ? o.hp < 2
-                                      : o.hp < 2 || (o.afflictions && o.afflictions.length > 0)
-                            );
+                                    : o.hp < 2 || (o.afflictions && o.afflictions.length > 0)
+                          );
 
                         return (
                           <button
@@ -978,8 +983,8 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                                 );
                               }}
                               className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${room.settings?.maxPlayers === num
-                                  ? "bg-rose-600 text-white shadow-sm"
-                                  : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                                ? "bg-rose-600 text-white shadow-sm"
+                                : "bg-slate-800 text-slate-400 hover:bg-slate-700"
                                 }`}
                             >
                               {num}
