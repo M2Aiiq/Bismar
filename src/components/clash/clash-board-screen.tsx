@@ -171,6 +171,13 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   const [nameError, setNameError] = useState<string | null>(null);
   const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [localTimer, setLocalTimer] = useState(30);
+
+  useEffect(() => {
+    if (settingsOpen && room?.settings?.turnTimerSeconds) {
+      setLocalTimer(room.settings.turnTimerSeconds);
+    }
+  }, [settingsOpen, room?.settings?.turnTimerSeconds]);
 
   const me = room?.players?.[playerId];
   const isHost = me?.isHost || false;
@@ -1030,13 +1037,18 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                           type="number"
                           min={5}
                           max={300}
-                          value={room.settings?.turnTimerSeconds || 30}
+                          value={localTimer || ""}
                           onChange={(e) => {
-                            const val = Math.max(5, Math.min(300, Number(e.target.value) || 30));
+                            const val = e.target.value;
+                            setLocalTimer(val === "" ? 0 : (Number(val) || 0));
+                          }}
+                          onBlur={() => {
+                            const clamped = Math.max(5, Math.min(300, localTimer || 30));
+                            setLocalTimer(clamped);
                             void updateClashRoomSettings(
                               room.settings?.maxPlayers || 4,
                               room.settings?.initialHandSize || 5,
-                              val
+                              clamped
                             );
                           }}
                           className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white text-center font-bold font-mono outline-none"

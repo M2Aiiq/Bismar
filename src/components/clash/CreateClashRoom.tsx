@@ -52,7 +52,7 @@ export function CreateClashRoomButton() {
         settings: {
           maxPlayers,
           initialHandSize,
-          turnTimerSeconds,
+          turnTimerSeconds: Math.max(5, Math.min(300, turnTimerSeconds || 30)),
         },
       };
 
@@ -159,8 +159,12 @@ export function CreateClashRoomButton() {
                     type="number"
                     min={5}
                     max={300}
-                    value={turnTimerSeconds}
-                    onChange={(e) => setTurnTimerSeconds(Math.max(5, Math.min(300, Number(e.target.value) || 30)))}
+                    value={turnTimerSeconds || ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setTurnTimerSeconds(val === "" ? 0 : Number(val) || 0);
+                    }}
+                    onBlur={() => setTurnTimerSeconds((prev) => Math.max(5, Math.min(300, prev || 30)))}
                     className="w-full bg-transparent px-3 py-2 text-sm text-[#F8FAFC] outline-none text-center font-bold font-mono"
                   />
                 </div>
