@@ -1,9 +1,10 @@
 export interface OrganCard {
   id: string;      // "heart" | "brain" | "liver" | "lungs" | "stomach" | "kidneys" | "intestines"
   name: string;    // "القلب" | "الدماغ" | "الكبد" | "الرئتين" | "المعدة" | "الكلى" | "الأمعاء"
-  hp: number;      // يبدأ بـ 2، الأقصى 2 (أو 3 مع فيتامينات)
+  hp: number;      // يبدأ بـ 2، الأقصى 2
   isDead: boolean;
   hasVaccine?: boolean; // لقاح يمنع الاعتلالات
+  hasOrganicDiet?: boolean; // نظام غذائي عضوي يمنع الاعتلالات العامة
   afflictions?: string[]; // قائمة بالاعتلالات النشطة على العضو
 }
 

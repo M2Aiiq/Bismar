@@ -387,7 +387,6 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
     if (!isMyTurn || room.turnPhase !== "play" || room.pendingAction) return;
 
     if (
-      card.subType === "organicDiet" ||
       card.subType === "sedative" ||
       card.subType === "doubleDraw" ||
       card.type === "useless"
@@ -549,6 +548,9 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   {o.hasVaccine && (
                     <span className="absolute top-1 left-1 text-[9px] sm:text-[11px]" title="محصن باللقاح">🛡️</span>
                   )}
+                  {o.hasOrganicDiet && (
+                    <span className="absolute top-1 left-4 text-[9px] sm:text-[11px]" title="نظام غذائي عضوي">🥦</span>
+                  )}
 
                   {/* Afflictions count badge */}
                   {o.afflictions && o.afflictions.length > 0 && (
@@ -692,7 +694,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                       <span className="text-xs font-bold block mb-2 text-rose-300">{opp.name}</span>
                       <div className="grid grid-cols-2 gap-2">
                         {opp.organs?.map((o) => {
-                          const isImmune = o.hasVaccine || (opp.hasOrganicDiet && ["spicyFood", "foodPoisoning", "toxicDose", "fattyLiver", "cholesterol"].includes(selectedCard.subType));
+                          const isImmune = o.hasVaccine || (o.hasOrganicDiet && ["acuteInflammation", "tumor"].includes(selectedCard.subType));
                           const isLegitimate = selectedCard.targetOrganId === "any" || selectedCard.targetOrganId === o.id || selectedCard.subType === "infection";
                           const isClickable = !o.isDead && !isImmune && isLegitimate;
                           return (
@@ -711,11 +713,12 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                     </div>
                   ))}
 
-                {(selectedCard.type === "cure" || selectedCard.subType === "vaccine") && me && (
+                {(selectedCard.type === "cure" || selectedCard.subType === "vaccine" || selectedCard.subType === "organicDiet") && me && (
                   <div className="rounded-2xl border border-white/5 bg-[#181E2F]/40 p-3 text-right">
                     <span className="text-xs font-bold block mb-2 text-emerald-300">أعضاؤك الشخصية</span>
                     <div className="grid grid-cols-2 gap-2">
                       {me.organs?.map((o) => {
+                        const isOrganicDiet = selectedCard.subType === "organicDiet";
                         const isVaccine = selectedCard.subType === "vaccine";
                         const isSurgery = selectedCard.subType === "surgery";
                         const isVitamin = selectedCard.subType === "vitamin";
@@ -724,13 +727,15 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                         const isClickable = isSurgery
                           ? true
                           : !o.isDead && (
-                              isVaccine
-                                ? !o.hasVaccine
-                                : isVitamin
-                                  ? o.hp < 2
-                                  : isIcu
-                                    ? o.hp === 1
-                                    : o.hp < 2 || (o.afflictions && o.afflictions.length > 0)
+                              isOrganicDiet
+                                ? !o.hasOrganicDiet
+                                : isVaccine
+                                  ? !o.hasVaccine
+                                  : isVitamin
+                                    ? o.hp < 2
+                                    : isIcu
+                                      ? o.hp < 2
+                                      : o.hp < 2 || (o.afflictions && o.afflictions.length > 0)
                             );
 
                         return (

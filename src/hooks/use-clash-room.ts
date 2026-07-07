@@ -611,21 +611,17 @@ export function useClashRoom(roomId: string) {
                     targetOrgan.hp = Math.min(2, targetOrgan.hp + 1);
                   }
                 } else if (card.subType === "icu") {
-                  if (!targetOrgan.isDead && targetOrgan.hp === 1) {
+                  if (!targetOrgan.isDead) {
                     targetOrgan.hp = 2;
                   }
                 } else if (card.subType === "surgery") {
-                  if (targetOrgan.isDead && targetPlayer) {
-                    targetOrgan.isDead = false;
-                    targetOrgan.hp = 1;
-                    targetOrgan.afflictions = [];
-                    targetOrgan.hasVaccine = false;
+                  targetOrgan.isDead = false;
+                  targetOrgan.hp = 2;
+                  targetOrgan.afflictions = [];
+                  targetOrgan.hasVaccine = false;
+                  targetOrgan.hasOrganicDiet = false;
+                  if (targetPlayer) {
                     targetPlayer.isZombie = targetPlayer.organs.every(o => o.isDead);
-                  } else if (!targetOrgan.isDead) {
-                    targetOrgan.afflictions = targetOrgan.afflictions?.filter(a => a !== "tumor") || [];
-                    if (targetOrgan.afflictions.length > 0) {
-                      targetOrgan.afflictions.pop();
-                    }
                   }
                 }
               }
@@ -638,8 +634,11 @@ export function useClashRoom(roomId: string) {
                   targetOrgan.hasVaccine = true;
                   targetOrgan.afflictions = [];
                 }
-              } else if (card.subType === "organicDiet") {
-                player.hasOrganicDiet = true;
+              } else if (card.subType === "organicDiet" && targetOrganId) {
+                const targetOrgan = player.organs.find(o => o.id === targetOrganId);
+                if (targetOrgan && !targetOrgan.isDead) {
+                  targetOrgan.hasOrganicDiet = true;
+                }
               }
             } 
             // ج. التكتيكات
@@ -737,8 +736,8 @@ export function useClashRoom(roomId: string) {
           // Immunity validation
           const hasVaccine = targetOrgan.hasVaccine === true;
           const hasOrganicDietImmunity =
-            targetPlayer.hasOrganicDiet === true &&
-            ["spicyFood", "foodPoisoning", "toxicDose", "fattyLiver", "cholesterol"].includes(card.subType);
+            targetOrgan.hasOrganicDiet === true &&
+            ["acuteInflammation", "tumor"].includes(card.subType);
 
           const isLegitimateTarget =
             card.targetOrganId === "any" || card.targetOrganId === targetOrgan.id;
@@ -750,6 +749,7 @@ export function useClashRoom(roomId: string) {
               targetOrgan.isDead = true;
               targetOrgan.afflictions = [];
               targetOrgan.hasVaccine = false;
+              targetOrgan.hasOrganicDiet = false;
             } else {
               if (card.subType !== "acuteInflammation") {
                 targetOrgan.afflictions = [...(targetOrgan.afflictions || []), card.subType];
@@ -776,26 +776,16 @@ export function useClashRoom(roomId: string) {
               targetOrgan.hp = Math.min(2, targetOrgan.hp + 1);
             }
           } else if (card.subType === "icu") {
-            if (!targetOrgan.isDead && targetOrgan.hp === 1) {
+            if (!targetOrgan.isDead) {
               targetOrgan.hp = 2;
             }
           } else if (card.subType === "surgery") {
-            if (targetOrgan.isDead) {
-              targetOrgan.isDead = false;
-              targetOrgan.hp = 1;
-              targetOrgan.afflictions = [];
-              targetOrgan.hasVaccine = false;
-
-              // Re-check target zombie state
-              targetPlayer.isZombie = targetPlayer.organs.every((o) => o.isDead);
-            } else {
-              if (targetOrgan.afflictions && targetOrgan.afflictions.length > 0) {
-                targetOrgan.afflictions = targetOrgan.afflictions.filter((a) => a !== "tumor");
-                if (targetOrgan.afflictions.length > 0) {
-                  targetOrgan.afflictions.pop();
-                }
-              }
-            }
+            targetOrgan.isDead = false;
+            targetOrgan.hp = 2;
+            targetOrgan.afflictions = [];
+            targetOrgan.hasVaccine = false;
+            targetOrgan.hasOrganicDiet = false;
+            targetPlayer.isZombie = targetPlayer.organs.every((o) => o.isDead);
           }
         }
         // Tactical Rules
@@ -862,9 +852,9 @@ export function useClashRoom(roomId: string) {
         else if (card.type === "immunity" && activePlayer) {
           if (card.subType === "vaccine" && targetOrgan && !targetOrgan.isDead) {
             targetOrgan.hasVaccine = true;
-            targetOrgan.afflictions = []; // clear afflictions when vaccinated
-          } else if (card.subType === "organicDiet") {
-            activePlayer.hasOrganicDiet = true;
+            targetOrgan.afflictions = [];
+          } else if (card.subType === "organicDiet" && targetOrgan && !targetOrgan.isDead) {
+            targetOrgan.hasOrganicDiet = true;
           }
         }
 
