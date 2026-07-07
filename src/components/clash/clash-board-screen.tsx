@@ -527,7 +527,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 <span className="text-xl font-black font-mono tracking-[0.35em] text-[#F8FAFC] sm:text-2xl">{room.roomId}</span>
               </div>
 
-              <div className="mb-4 flex w-full flex-col gap-2 sm:flex-row">
+              <div className="mb-4 flex w-full gap-2">
                 <button
                   type="button"
                   onClick={() => {
