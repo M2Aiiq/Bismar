@@ -518,24 +518,24 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
 
         {/* Player Organs Grid / Lobby waiting card */}
         {room.status === "lobby" ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-slate-900/30 border border-white/5 rounded-3xl w-full max-w-md my-auto">
-            <h3 className="text-lg font-black text-rose-400 mb-2">غرفة انتظار صراع الأعضاء</h3>
+          <div className="flex-none w-full max-w-sm flex flex-col items-center justify-center text-center rounded-[1.75rem] border border-white/5 bg-slate-900/30 px-5 py-4 sm:px-6 sm:py-5">
+            <h3 className="mb-1 text-base font-black text-rose-400 sm:text-lg">غرفة انتظار صراع الأعضاء</h3>
 
             {/* كود الغرفة في الأعلى */}
-            <div className="mb-4">
+            <div className="mb-3">
               <span className="text-[10px] text-slate-400 block mb-1">رمز الغرفة:</span>
-              <span className="text-2xl font-black font-mono tracking-widest text-[#F8FAFC]">{room.roomId}</span>
+              <span className="text-xl font-black font-mono tracking-[0.35em] text-[#F8FAFC] sm:text-2xl">{room.roomId}</span>
             </div>
 
             {/* زري نسخ الكود ونسخ الرابط بدون أيقونات */}
-            <div className="flex gap-2 w-full mb-6">
+            <div className="mb-4 flex w-full gap-2">
               <button
                 type="button"
                 onClick={() => {
                   navigator.clipboard.writeText(room.roomId);
                   setToastMessage("تم نسخ رمز الغرفة بنجاح!");
                 }}
-                className="flex-1 rounded-xl bg-slate-800 border border-white/5 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-700 transition cursor-pointer"
+                className="flex-1 rounded-xl border border-white/5 bg-slate-800 py-2 text-xs font-bold text-slate-300 transition hover:bg-slate-700 cursor-pointer"
               >
                 نسخ الكود
               </button>
@@ -546,16 +546,16 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   navigator.clipboard.writeText(joinUrl);
                   setToastMessage("تم نسخ رابط الغرفة بنجاح!");
                 }}
-                className="flex-1 rounded-xl bg-slate-800 border border-white/5 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-700 transition cursor-pointer"
+                className="flex-1 rounded-xl border border-white/5 bg-slate-800 py-2 text-xs font-bold text-slate-300 transition hover:bg-slate-700 cursor-pointer"
               >
                 نسخ الرابط
               </button>
             </div>
 
-            <p className="text-xs text-slate-400 max-w-xs leading-relaxed mb-4 text-center">
+            <p className="mb-3 max-w-xs text-center text-xs leading-relaxed text-slate-400">
               بانتظار اللاعبين للانضمام. المضيف يمكنه ضبط إعدادات المباراة وتعديلها عبر أيقونة الترس بالعلّي.
             </p>
-            <div className="text-xs font-mono bg-slate-950/80 px-3 py-1.5 rounded-lg border border-white/5 text-slate-400 mb-6 w-full">
+            <div className="mb-4 w-full rounded-lg border border-white/5 bg-slate-950/80 px-3 py-1.5 font-mono text-xs text-slate-400">
               عدد المتصلين: {Object.keys(room.players).length} / {room.settings?.maxPlayers || 4}
             </div>
 
@@ -563,12 +563,12 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
               <button
                 onClick={() => startClashGame(room.settings.maxPlayers, room.settings.initialHandSize, room.settings.turnTimerSeconds)}
                 disabled={Object.keys(room.players).length < 2}
-                className="w-full rounded-2xl bg-rose-600 py-3.5 font-bold text-white transition hover:bg-rose-500 disabled:bg-rose-900/40 disabled:text-white/40 disabled:cursor-not-allowed text-xs shadow-lg shadow-rose-600/20 cursor-pointer"
+                className="w-full rounded-2xl bg-rose-600 py-3 font-bold text-white transition hover:bg-rose-500 disabled:bg-rose-900/40 disabled:text-white/40 disabled:cursor-not-allowed text-xs shadow-lg shadow-rose-600/20 cursor-pointer"
               >
                 بدء المعركة الآن
               </button>
             ) : (
-              <div className="text-xs text-slate-500 font-semibold animate-pulse">
+              <div className="text-xs font-semibold text-slate-500 animate-pulse">
                 بانتظار المضيف لبدء اللعبة...
               </div>
             )}
