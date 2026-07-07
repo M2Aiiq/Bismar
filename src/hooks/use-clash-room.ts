@@ -183,6 +183,91 @@ function shuffleList<T>(list: T[]): T[] {
   return arr;
 }
 
+function transitionToNextTurn(currentRoom: ClashRoomState) {
+  try {
+    const playerIds = Object.keys(currentRoom.players);
+    const currentIndex = playerIds.indexOf(currentRoom.currentTurnPlayerId);
+    if (currentIndex === -1) return;
+
+    let nextIndex = (currentIndex + 1) % playerIds.length;
+    let nextPlayerId = playerIds[nextIndex];
+
+    // Antibody/Sedative turn skip trigger
+    if (currentRoom.skipNextTurn) {
+      currentRoom.skipNextTurn = false;
+      nextIndex = (nextIndex + 1) % playerIds.length;
+      nextPlayerId = playerIds[nextIndex];
+    }
+
+    currentRoom.currentTurnPlayerId = nextPlayerId;
+    currentRoom.turnPhase = "draw";
+    currentRoom.pendingAction = null;
+
+    const timerSeconds = currentRoom.settings?.turnTimerSeconds || 30;
+    currentRoom.turnEndsAt = Date.now() + timerSeconds * 1000;
+
+    const nextPlayer = currentRoom.players[nextPlayerId];
+    if (nextPlayer && nextPlayer.isZombie) {
+      let drawPile = currentRoom.drawPile || [];
+      let discardPile = currentRoom.discardPile || [];
+      if (drawPile.length === 0 && discardPile.length > 0) {
+        drawPile = shuffleList(discardPile);
+        currentRoom.discardPile = [];
+      }
+
+      const zombieAttack = drawPile.pop() || {
+        id: `zombie_att_${Date.now()}`,
+        name: "التهاب حاد",
+        type: "attack" as const,
+        subType: "acuteInflammation" as const,
+        description: "تسبب 1 ضرر لعضو عشوائي للخصم",
+        damage: 1,
+      };
+
+      const liveOpponents = playerIds.filter((pid) => pid !== nextPlayerId && !currentRoom.players[pid].isZombie);
+      if (liveOpponents.length > 0) {
+        const randomOpponentId = liveOpponents[Math.floor(Math.random() * liveOpponents.length)];
+        const randomOpponent = currentRoom.players[randomOpponentId];
+        const liveOrgans = randomOpponent.organs.filter((o) => !o.isDead);
+        if (liveOrgans.length > 0) {
+          const randomOrgan = liveOrgans[Math.floor(Math.random() * liveOrgans.length)];
+          
+          if (!randomOrgan.hasVaccine) {
+            randomOrgan.hp = Math.max(0, randomOrgan.hp - 1);
+            if (randomOrgan.hp <= 0) {
+              randomOrgan.isDead = true;
+              randomOrgan.afflictions = [];
+              randomOrgan.hasVaccine = false;
+            }
+
+            if (randomOpponent.organs.every((o) => o.isDead)) {
+              randomOpponent.isZombie = true;
+            }
+          }
+        }
+      }
+
+      if (!currentRoom.discardPile) currentRoom.discardPile = [];
+      currentRoom.discardPile.push(zombieAttack);
+      currentRoom.drawPile = drawPile;
+
+      let nextNextIndex = (nextIndex + 1) % playerIds.length;
+      currentRoom.currentTurnPlayerId = playerIds[nextNextIndex];
+      currentRoom.turnPhase = "draw";
+
+      currentRoom.turnEndsAt = Date.now() + timerSeconds * 1000;
+
+      const alivePlayers = playerIds.filter((pid) => !currentRoom.players[pid].isZombie);
+      if (alivePlayers.length === 1) {
+        currentRoom.status = "ended";
+        currentRoom.winnerId = alivePlayers[0];
+      }
+    }
+  } catch (err) {
+    console.error("Error in transitionToNextTurn:", err);
+  }
+}
+
 export function useClashRoom(roomId: string) {
   const router = useRouter();
   const [room, setRoom] = useState<ClashRoomState | null>(null);
@@ -505,7 +590,7 @@ export function useClashRoom(roomId: string) {
           } else {
             if (!currentRoom.discardPile) currentRoom.discardPile = [];
             currentRoom.discardPile.push(card);
-            currentRoom.turnPhase = "pass";
+            transitionToNextTurn(currentRoom);
           }
         } catch (err) {
           console.error("Error playing action card:", err);
@@ -685,7 +770,6 @@ export function useClashRoom(roomId: string) {
         currentRoom.discardPile.push(card);
 
         currentRoom.pendingAction = null;
-        currentRoom.turnPhase = "pass";
 
         const playerIds = Object.keys(currentRoom.players);
         const alivePlayers = playerIds.filter((pid) => !currentRoom.players[pid].isZombie);
@@ -695,6 +779,10 @@ export function useClashRoom(roomId: string) {
         } else if (alivePlayers.length === 0) {
           currentRoom.status = "ended";
           currentRoom.winnerId = pending.playerId;
+        }
+
+        if (currentRoom.status === "playing") {
+          transitionToNextTurn(currentRoom);
         }
       } catch (err) {
         console.error("Error committing action:", err);
@@ -739,7 +827,7 @@ export function useClashRoom(roomId: string) {
           currentRoom.discardPile.push(currentRoom.pendingAction.card);
 
           currentRoom.pendingAction = null;
-          currentRoom.turnPhase = "pass";
+          transitionToNextTurn(currentRoom);
         } catch (err) {
           console.error("Error executing instant counter:", err);
         }
@@ -764,87 +852,9 @@ export function useClashRoom(roomId: string) {
       if (!currentRoom || currentRoom.status !== "playing") return currentRoom;
 
       try {
-        const playerIds = Object.keys(currentRoom.players);
-        const currentIndex = playerIds.indexOf(currentRoom.currentTurnPlayerId);
-        if (currentIndex === -1) return currentRoom;
-
-        let nextIndex = (currentIndex + 1) % playerIds.length;
-        let nextPlayerId = playerIds[nextIndex];
-
-        // Antibody/Sedative turn skip trigger
-        if (currentRoom.skipNextTurn) {
-          currentRoom.skipNextTurn = false;
-          nextIndex = (nextIndex + 1) % playerIds.length;
-          nextPlayerId = playerIds[nextIndex];
-        }
-
-        currentRoom.currentTurnPlayerId = nextPlayerId;
-        currentRoom.turnPhase = "draw";
-        currentRoom.pendingAction = null;
-
-        const timerSeconds = currentRoom.settings?.turnTimerSeconds || 30;
-        currentRoom.turnEndsAt = Date.now() + timerSeconds * 1000;
-
-        const nextPlayer = currentRoom.players[nextPlayerId];
-        if (nextPlayer && nextPlayer.isZombie) {
-          let drawPile = currentRoom.drawPile || [];
-          let discardPile = currentRoom.discardPile || [];
-          if (drawPile.length === 0 && discardPile.length > 0) {
-            drawPile = shuffleList(discardPile);
-            currentRoom.discardPile = [];
-          }
-
-          const zombieAttack = drawPile.pop() || {
-            id: `zombie_att_${Date.now()}`,
-            name: "التهاب حاد",
-            type: "attack" as const,
-            subType: "acuteInflammation" as const,
-            description: "تسبب 1 ضرر لعضو عشوائي للخصم",
-            damage: 1,
-          };
-
-          const liveOpponents = playerIds.filter((pid) => pid !== nextPlayerId && !currentRoom.players[pid].isZombie);
-          if (liveOpponents.length > 0) {
-            const randomOpponentId = liveOpponents[Math.floor(Math.random() * liveOpponents.length)];
-            const randomOpponent = currentRoom.players[randomOpponentId];
-            const liveOrgans = randomOpponent.organs.filter((o) => !o.isDead);
-            if (liveOrgans.length > 0) {
-              const randomOrgan = liveOrgans[Math.floor(Math.random() * liveOrgans.length)];
-              
-              // Validate vaccine
-              if (!randomOrgan.hasVaccine) {
-                randomOrgan.hp = Math.max(0, randomOrgan.hp - 1);
-                if (randomOrgan.hp <= 0) {
-                  randomOrgan.isDead = true;
-                  randomOrgan.afflictions = [];
-                  randomOrgan.hasVaccine = false;
-                }
-
-                if (randomOpponent.organs.every((o) => o.isDead)) {
-                  randomOpponent.isZombie = true;
-                }
-              }
-            }
-          }
-
-          if (!currentRoom.discardPile) currentRoom.discardPile = [];
-          currentRoom.discardPile.push(zombieAttack);
-          currentRoom.drawPile = drawPile;
-
-          let nextNextIndex = (nextIndex + 1) % playerIds.length;
-          currentRoom.currentTurnPlayerId = playerIds[nextNextIndex];
-          currentRoom.turnPhase = "draw";
-
-          currentRoom.turnEndsAt = Date.now() + timerSeconds * 1000;
-
-          const alivePlayers = playerIds.filter((pid) => !currentRoom.players[pid].isZombie);
-          if (alivePlayers.length === 1) {
-            currentRoom.status = "ended";
-            currentRoom.winnerId = alivePlayers[0];
-          }
-        }
+        transitionToNextTurn(currentRoom);
       } catch (err) {
-        console.error("Error transitioning turn:", err);
+        console.error("Error transitioning turn manually:", err);
       }
 
       return currentRoom;

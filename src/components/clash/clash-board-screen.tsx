@@ -582,12 +582,12 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
         </div>
 
         {/* Turn Phase manual action */}
-        {room.turnPhase === "pass" && isMyTurn && (
+        {room.turnPhase === "play" && isMyTurn && !room.pendingAction && (
           <button
             onClick={() => void endClashTurn(false)}
-            className="mt-3 rounded-2xl bg-rose-600 px-6 py-2.5 font-bold text-white transition hover:bg-rose-500 shadow-lg shadow-rose-600/30 text-xs"
+            className="mt-3 rounded-2xl bg-slate-800 border border-slate-700 px-6 py-2.5 font-bold text-slate-300 transition hover:bg-slate-700 hover:text-white shadow-lg text-xs cursor-pointer"
           >
-            إنهاء الدور وتمرير اللعب ➔
+            تخطي الدور وتمرير اللعب ➔
           </button>
         )}
       </div>
