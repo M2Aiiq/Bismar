@@ -551,12 +551,26 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 </button>
               </div>
 
-              <p className="mb-3 max-w-xl text-center text-xs leading-relaxed text-slate-400">
-                بانتظار اللاعبين للانضمام. المضيف يمكنه ضبط إعدادات المباراة وتعديلها عبر أيقونة الترس بالعلّي.
-              </p>
-
               <div className="w-full rounded-lg border border-white/5 bg-slate-950/80 px-3 py-1.5 font-mono text-xs text-slate-400">
                 عدد المتصلين: {Object.keys(room.players).length} / {room.settings?.maxPlayers || 4}
+              </div>
+
+              <div className="mt-3 w-full rounded-2xl border border-white/5 bg-slate-950/50 px-3 py-3 text-right">
+                <div className="mb-2 text-[10px] font-bold tracking-[0.18em] text-slate-500">اللاعبون</div>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {Object.values(room.players).map((roomPlayer) => (
+                    <span
+                      key={roomPlayer.id}
+                      className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-bold ${roomPlayer.isHost
+                          ? "border-amber-400/30 bg-amber-500/10 text-amber-300"
+                          : "border-white/10 bg-slate-800/80 text-slate-200"
+                        }`}
+                    >
+                      <span className="max-w-[10rem] truncate">{roomPlayer.name}</span>
+                      {roomPlayer.isHost ? <span className="text-[9px] uppercase tracking-widest text-amber-300">host</span> : null}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
 
