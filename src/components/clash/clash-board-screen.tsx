@@ -851,10 +851,8 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                       <span className="text-xs font-bold block mb-2 text-rose-300">{opp.name}</span>
                       <div className="grid grid-cols-2 gap-2">
                         {opp.organs?.map((o) => {
-                          const isGeneralAttack = ["acuteInflammation", "tumor"].includes(selectedCard.subType);
-                          const isImmune = !isGeneralAttack && o.hasVaccine;
                           const isLegitimate = selectedCard.targetOrganId === "any" || selectedCard.targetOrganId === o.id || selectedCard.subType === "infection";
-                          const isClickable = !o.isDead && !isImmune && isLegitimate;
+                          const isClickable = !o.isDead && isLegitimate;
                           return (
                             <button
                               key={o.id}
