@@ -7,7 +7,7 @@ import { getRealtimeDatabase } from "../lib/firebase";
 import type { ClashRoomState, ClashPlayer, ActionCard, OrganCard, PendingAction, GameLog } from "../types/organClash";
 
 const SESSION_STORAGE_KEY = "iraqi-codenames-session";
-const IMMUNITY_DURATION_TURNS = 2;
+const VACCINE_REFLECT_DAMAGE = true; // اللقاح يعكس الضرر على المهاجم
 
 interface SessionData {
   playerId: string;
@@ -221,52 +221,60 @@ function clearVaccineEffect(targetOrgan: OrganCard) {
   targetOrgan.vaccineTurnsLeft = 0;
 }
 
-function clearOrganicDietEffect(targetPlayer: ClashPlayer) {
-  targetPlayer.hasOrganicDiet = false;
-  targetPlayer.organicDietTurnsLeft = 0;
-  if (targetPlayer.organs) {
-    targetPlayer.organs.forEach((o) => {
-      o.hasOrganicDiet = false;
-      o.organicDietOwnerId = null;
-    });
-  }
+function clearOrganicDietEffect(organ: OrganCard) {
+  organ.hasOrganicDiet = false;
+  organ.organicDietTurnsLeft = 0;
 }
 
 function setVaccineEffect(targetOrgan: OrganCard) {
   targetOrgan.hasVaccine = true;
-  targetOrgan.vaccineTurnsLeft = IMMUNITY_DURATION_TURNS;
+  targetOrgan.vaccineTurnsLeft = 9999; // دائم حتى يتم إزالته
 }
 
-function setOrganicDietEffect(targetPlayer: ClashPlayer) {
-  targetPlayer.hasOrganicDiet = true;
-  targetPlayer.organicDietTurnsLeft = IMMUNITY_DURATION_TURNS;
+function setOrganicDietEffect(organ: OrganCard, ownerId: string) {
+  organ.hasOrganicDiet = true;
+  organ.organicDietOwnerId = ownerId;
+  organ.organicDietStartTurn = ownerId; // يُستخدم لمعرفة متى يعود الدور
+  organ.organicDietTurnsLeft = 9999; // دائم حتى تنتهي الشروط
 }
 
 function normalizeTemporaryEffects(currentRoom: ClashRoomState) {
-  // تأثيرات الأعضاء تدار لحظياً وتنقضي بشروط معينة
+  // لا حاجة لتطبيع - الآن اللقاح والنظام الغذائي دائمان حتى تنتهي الشروط
 }
 
-function expireTemporaryEffects(currentRoom: ClashRoomState) {
-  // تأثيرات الأعضاء تدار لحظياً وتنقضي بشروط معينة
+/**
+ * يُستدعى عند انتهاء دور اللاعب "playerId"
+ * - إذا كان العضو عليه نظام غذائي وصاحبه هو صاحب الدور الذي انتهى، يُزال النظام
+ */
+function expireTemporaryEffectsForPlayer(currentRoom: ClashRoomState, endedPlayerId: string) {
+  Object.values(currentRoom.players).forEach((player) => {
+    player.organs.forEach((organ) => {
+      if (organ.hasOrganicDiet && organ.organicDietOwnerId === endedPlayerId) {
+        clearOrganicDietEffect(organ);
+      }
+    });
+  });
 }
 
-function transitionToNextTurn(currentRoom: ClashRoomState) {
+function transitionToNextTurn(currentRoom: ClashRoomState, returnToSamePlayer = false) {
   try {
-    normalizeTemporaryEffects(currentRoom);
     const playerIds = Object.keys(currentRoom.players);
-    const currentIndex = playerIds.indexOf(currentRoom.currentTurnPlayerId);
+    const currentPlayerId = currentRoom.currentTurnPlayerId;
+    const currentIndex = playerIds.indexOf(currentPlayerId);
     if (currentIndex === -1) return;
 
-    let nextPlayerId = currentRoom.currentTurnPlayerId;
+    // إنهاء دور اللاعب الحالي: إزالة النظام الغذائي المرتبط به
+    expireTemporaryEffectsForPlayer(currentRoom, currentPlayerId);
 
-    if (currentRoom.skipAllOthers) {
-      currentRoom.skipAllOthers = false;
-      addRoomLog(currentRoom, `💤 تم تخطي جميع اللاعبين بالتخدير العام! عاد الدور لنفس اللاعب.`, "system");
+    let nextPlayerId: string;
+    if (returnToSamePlayer) {
+      // تخدير عام: يعود الدور لنفس اللاعب
+      nextPlayerId = currentPlayerId;
     } else {
       let nextIndex = (currentIndex + 1) % playerIds.length;
       nextPlayerId = playerIds[nextIndex];
 
-      // Antibody/Sedative turn skip trigger
+      // skipNextTurn: تخطي دور اللاعب التالي (للإصدارات القديمة من التخدير)
       if (currentRoom.skipNextTurn) {
         currentRoom.skipNextTurn = false;
         nextIndex = (nextIndex + 1) % playerIds.length;
@@ -278,19 +286,6 @@ function transitionToNextTurn(currentRoom: ClashRoomState) {
     currentRoom.turnPhase = "draw";
     currentRoom.pendingAction = null;
     currentRoom.hasReplacedCardThisTurn = false;
-
-    // Expire organic diet when turn returns to the owner who played it
-    Object.values(currentRoom.players).forEach((p) => {
-      p.organs.forEach((o) => {
-        if (o.hasOrganicDiet && o.organicDietOwnerId === nextPlayerId) {
-          o.hasOrganicDiet = false;
-          o.organicDietOwnerId = null;
-          addRoomLog(currentRoom, `🥦 انتهى مفعول النظام الغذائي العضوي على ${o.name} لدى ${p.name}`, "system");
-        }
-      });
-    });
-
-    expireTemporaryEffects(currentRoom);
 
     const timerSeconds = currentRoom.settings?.turnTimerSeconds || 30;
     currentRoom.turnEndsAt = Date.now() + timerSeconds * 1000;
@@ -340,8 +335,7 @@ function transitionToNextTurn(currentRoom: ClashRoomState) {
       currentRoom.discardPile.push(zombieAttack);
       currentRoom.drawPile = drawPile;
 
-      const nextPlayerIdx = playerIds.indexOf(nextPlayerId);
-      let nextNextIndex = (nextPlayerIdx + 1) % playerIds.length;
+      let nextNextIndex = (playerIds.indexOf(nextPlayerId) + 1) % playerIds.length;
       currentRoom.currentTurnPlayerId = playerIds[nextNextIndex];
       currentRoom.turnPhase = "draw";
 
@@ -597,7 +591,7 @@ export function useClashRoom(roomId: string) {
 
             currentRoom.players[pid].organs = createInitialOrgans();
             currentRoom.players[pid].isZombie = false;
-            clearOrganicDietEffect(currentRoom.players[pid]);
+            // لا حاجة لتصفير النظام الغذائي هنا - createInitialOrgans() تنشئ أعضاء جديدة
           });
 
           currentRoom.drawPile = deck;
@@ -775,7 +769,7 @@ export function useClashRoom(roomId: string) {
                   targetOrgan.hp = 2;
                   targetOrgan.afflictions = [];
                   clearVaccineEffect(targetOrgan);
-                  clearOrganicDietEffect(targetPlayer);
+                  clearOrganicDietEffect(targetOrgan);
                   if (targetPlayer) {
                     targetPlayer.isZombie = targetPlayer.organs.every(o => o.isDead);
                   }
@@ -791,11 +785,9 @@ export function useClashRoom(roomId: string) {
                   targetOrgan.afflictions = [];
                 }
               } else if (card.subType === "organicDiet" && targetOrganId) {
-                const targetOrgan = player.organs.find((o) => o.id === targetOrganId);
-                if (targetOrgan && !targetOrgan.isDead) {
-                  targetOrgan.hasOrganicDiet = true;
-                  targetOrgan.organicDietOwnerId = playerId;
-                  targetOrgan.afflictions = [];
+                const targetOrgan = player.organs.find(o => o.id === targetOrganId);
+                if (targetOrgan && !targetOrgan.isDead && !player.isZombie) {
+                  setOrganicDietEffect(targetOrgan, playerId);
                 }
               }
             }
@@ -816,7 +808,8 @@ export function useClashRoom(roomId: string) {
                   targetPlayer.hand = temp;
                 }
               } else if (card.subType === "sedative") {
-                currentRoom.skipAllOthers = true;
+                // تخدير عام: يُخدّر جميع اللاعبين ويعود الدور لنفس اللاعب
+                currentRoom.skipNextTurn = false; // لا نستخدم skipNextTurn بعد الآن لهذا
               } else if (card.subType === "doubleDraw") {
                 let drawPile = currentRoom.drawPile || [];
                 let discardPile = currentRoom.discardPile || [];
@@ -863,7 +856,9 @@ export function useClashRoom(roomId: string) {
             }
 
             if (currentRoom.status === "playing") {
-              transitionToNextTurn(currentRoom);
+              // تخدير عام: يعود الدور لنفس اللاعب
+              const returnToSame = card.subType === "sedative";
+              transitionToNextTurn(currentRoom, returnToSame);
             }
           }
         } catch (err) {
@@ -906,99 +901,69 @@ export function useClashRoom(roomId: string) {
 
         // Core Combat Rules
         if (card.type === "attack" && targetPlayer && targetOrgan) {
-          // Check Vaccine reflection first!
-          if (targetOrgan.hasVaccine && !targetOrgan.isDead) {
-            // Reflect damage to the attacker (activePlayer)
+          const isGeneralAttack = ["acuteInflammation", "tumor"].includes(card.subType);
+          const activePlayer = currentRoom.players[pending.playerId];
+
+          // الورم والتهاب حاد يُزيلان النظام الغذائي ويتجاوزان اللقاح
+          if (isGeneralAttack) {
+            clearVaccineEffect(targetOrgan);
+            clearOrganicDietEffect(targetOrgan);
+          }
+
+          const isLegitimateTarget =
+            card.targetOrganId === "any" || card.targetOrganId === targetOrgan.id;
+
+          // فحص: هل العضو محمي بنظام غذائي؟ (يمنع أي هجوم عدا الورم والالتهاب الحاد)
+          if (targetOrgan.hasOrganicDiet && !isGeneralAttack && isLegitimateTarget && !targetOrgan.isDead) {
+            // النظام الغذائي يحمي من الهجوم - لا يحدث شيء
+            addRoomLog(currentRoom, `🥦 ${targetOrgan.name} (${targetPlayer.name}) محمي بالنظام الغذائي! الهجوم مصدود.`, "immunity");
+          }
+          // فحص: هل العضو ملقح؟ → عكس الضرر على المهاجم
+          else if (targetOrgan.hasVaccine && !isGeneralAttack && isLegitimateTarget && !targetOrgan.isDead && VACCINE_REFLECT_DAMAGE) {
             if (activePlayer) {
-              const attackerOrgan = activePlayer.organs.find((o) => o.id === targetOrgan.id);
-              const dmg = card.damage ?? 1;
-
-              if (attackerOrgan && !attackerOrgan.isDead) {
-                attackerOrgan.hp = Math.max(0, attackerOrgan.hp - dmg);
-                if (attackerOrgan.hp <= 0) {
-                  attackerOrgan.isDead = true;
-                  attackerOrgan.afflictions = [];
-                  clearVaccineEffect(attackerOrgan);
-                  clearOrganicDietEffect(activePlayer);
-
-                  if (activePlayer.organs.every((o) => o.isDead)) {
-                    activePlayer.isZombie = true;
-                  }
-                  addRoomLog(currentRoom, `🛡️ اللقاح يعكس الهجوم! 💀 مات ${attackerOrgan.name} لدى المهاجم ${activePlayer.name}!`, "death");
+              const aliveOrgans = activePlayer.organs.filter(o => !o.isDead);
+              if (aliveOrgans.length > 0) {
+                const randomOrgan = aliveOrgans[Math.floor(Math.random() * aliveOrgans.length)];
+                const dmg = card.damage ?? 1;
+                randomOrgan.hp = Math.max(0, randomOrgan.hp - dmg);
+                if (randomOrgan.hp <= 0) {
+                  randomOrgan.isDead = true;
+                  randomOrgan.afflictions = [];
+                  clearVaccineEffect(randomOrgan);
+                  clearOrganicDietEffect(randomOrgan);
+                  addRoomLog(currentRoom, `🛡️🔄 اللقاح عكس الهجوم! 💀 مات ${randomOrgan.name} لدى ${activePlayer.name}!`, "counter");
                 } else {
                   if (card.subType !== "acuteInflammation") {
-                    attackerOrgan.afflictions = [...(attackerOrgan.afflictions || []), card.subType];
+                    randomOrgan.afflictions = [...(randomOrgan.afflictions || []), card.subType];
                   }
-                  addRoomLog(currentRoom, `🛡️ اللقاح يعكس الهجوم! 💥 أصيب ${attackerOrgan.name} لدى المهاجم ${activePlayer.name} بـ ${card.name}`, "counter");
+                  addRoomLog(currentRoom, `🛡️🔄 اللقاح عكس الهجوم! 💥 أصيب ${randomOrgan.name} (${activePlayer.name})`, "counter");
                 }
-              } else {
-                addRoomLog(currentRoom, `🛡️ اللقاح يعكس الهجوم! لم يصب المهاجم بأي ضرر لأن عضوه مدمر بالفعل.`, "counter");
+                if (activePlayer.organs.every(o => o.isDead)) {
+                  activePlayer.isZombie = true;
+                }
               }
             }
-
-            // Consume/clear Vaccine on targetOrgan
-            clearVaccineEffect(targetOrgan);
           }
-          // Check Organic Diet protection
-          else if (targetOrgan.hasOrganicDiet && !targetOrgan.isDead) {
-            const isGeneralAttack = ["acuteInflammation", "tumor"].includes(card.subType);
-
-            if (isGeneralAttack) {
-              // General attack breaks Organic Diet and does damage!
-              targetOrgan.hasOrganicDiet = false;
-              targetOrgan.organicDietOwnerId = null;
-
-              const dmg = card.damage ?? 1;
-              targetOrgan.hp = Math.max(0, targetOrgan.hp - dmg);
-              if (targetOrgan.hp <= 0) {
-                targetOrgan.isDead = true;
-                targetOrgan.afflictions = [];
-                clearVaccineEffect(targetOrgan);
-                clearOrganicDietEffect(targetPlayer);
-                if (targetPlayer.organs.every((o) => o.isDead)) {
-                  targetPlayer.isZombie = true;
-                }
-                addRoomLog(currentRoom, `💀 تم كسر النظام الغذائي ومات عضو ${targetOrgan.name} لدى ${targetPlayer.name}!`, "death");
-              } else {
-                addRoomLog(currentRoom, `💥 تم كسر النظام الغذائي العضوي وأصيب ${targetOrgan.name} (${targetPlayer.name}) بـ ${card.name}`, "attack");
-              }
-            } else {
-              // Block the attack
-              addRoomLog(currentRoom, `🥦 النظام الغذائي العضوي حمى ${targetOrgan.name} (${targetPlayer.name}) من هجوم ${card.name}!`, "immunity");
-            }
-          }
-          // Normal attack execution
-          else {
-            const isGeneralAttack = ["acuteInflammation", "tumor"].includes(card.subType);
-
-            if (isGeneralAttack) {
+          // هجوم عادي
+          else if (isLegitimateTarget && !targetOrgan.isDead && !targetOrgan.hasVaccine) {
+            const dmg = card.damage ?? 1;
+            targetOrgan.hp = Math.max(0, targetOrgan.hp - dmg);
+            if (targetOrgan.hp <= 0) {
+              targetOrgan.isDead = true;
+              targetOrgan.afflictions = [];
               clearVaccineEffect(targetOrgan);
-              clearOrganicDietEffect(targetPlayer);
+              clearOrganicDietEffect(targetOrgan);
+              addRoomLog(currentRoom, `💀 مات عضو ${targetOrgan.name} لدى ${targetPlayer.name}!`, "death");
+            } else {
+              if (card.subType !== "acuteInflammation") {
+                targetOrgan.afflictions = [...(targetOrgan.afflictions || []), card.subType];
+              }
+              addRoomLog(currentRoom, `💥 أصيب ${targetOrgan.name} (${targetPlayer.name}) بـ ${card.name}`, "attack");
             }
 
-            const isLegitimateTarget =
-              card.targetOrganId === "any" || card.targetOrganId === targetOrgan.id;
-
-            if (isLegitimateTarget && !targetOrgan.isDead) {
-              const dmg = card.damage ?? 1;
-              targetOrgan.hp = Math.max(0, targetOrgan.hp - dmg);
-              if (targetOrgan.hp <= 0) {
-                targetOrgan.isDead = true;
-                targetOrgan.afflictions = [];
-                clearVaccineEffect(targetOrgan);
-                clearOrganicDietEffect(targetPlayer);
-                addRoomLog(currentRoom, `💀 مات عضو ${targetOrgan.name} لدى ${targetPlayer.name}!`, "death");
-              } else {
-                if (card.subType !== "acuteInflammation") {
-                  targetOrgan.afflictions = [...(targetOrgan.afflictions || []), card.subType];
-                }
-                addRoomLog(currentRoom, `💥 أصيب ${targetOrgan.name} (${targetPlayer.name}) بـ ${card.name}`, "attack");
-              }
-
-              const allDead = targetPlayer.organs.every((o) => o.isDead);
-              if (allDead) {
-                targetPlayer.isZombie = true;
-              }
+            const allDead = targetPlayer.organs.every((o) => o.isDead);
+            if (allDead) {
+              targetPlayer.isZombie = true;
             }
           }
         }
@@ -1024,7 +989,7 @@ export function useClashRoom(roomId: string) {
             targetOrgan.hp = 2;
             targetOrgan.afflictions = [];
             clearVaccineEffect(targetOrgan);
-            clearOrganicDietEffect(targetPlayer);
+            clearOrganicDietEffect(targetOrgan);
             targetPlayer.isZombie = targetPlayer.organs.every((o) => o.isDead);
           }
         }
@@ -1041,11 +1006,10 @@ export function useClashRoom(roomId: string) {
             }
 
             if (extractedAffliction && !targetOrgan.hasVaccine) {
-              const isDietImmune =
-                targetPlayer.hasOrganicDiet === true &&
-                ["spicyFood", "foodPoisoning", "toxicDose", "fattyLiver", "cholesterol"].includes(extractedAffliction);
+              // العدوى المتحورة تنقل الإصابة ويفحص حماية النظام الغذائي على العضو المستهدف
+              const isOrganDietImmune = targetOrgan.hasOrganicDiet === true;
 
-              if (!isDietImmune) {
+              if (!isOrganDietImmune) {
                 targetOrgan.hp = Math.max(0, targetOrgan.hp - 1);
                 if (targetOrgan.hp <= 0) {
                   targetOrgan.isDead = true;
@@ -1094,9 +1058,7 @@ export function useClashRoom(roomId: string) {
             setVaccineEffect(targetOrgan);
             targetOrgan.afflictions = [];
           } else if (card.subType === "organicDiet" && targetOrgan && !targetOrgan.isDead) {
-            targetOrgan.hasOrganicDiet = true;
-            targetOrgan.organicDietOwnerId = pending.playerId;
-            targetOrgan.afflictions = [];
+            setOrganicDietEffect(targetOrgan, pending.playerId);
           }
         }
 
@@ -1169,26 +1131,19 @@ export function useClashRoom(roomId: string) {
               const aliveOrgans = attacker.organs.filter(o => !o.isDead);
               if (aliveOrgans.length > 0) {
                 const randomOrgan = aliveOrgans[Math.floor(Math.random() * aliveOrgans.length)];
-                if (randomOrgan.hasVaccine && !randomOrgan.isDead) {
+                const dmg = pendingCard.damage ?? 1;
+                randomOrgan.hp = Math.max(0, randomOrgan.hp - dmg);
+                if (randomOrgan.hp <= 0) {
+                  randomOrgan.isDead = true;
+                  randomOrgan.afflictions = [];
                   clearVaccineEffect(randomOrgan);
-                  addRoomLog(currentRoom, `🛡️ اللقاح حمى ${randomOrgan.name} لدى ${attacker.name} من العدوى المنعكسة!`, "immunity");
-                } else if (randomOrgan.hasOrganicDiet && !randomOrgan.isDead) {
-                  addRoomLog(currentRoom, `🥦 النظام الغذائي حمى ${randomOrgan.name} لدى ${attacker.name} من العدوى المنعكسة!`, "immunity");
+                  clearOrganicDietEffect(randomOrgan);
+                  addRoomLog(currentRoom, `🔄 ${counterPlayer.name}: عكس الهجوم! 💀 مات ${randomOrgan.name} لدى ${attacker.name}`, "counter");
                 } else {
-                  const dmg = pendingCard.damage ?? 1;
-                  randomOrgan.hp = Math.max(0, randomOrgan.hp - dmg);
-                  if (randomOrgan.hp <= 0) {
-                    randomOrgan.isDead = true;
-                    randomOrgan.afflictions = [];
-                    clearVaccineEffect(randomOrgan);
-                    clearOrganicDietEffect(attacker);
-                    addRoomLog(currentRoom, `🔄 ${counterPlayer.name}: عكس الهجوم! 💀 مات ${randomOrgan.name} لدى ${attacker.name}`, "counter");
-                  } else {
-                    addRoomLog(currentRoom, `🔄 ${counterPlayer.name}: عكس الهجوم! 💥 أصيب ${randomOrgan.name} (${attacker.name})`, "counter");
-                  }
-                  if (attacker.organs.every(o => o.isDead)) {
-                    attacker.isZombie = true;
-                  }
+                  addRoomLog(currentRoom, `🔄 ${counterPlayer.name}: عكس الهجوم! 💥 أصيب ${randomOrgan.name} (${attacker.name})`, "counter");
+                }
+                if (attacker.organs.every(o => o.isDead)) {
+                  attacker.isZombie = true;
                 }
               } else {
                 addRoomLog(currentRoom, `🔄 ${counterPlayer.name}: عكس الهجوم بعدوى متحورة!`, "counter");
@@ -1262,7 +1217,7 @@ export function useClashRoom(roomId: string) {
           currentRoom.players[pid].hand = [];
           currentRoom.players[pid].organs = [];
           currentRoom.players[pid].isZombie = false;
-          clearOrganicDietEffect(currentRoom.players[pid]);
+          // الأعضاء جديدة لا تحمل أي تأثيرات سابقة
         });
       } catch (err) {
         console.error("Error resetting Clash room:", err);

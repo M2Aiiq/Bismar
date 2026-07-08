@@ -3,12 +3,13 @@ export interface OrganCard {
   name: string;    // "القلب" | "الدماغ" | "الكبد" | "الرئتين" | "المعدة" | "الكلى" | "الأمعاء"
   hp: number;      // يبدأ بـ 2، الأقصى 2
   isDead: boolean;
-  hasVaccine?: boolean; // لقاح يمنع الاعتلالات
+  hasVaccine?: boolean;          // لقاح يعكس الهجوم على المهاجم
   vaccineTurnsLeft?: number;
-  hasOrganicDiet?: boolean; // نظام غذائي عضوي يمنع الاعتلالات العامة
+  hasOrganicDiet?: boolean;      // نظام غذائي يحمي العضو من أي هجوم
   organicDietTurnsLeft?: number;
-  organicDietOwnerId?: string | null;
-  afflictions?: string[]; // قائمة بالاعتلالات النشطة على العضو
+  organicDietOwnerId?: string;   // معرّف صاحب النظام لمعرفة متى ينتهي
+  organicDietStartTurn?: string;
+  afflictions?: string[];        // قائمة بالاعتلالات النشطة على العضو
 }
 
 export interface ActionCard {
@@ -36,8 +37,6 @@ export interface ClashPlayer {
   hand: ActionCard[];
   isZombie: boolean;
   isHost: boolean;
-  hasOrganicDiet?: boolean; // حصانة ضد المعدة، الكبد، والكوليسترول
-  organicDietTurnsLeft?: number;
 }
 
 export interface PendingAction {
@@ -65,7 +64,6 @@ export interface ClashRoomState {
   logs?: GameLog[];
   isPaused?: boolean | null;
   pausedTimeRemaining?: number | null;
-  skipAllOthers?: boolean | null;
   settings: {
     maxPlayers: number;
     initialHandSize: number;
