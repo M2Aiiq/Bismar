@@ -715,16 +715,15 @@ export function useClashRoom(roomId: string) {
             const targetPlayer = targetPlayerId ? currentRoom.players[targetPlayerId] : null;
             const targetOrgan = (targetPlayer && targetOrganId) ? targetPlayer.organs.find(o => o.id === targetOrganId) : null;
 
-            // فحص: هل يملك أي خصم كارت أجسام مضادة أو عدوى متحورة؟
-            const anyOpponentHasCounter = Object.keys(currentRoom.players)
-              .filter(pid => pid !== playerId)
-              .some(pid => {
-                const p = currentRoom.players[pid];
-                return p.hand?.some(c => c.subType === "antibody" || c.subType === "infection");
-              });
+            // فحص: هل يملك اللاعب المستهدف كارت أجسام مضادة أو عدوى متحورة؟
+            const targetHasCounter = targetPlayerId
+              ? currentRoom.players[targetPlayerId]?.hand?.some(
+                  (c) => c.subType === "antibody" || c.subType === "infection"
+                )
+              : false;
 
-            if (anyOpponentHasCounter) {
-              // يوجد كارت دفاعي لدى خصم → أنشئ حدثاً معلقاً لمنح فرصة المقاطعة
+            if (targetHasCounter) {
+              // يوجد كارت دفاعي لدى المستهدف → أنشئ حدثاً معلقاً لمنح فرصة المقاطعة
               currentRoom.pendingAction = {
                 playerId,
                 card,
