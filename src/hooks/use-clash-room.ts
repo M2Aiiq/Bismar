@@ -401,6 +401,7 @@ export function useClashRoom(roomId: string) {
           return;
         }
 
+        setError(null);
         const data = snapshot.val() as ClashRoomState;
 
         if (!data.players) data.players = {};

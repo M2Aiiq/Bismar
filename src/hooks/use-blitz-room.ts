@@ -73,6 +73,7 @@ export function useBlitzRoom(roomId: string) {
           return;
         }
 
+        setError(null);
         const data = snapshot.val() as BlitzRoomState;
 
         // التأكد من تهيئة الهياكل الأساسية

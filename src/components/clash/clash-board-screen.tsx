@@ -667,41 +667,45 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
             })}
           </div>
         )}
-
-        {/* Turn Phase manual action */}
-        {room.status === "playing" && room.turnPhase === "play" && isMyTurn && !room.pendingAction && (
-          <button
-            onClick={() => void endClashTurn(false)}
-            className="mt-3 rounded-2xl bg-slate-800 border border-slate-700 px-6 py-2.5 font-bold text-slate-300 transition hover:bg-slate-700 hover:text-white shadow-lg text-xs cursor-pointer"
-          >
-            تخطي الدور وتمرير اللعب
-          </button>
-        )}
       </div>
 
       {/* 3. منطقة اليد (Bottom Zone - Player Hand Cards) */}
       <div className="w-screen -mx-3 pb-2 bg-transparent select-none overflow-hidden">
         <div className="flex justify-between items-center px-3 mb-1.5 w-full">
           {room.status === "playing" && (
-            <button
-              onClick={async (e) => {
-                e.stopPropagation();
-                if (!isMyTurn) {
-                  setToastMessage("ليس دورك!");
-                  return;
-                }
-                if (room.hasReplacedCardThisTurn) {
-                  setToastMessage("لقد استبدلت كارتاً بالفعل هذا الدور!");
-                  return;
-                }
-                await drawAndReplaceCard();
-                setToastMessage("تم استبدال كارت عشوائي!");
-              }}
-              disabled={room.hasReplacedCardThisTurn}
-              className="px-3 py-1 bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 text-amber-400 font-bold rounded-xl text-[9px] cursor-pointer transition disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              {room.hasReplacedCardThisTurn ? "تم السحب" : "سحب كارت"}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  if (!isMyTurn) {
+                    setToastMessage("ليس دورك!");
+                    return;
+                  }
+                  if (room.hasReplacedCardThisTurn) {
+                    setToastMessage("لقد استبدلت كارتاً بالفعل هذا الدور!");
+                    return;
+                  }
+                  await drawAndReplaceCard();
+                  setToastMessage("تم استبدال كارت عشوائي!");
+                }}
+                disabled={room.hasReplacedCardThisTurn}
+                className="px-3 py-1 bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 text-amber-400 font-bold rounded-xl text-[9px] cursor-pointer transition disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                {room.hasReplacedCardThisTurn ? "تم السحب" : "سحب كارت"}
+              </button>
+
+              {room.turnPhase === "play" && isMyTurn && !room.pendingAction && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void endClashTurn(false);
+                  }}
+                  className="px-3 py-1 bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 text-slate-300 font-bold rounded-xl text-[9px] cursor-pointer transition"
+                >
+                  تخطي الدور
+                </button>
+              )}
+            </div>
           )}
         </div>
         {room.status !== "lobby" && me?.hand && me.hand.length > 0 ? (
