@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useClashRoom } from "../../hooks/use-clash-room";
 import { motion, AnimatePresence } from "framer-motion";
@@ -225,6 +225,18 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   const [localTimeRemaining, setLocalTimeRemaining] = useState(30);
   const totalDuration = room?.settings?.turnTimerSeconds || 30;
 
+  const isMyTurnRef = useRef(isMyTurn);
+  const isHostRef = useRef(isHost);
+  const currentTurnPlayerIdRef = useRef(room?.currentTurnPlayerId);
+  const turnEndsAtRef = useRef(room?.turnEndsAt);
+
+  useEffect(() => {
+    isMyTurnRef.current = isMyTurn;
+    isHostRef.current = isHost;
+    currentTurnPlayerIdRef.current = room?.currentTurnPlayerId;
+    turnEndsAtRef.current = room?.turnEndsAt;
+  }, [isMyTurn, isHost, room?.currentTurnPlayerId, room?.turnEndsAt]);
+
   useEffect(() => {
     if (room?.status !== "playing" || !room.turnEndsAt) return;
 
@@ -236,25 +248,26 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
     setLocalTimeRemaining(Math.max(0, (room.turnEndsAt - Date.now()) / 1000));
 
     const interval = setInterval(() => {
-      const remaining = Math.max(0, room.turnEndsAt! - Date.now());
+      const endsAt = turnEndsAtRef.current || Date.now();
+      const remaining = Math.max(0, endsAt - Date.now());
       setLocalTimeRemaining(remaining / 1000);
 
-      if (remaining <= 0 && isMyTurn) {
-        clearInterval(interval);
-        void endClashTurn();
-      }
-
-      if (remaining <= 0 && isHost && room.currentTurnPlayerId !== playerId) {
-        const overtime = Date.now() - room.turnEndsAt!;
-        if (overtime >= 2500) {
+      if (remaining <= 0) {
+        if (isMyTurnRef.current) {
           clearInterval(interval);
-          void endClashTurn(true);
+          void endClashTurn();
+        } else if (isHostRef.current && currentTurnPlayerIdRef.current !== playerId) {
+          const overtime = Date.now() - endsAt;
+          if (overtime >= 2500) {
+            clearInterval(interval);
+            void endClashTurn(true);
+          }
         }
       }
     }, 100);
 
     return () => clearInterval(interval);
-  }, [room?.status, room?.turnEndsAt, room?.isPaused, room?.pausedTimeRemaining, isMyTurn, isHost, room?.currentTurnPlayerId, playerId, endClashTurn, totalDuration]);
+  }, [room?.status, room?.turnEndsAt, room?.isPaused, room?.pausedTimeRemaining, playerId, endClashTurn, totalDuration]);
 
   // 1. الانضمام التلقائي للوبي إذا لم نكن مسجلين
   useEffect(() => {

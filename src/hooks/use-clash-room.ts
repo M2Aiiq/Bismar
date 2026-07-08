@@ -366,6 +366,11 @@ function transitionToNextTurn(currentRoom: ClashRoomState) {
 export function useClashRoom(roomId: string) {
   const router = useRouter();
   const [room, setRoom] = useState<ClashRoomState | null>(null);
+  const roomRef = useRef<ClashRoomState | null>(null);
+  useEffect(() => {
+    roomRef.current = room;
+  }, [room]);
+
   const [playerId, setPlayerId] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [isReady, setIsReady] = useState(false);
@@ -546,7 +551,8 @@ export function useClashRoom(roomId: string) {
 
   const startClashGame = useCallback(
     async (maxPlayers: number, initialHandSize: number, turnTimerSeconds?: number) => {
-      if (!roomId || !room) return;
+      const currentRoom = roomRef.current;
+      if (!roomId || !currentRoom) return;
 
       const database = getRealtimeDatabase() || getDatabase();
       const roomPathRef = ref(database, `clashRooms/${roomId}`);
@@ -633,12 +639,13 @@ export function useClashRoom(roomId: string) {
         return currentRoom;
       });
     },
-    [roomId, room]
+    [roomId]
   );
 
   const drawCardAuto = useCallback(async () => {
-    if (!roomId || !room || room.status !== "playing" || room.turnPhase !== "draw") return;
-    if (room.currentTurnPlayerId !== playerId) return;
+    const currentRoom = roomRef.current;
+    if (!roomId || !currentRoom || currentRoom.status !== "playing" || currentRoom.turnPhase !== "draw") return;
+    if (currentRoom.currentTurnPlayerId !== playerId) return;
 
     const database = getRealtimeDatabase() || getDatabase();
     const roomPathRef = ref(database, `clashRooms/${roomId}`);
@@ -682,13 +689,14 @@ export function useClashRoom(roomId: string) {
 
       return currentRoom;
     });
-  }, [roomId, room, playerId]);
+  }, [roomId, playerId]);
 
   const playActionCard = useCallback(
     async (cardId: string, targetPlayerId?: string, targetOrganId?: string) => {
-      if (!roomId || !room || room.status !== "playing" || room.turnPhase !== "play") return;
-      if (room.currentTurnPlayerId !== playerId) return;
-      if (room.pendingAction) return;
+      const currentRoom = roomRef.current;
+      if (!roomId || !currentRoom || currentRoom.status !== "playing" || currentRoom.turnPhase !== "play") return;
+      if (currentRoom.currentTurnPlayerId !== playerId) return;
+      if (currentRoom.pendingAction) return;
 
       const database = getRealtimeDatabase() || getDatabase();
       const roomPathRef = ref(database, `clashRooms/${roomId}`);
@@ -877,11 +885,12 @@ export function useClashRoom(roomId: string) {
         return currentRoom;
       });
     },
-    [roomId, room, playerId]
+    [roomId, playerId]
   );
 
   const commitPendingAction = useCallback(async () => {
-    if (!roomId || !room || !room.pendingAction) return;
+    const currentRoom = roomRef.current;
+    if (!roomId || !currentRoom || !currentRoom.pendingAction) return;
 
     const database = getRealtimeDatabase() || getDatabase();
     const roomPathRef = ref(database, `clashRooms/${roomId}`);
@@ -1120,11 +1129,12 @@ export function useClashRoom(roomId: string) {
 
       return currentRoom;
     });
-  }, [roomId, room]);
+  }, [roomId]);
 
   const playInstantCounter = useCallback(
     async (instantCardId: string) => {
-      if (!roomId || !room || !room.pendingAction) return;
+      const currentRoom = roomRef.current;
+      if (!roomId || !currentRoom || !currentRoom.pendingAction) return;
 
       const database = getRealtimeDatabase() || getDatabase();
       const roomPathRef = ref(database, `clashRooms/${roomId}`);
@@ -1207,31 +1217,32 @@ export function useClashRoom(roomId: string) {
         return currentRoom;
       });
     },
-    [roomId, room]
+    [roomId]
   );
 
   const endClashTurn = useCallback(async (forceByHost = false) => {
-    if (!roomId || !room || room.status !== "playing") return;
+    const currentRoom = roomRef.current;
+    if (!roomId || !currentRoom || currentRoom.status !== "playing") return;
 
-    const isMyTurn = room.currentTurnPlayerId === playerId;
-    const isHost = room.players?.[playerId]?.isHost || false;
+    const isMyTurn = currentRoom.currentTurnPlayerId === playerId;
+    const isHost = currentRoom.players?.[playerId]?.isHost || false;
     if (!isMyTurn && !(forceByHost && isHost)) return;
 
     const database = getRealtimeDatabase() || getDatabase();
     const roomPathRef = ref(database, `clashRooms/${roomId}`);
 
-    await runTransaction(roomPathRef, (currentRoom: ClashRoomState | null) => {
-      if (!currentRoom || currentRoom.status !== "playing") return currentRoom;
+    await runTransaction(roomPathRef, (txRoom: ClashRoomState | null) => {
+      if (!txRoom || txRoom.status !== "playing") return txRoom;
 
       try {
-        transitionToNextTurn(currentRoom);
+        transitionToNextTurn(txRoom);
       } catch (err) {
         console.error("Error transitioning turn manually:", err);
       }
 
-      return currentRoom;
+      return txRoom;
     });
-  }, [roomId, room, playerId]);
+  }, [roomId, playerId]);
 
   const resetClashGame = useCallback(async () => {
     if (!roomId) return;
@@ -1289,9 +1300,10 @@ export function useClashRoom(roomId: string) {
   );
 
   const drawAndReplaceCard = useCallback(async () => {
-    if (!roomId || !room || room.status !== "playing") return;
-    if (room.currentTurnPlayerId !== playerId) return;
-    if (room.hasReplacedCardThisTurn) return;
+    const currentRoom = roomRef.current;
+    if (!roomId || !currentRoom || currentRoom.status !== "playing") return;
+    if (currentRoom.currentTurnPlayerId !== playerId) return;
+    if (currentRoom.hasReplacedCardThisTurn) return;
 
     const database = getRealtimeDatabase() || getDatabase();
     const roomPathRef = ref(database, `clashRooms/${roomId}`);
@@ -1335,10 +1347,11 @@ export function useClashRoom(roomId: string) {
 
       return currentRoom;
     });
-  }, [roomId, room, playerId]);
+  }, [roomId, playerId]);
 
   const togglePauseClashGame = useCallback(async () => {
-    if (!roomId || !room || room.status !== "playing") return;
+    const currentRoom = roomRef.current;
+    if (!roomId || !currentRoom || currentRoom.status !== "playing") return;
 
     const database = getRealtimeDatabase() || getDatabase();
     const roomPathRef = ref(database, `clashRooms/${roomId}`);
@@ -1366,7 +1379,7 @@ export function useClashRoom(roomId: string) {
 
       return currentRoom;
     });
-  }, [roomId, room]);
+  }, [roomId]);
 
   return {
     room,
