@@ -399,11 +399,6 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   // 5. واجهة اللعب الأساسية (Playing State)
   const opponents = Object.values(room.players).filter((p) => p.id !== playerId);
 
-  // كروت المقاطعة التي يمتلكها اللاعب الحالي (أجسام مضادة أو عدوى متحورة)
-  const counterCardsInHand = me?.hand?.filter(
-    (c) => c.subType === "antibody" || c.subType === "infection"
-  ) ?? [];
-
   const handleCardClick = (card: ActionCard) => {
     if (room.isPaused) {
       setToastMessage("اللعبة متوقفة مؤقتاً!");
@@ -439,6 +434,8 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
     setTargetSelectorOpen(false);
   };
 
+  // كروت المقاطعة المتوفرة في يد اللاعب الحالي
+  const counterCardsInHand = me?.hand?.filter((c) => c.type === "instant" || c.subType === "infection") || [];
 
   return (
     <div
@@ -855,11 +852,9 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                       <div className="grid grid-cols-2 gap-2">
                         {opp.organs?.map((o) => {
                           const isGeneralAttack = ["acuteInflammation", "tumor"].includes(selectedCard.subType);
-                          // اللقاح: لا يظهر للمستخدم في قائمة الاستهداف - الزر يُعطل بصمت
-                          const isVaccineBlocked = !isGeneralAttack && o.hasVaccine;
-                          const isOrganicDietBlocked = !isGeneralAttack && o.hasOrganicDiet;
+                          const isImmune = !isGeneralAttack && o.hasVaccine;
                           const isLegitimate = selectedCard.targetOrganId === "any" || selectedCard.targetOrganId === o.id || selectedCard.subType === "infection";
-                          const isClickable = !o.isDead && !isVaccineBlocked && !isOrganicDietBlocked && isLegitimate;
+                          const isClickable = !o.isDead && !isImmune && isLegitimate;
                           return (
                             <button
                               key={o.id}
@@ -868,10 +863,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                               className="rounded-xl border border-white/5 bg-slate-800/80 py-2 text-xs font-bold hover:bg-rose-900/30 hover:border-rose-500 disabled:opacity-30 transition flex flex-col items-center justify-center gap-0.5"
                             >
                               <span>{o.name}</span>
-                              <span className="text-[9px] text-slate-400">
-                                {o.isDead ? "🔒" : `${o.hp}/2HP`}
-                                {o.hasOrganicDiet && " 🥦"}
-                              </span>
+                              <span className="text-[9px] text-slate-400">{o.isDead ? "🔒" : `${o.hp}/2HP`}</span>
                             </button>
                           );
                         })}
@@ -894,9 +886,9 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                           ? true
                           : !o.isDead && (
                             isOrganicDiet
-                              ? !o.hasOrganicDiet  // لا تضع نظام غذائي على عضو محمي مسبقاً
+                              ? !o.hasOrganicDiet
                               : isVaccine
-                                ? !o.hasVaccine    // لا تضع لقاح على عضو ملقح مسبقاً
+                                ? !o.hasVaccine
                                 : isVitamin
                                   ? o.hp < 2
                                   : isIcu
@@ -912,11 +904,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                             className="rounded-xl border border-white/5 bg-slate-800/80 py-2 text-xs font-bold hover:bg-emerald-900/30 hover:border-emerald-500 disabled:opacity-30 transition flex flex-col items-center justify-center gap-0.5"
                           >
                             <span>{o.name}</span>
-                            <span className="text-[9px] text-slate-400">
-                              {o.isDead ? "ميت 💀" : `${o.hp}HP`}
-                              {o.hasVaccine && " 🛡️"}
-                              {o.hasOrganicDiet && " 🥦"}
-                            </span>
+                            <span className="text-[9px] text-slate-400">{o.isDead ? "ميت 💀" : `${o.hp}HP`} {o.hasVaccine && "🛡️"} {o.hasOrganicDiet && "🥦"}</span>
                           </button>
                         );
                       })}
