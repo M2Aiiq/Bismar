@@ -612,6 +612,8 @@ export function useClashRoom(roomId: string) {
           currentRoom.winnerId = null;
           currentRoom.pendingAction = null;
           currentRoom.skipNextTurn = false;
+          currentRoom.isPaused = false;
+          currentRoom.pausedTimeRemaining = null;
 
           const hostId = playerIds.find((pid) => currentRoom.players[pid].isHost) || playerIds[0];
           currentRoom.currentTurnPlayerId = hostId;
@@ -1188,6 +1190,8 @@ export function useClashRoom(roomId: string) {
         currentRoom.turnPhase = "draw";
         currentRoom.skipNextTurn = false;
         currentRoom.logs = [];
+        currentRoom.isPaused = false;
+        currentRoom.pausedTimeRemaining = null;
 
         Object.keys(currentRoom.players || {}).forEach((pid) => {
           currentRoom.players[pid].hand = [];
@@ -1272,6 +1276,37 @@ export function useClashRoom(roomId: string) {
     });
   }, [roomId, room, playerId]);
 
+  const togglePauseClashGame = useCallback(async () => {
+    if (!roomId || !room || room.status !== "playing") return;
+
+    const database = getRealtimeDatabase() || getDatabase();
+    const roomPathRef = ref(database, `clashRooms/${roomId}`);
+
+    await runTransaction(roomPathRef, (currentRoom: ClashRoomState | null) => {
+      if (!currentRoom || currentRoom.status !== "playing") return currentRoom;
+
+      try {
+        const currentlyPaused = !!currentRoom.isPaused;
+        currentRoom.isPaused = !currentlyPaused;
+
+        if (currentRoom.isPaused) {
+          // Store how many seconds were remaining
+          const remainingSeconds = Math.max(0, ((currentRoom.turnEndsAt || Date.now()) - Date.now()) / 1000);
+          currentRoom.pausedTimeRemaining = remainingSeconds;
+        } else {
+          // Unpaused: calculate new turnEndsAt based on pausedTimeRemaining
+          const remaining = currentRoom.pausedTimeRemaining || currentRoom.settings?.turnTimerSeconds || 30;
+          currentRoom.turnEndsAt = Date.now() + remaining * 1000;
+          currentRoom.pausedTimeRemaining = null;
+        }
+      } catch (err) {
+        console.error("Error toggling pause Clash game:", err);
+      }
+
+      return currentRoom;
+    });
+  }, [roomId, room]);
+
   return {
     room,
     playerId,
@@ -1290,5 +1325,6 @@ export function useClashRoom(roomId: string) {
     resetClashGame,
     updateClashRoomSettings,
     drawAndReplaceCard,
+    togglePauseClashGame,
   };
 }

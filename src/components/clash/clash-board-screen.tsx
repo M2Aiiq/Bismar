@@ -190,6 +190,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
     resetClashGame,
     updateClashRoomSettings,
     drawAndReplaceCard,
+    togglePauseClashGame,
   } = useClashRoom(roomId);
 
   const [lobbyName, setLobbyName] = useState("");
@@ -227,6 +228,11 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   useEffect(() => {
     if (room?.status !== "playing" || !room.turnEndsAt) return;
 
+    if (room.isPaused) {
+      setLocalTimeRemaining(room.pausedTimeRemaining ?? totalDuration);
+      return;
+    }
+
     setLocalTimeRemaining(Math.max(0, (room.turnEndsAt - Date.now()) / 1000));
 
     const interval = setInterval(() => {
@@ -248,7 +254,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [room?.status, room?.turnEndsAt, isMyTurn, isHost, room?.currentTurnPlayerId, playerId, endClashTurn]);
+  }, [room?.status, room?.turnEndsAt, room?.isPaused, room?.pausedTimeRemaining, isMyTurn, isHost, room?.currentTurnPlayerId, playerId, endClashTurn, totalDuration]);
 
   // 1. الانضمام التلقائي للوبي إذا لم نكن مسجلين
   useEffect(() => {
@@ -394,6 +400,10 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   const opponents = Object.values(room.players).filter((p) => p.id !== playerId);
 
   const handleCardClick = (card: ActionCard) => {
+    if (room.isPaused) {
+      setToastMessage("اللعبة متوقفة مؤقتاً!");
+      return;
+    }
     if (!isMyTurn) {
       setToastMessage("ليس دورك!");
       return;
@@ -473,7 +483,13 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   : "border-slate-800 bg-slate-900/50 text-slate-400 font-medium"
                   }`}>
                   <span className="text-xs uppercase tracking-wider flex items-center justify-center gap-1.5">
-                    {isMyTurn ? "🔔 حان دورك الآن! العب بحكمة" : `🕒 دور اللاعب الحالي: ${activePlayerName}`}
+                    {room.isPaused ? (
+                      <span className="text-amber-400 animate-pulse">⏸️ اللعبة متوقفة مؤقتاً</span>
+                    ) : isMyTurn ? (
+                      "🔔 حان دورك الآن! العب بحكمة"
+                    ) : (
+                      `🕒 دور اللاعب الحالي: ${activePlayerName}`
+                    )}
                   </span>
 
                   {room.turnEndsAt && (
@@ -673,39 +689,76 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
       <div className="w-screen -mx-3 pb-2 bg-transparent select-none overflow-hidden">
         <div className="flex justify-between items-center px-3 mb-1.5 w-full">
           {room.status === "playing" && (
-            <div className="flex gap-2">
-              <button
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  if (!isMyTurn) {
-                    setToastMessage("ليس دورك!");
-                    return;
-                  }
-                  if (room.hasReplacedCardThisTurn) {
-                    setToastMessage("لقد استبدلت كارتاً بالفعل هذا الدور!");
-                    return;
-                  }
-                  await drawAndReplaceCard();
-                  setToastMessage("تم استبدال كارت عشوائي!");
-                }}
-                disabled={room.hasReplacedCardThisTurn}
-                className="px-3 py-1 bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 text-amber-400 font-bold rounded-xl text-[9px] cursor-pointer transition disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                {room.hasReplacedCardThisTurn ? "تم السحب" : "سحب كارت"}
-              </button>
+            <>
+              <div className="flex gap-2">
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (room.isPaused) {
+                      setToastMessage("اللعبة متوقفة مؤقتاً!");
+                      return;
+                    }
+                    if (!isMyTurn) {
+                      setToastMessage("ليس دورك!");
+                      return;
+                    }
+                    if (room.hasReplacedCardThisTurn) {
+                      setToastMessage("لقد استبدلت كارتاً بالفعل هذا الدور!");
+                      return;
+                    }
+                    await drawAndReplaceCard();
+                    setToastMessage("تم استبدال كارت عشوائي!");
+                  }}
+                  disabled={room.hasReplacedCardThisTurn || !!room.isPaused}
+                  className="px-3 py-1 bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 text-amber-400 font-bold rounded-xl text-[9px] cursor-pointer transition disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  {room.hasReplacedCardThisTurn ? "تم السحب" : "سحب كارت"}
+                </button>
 
-              {room.turnPhase === "play" && isMyTurn && !room.pendingAction && (
+                {room.turnPhase === "play" && isMyTurn && !room.pendingAction && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (room.isPaused) {
+                        setToastMessage("اللعبة متوقفة مؤقتاً!");
+                        return;
+                      }
+                      void endClashTurn(false);
+                    }}
+                    disabled={!!room.isPaused}
+                    className="px-3 py-1 bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 text-slate-300 font-bold rounded-xl text-[9px] cursor-pointer transition disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    تخطي الدور
+                  </button>
+                )}
+              </div>
+
+              {/* زر إيقاف وتشغيل اللعبة للمضيف */}
+              {isHost && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    void endClashTurn(false);
+                    void togglePauseClashGame();
                   }}
-                  className="px-3 py-1 bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 text-slate-300 font-bold rounded-xl text-[9px] cursor-pointer transition"
+                  title={room.isPaused ? "تشغيل اللعبة" : "إيقاف اللعبة مؤقتاً"}
+                  className={`h-7 w-7 rounded-xl border flex items-center justify-center transition active:scale-95 cursor-pointer ${
+                    room.isPaused
+                      ? "bg-emerald-600/20 border-emerald-500/30 text-emerald-400 hover:bg-emerald-600/30 animate-pulse"
+                      : "bg-amber-600/20 border-amber-500/30 text-amber-400 hover:bg-amber-600/30"
+                  }`}
                 >
-                  تخطي الدور
+                  {room.isPaused ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
+                    </svg>
+                  )}
                 </button>
               )}
-            </div>
+            </>
           )}
         </div>
         {room.status !== "lobby" && me?.hand && me.hand.length > 0 ? (

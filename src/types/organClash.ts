@@ -61,6 +61,8 @@ export interface ClashRoomState {
   skipNextTurn?: boolean | null;
   hasReplacedCardThisTurn?: boolean;
   logs?: GameLog[];
+  isPaused?: boolean | null;
+  pausedTimeRemaining?: number | null;
   settings: {
     maxPlayers: number;
     initialHandSize: number;
