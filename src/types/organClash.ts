@@ -6,6 +6,8 @@ export interface OrganCard {
   hasVaccine?: boolean; // لقاح يمنع الاعتلالات
   vaccineTurnsLeft?: number;
   hasOrganicDiet?: boolean; // نظام غذائي عضوي يمنع الاعتلالات العامة
+  organicDietTurnsLeft?: number;
+  organicDietOwnerId?: string | null;
   afflictions?: string[]; // قائمة بالاعتلالات النشطة على العضو
 }
 
@@ -63,6 +65,7 @@ export interface ClashRoomState {
   logs?: GameLog[];
   isPaused?: boolean | null;
   pausedTimeRemaining?: number | null;
+  skipAllOthers?: boolean | null;
   settings: {
     maxPlayers: number;
     initialHandSize: number;

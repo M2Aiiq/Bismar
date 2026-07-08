@@ -25,6 +25,9 @@ function MiniOrganBadge({ organ, className = "h-7 w-7" }: { organ: OrganCard; cl
         alt={organ.name}
         className="w-full h-full object-contain"
       />
+      {organ.hasOrganicDiet && (
+        <span className="absolute top-0 right-0 text-[7px] leading-none" title="نظام غذائي عضوي">🥦</span>
+      )}
     </div>
   );
 }
@@ -649,6 +652,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   {o.hasVaccine && (
                     <span className="absolute top-1 left-1 text-[9px] sm:text-[11px]" title="محصن باللقاح">🛡️</span>
                   )}
+                  {/* Organic Diet badge */}
                   {o.hasOrganicDiet && (
                     <span className="absolute top-1 left-4 text-[9px] sm:text-[11px]" title="نظام غذائي عضوي">🥦</span>
                   )}
@@ -851,10 +855,8 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                       <span className="text-xs font-bold block mb-2 text-rose-300">{opp.name}</span>
                       <div className="grid grid-cols-2 gap-2">
                         {opp.organs?.map((o) => {
-                          const isGeneralAttack = ["acuteInflammation", "tumor"].includes(selectedCard.subType);
-                          const isImmune = !isGeneralAttack && o.hasVaccine;
                           const isLegitimate = selectedCard.targetOrganId === "any" || selectedCard.targetOrganId === o.id || selectedCard.subType === "infection";
-                          const isClickable = !o.isDead && !isImmune && isLegitimate;
+                          const isClickable = !o.isDead && isLegitimate;
                           return (
                             <button
                               key={o.id}
@@ -863,7 +865,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                               className="rounded-xl border border-white/5 bg-slate-800/80 py-2 text-xs font-bold hover:bg-rose-900/30 hover:border-rose-500 disabled:opacity-30 transition flex flex-col items-center justify-center gap-0.5"
                             >
                               <span>{o.name}</span>
-                              <span className="text-[9px] text-slate-400">{o.isDead ? "🔒" : `${o.hp}/2HP`} {o.hasVaccine && "🛡️"}</span>
+                              <span className="text-[9px] text-slate-400">{o.isDead ? "🔒" : `${o.hp}/2HP`}</span>
                             </button>
                           );
                         })}
