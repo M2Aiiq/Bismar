@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useClashRoom } from "../../hooks/use-clash-room";
+import { useClashVoice } from "../../hooks/use-clash-voice";
 import { motion, AnimatePresence } from "framer-motion";
 import type { ActionCard, OrganCard, ClashPlayer } from "../../types/organClash";
 
@@ -55,7 +56,12 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
           }`}>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-black text-white">{opp.name}</span>
+              <span className="text-sm font-black text-white flex items-center gap-1.5">
+                <span>{opp.name}</span>
+                {opp.isMuted !== undefined && (
+                  <span className="text-[11px]" title={opp.isMuted ? "صامت" : "يتحدث"}>{opp.isMuted ? "🔇" : "🎤"}</span>
+                )}
+              </span>
               {opp.isZombie && <span className="text-[9px] bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 px-1.5 py-0.5 rounded-md animate-pulse">Zombie 🧟</span>}
             </div>
             {isLobby && (
@@ -85,7 +91,12 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
             <div key={opp.id} className={`rounded-2xl border bg-slate-900/80 p-3 flex flex-col justify-between transition-all ${isTurn ? "border-rose-500 shadow-md shadow-rose-500/10" : "border-slate-800"
               }`}>
               <div className="flex justify-between items-center">
-                <span className="text-xs font-bold text-white truncate max-w-[80px]">{opp.name}</span>
+                <span className="text-xs font-bold text-white flex items-center gap-1">
+                  <span className="truncate max-w-[65px]">{opp.name}</span>
+                  {opp.isMuted !== undefined && (
+                    <span className="text-[10px]">{opp.isMuted ? "🔇" : "🎤"}</span>
+                  )}
+                </span>
                 {isLobby && (
                   <span className="text-[9px] text-slate-400 font-mono">
                     🟢 متصل
@@ -115,7 +126,12 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
             <div key={opp.id} className={`rounded-xl border bg-slate-900/90 p-2.5 flex flex-col justify-between transition-all ${isTurn ? "border-rose-500 shadow-sm shadow-rose-500/10" : "border-slate-800"
               }`}>
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black text-white truncate max-w-[65px]">{opp.name}</span>
+                <span className="text-[10px] font-black text-white flex items-center gap-1">
+                  <span className="truncate max-w-[50px]">{opp.name}</span>
+                  {opp.isMuted !== undefined && (
+                    <span className="text-[8px]">{opp.isMuted ? "🔇" : "🎤"}</span>
+                  )}
+                </span>
                 {isLobby && (
                   <span className="text-[8px] text-slate-400 font-mono">
                     🟢 متصل
@@ -145,7 +161,12 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
           <div key={opp.id} className={`min-w-[130px] snap-center rounded-xl border bg-slate-900/90 p-2.5 flex flex-col justify-between transition-all ${isTurn ? "border-rose-500 shadow-sm shadow-rose-500/10" : "border-slate-800"
             }`}>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] font-black text-white truncate max-w-[70px]">{opp.name}</span>
+              <span className="text-[10px] font-black text-white flex items-center gap-1">
+                <span className="truncate max-w-[55px]">{opp.name}</span>
+                {opp.isMuted !== undefined && (
+                  <span className="text-[8px]">{opp.isMuted ? "🔇" : "🎤"}</span>
+                )}
+              </span>
               {isLobby && (
                 <span className="text-[8px] text-slate-400 font-mono">
                   🟢 متصل
@@ -192,6 +213,14 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
     drawAndReplaceCard,
     togglePauseClashGame,
   } = useClashRoom(roomId);
+
+  const {
+    voiceActive,
+    isMuted,
+    error: voiceError,
+    initVoice,
+    toggleMute,
+  } = useClashVoice(roomId, playerId, room?.players);
 
   const [lobbyName, setLobbyName] = useState("");
   const [selectedCard, setSelectedCard] = useState<ActionCard | null>(null);
@@ -457,9 +486,42 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
     >
       {/* شريط الإعدادات والتحكم العلوي */}
       <div className="w-full max-w-3xl mx-auto relative flex items-center justify-center px-2 py-2 mb-2 select-none">
+        {/* زر المحادثة الصوتية (اليسار) */}
+        <div className="absolute left-2 flex items-center gap-2">
+          {voiceError && (
+            <span className="text-[10px] text-rose-500 bg-rose-950/20 px-2 py-0.5 rounded border border-rose-500/20 hidden md:inline">
+              {voiceError}
+            </span>
+          )}
+          {!voiceActive ? (
+            <button
+              onClick={() => void initVoice()}
+              className="px-2.5 py-1.5 rounded-lg border border-rose-500/30 bg-rose-950/40 text-xs font-bold text-rose-400 hover:bg-rose-900/50 hover:text-white transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-rose-900/20"
+              title="انضم للمحادثة الصوتية"
+            >
+              <span>🎙️</span>
+              <span className="hidden sm:inline">تشغيل الصوت</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => void toggleMute()}
+              className={`px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-lg ${
+                isMuted
+                  ? "border-amber-500/40 bg-amber-950/40 text-amber-400 hover:bg-amber-900/50 hover:text-white shadow-amber-900/20"
+                  : "border-emerald-500/40 bg-emerald-950/40 text-emerald-400 hover:bg-emerald-900/50 hover:text-white shadow-emerald-900/20"
+              }`}
+              title={isMuted ? "المايك صامت - اضغط للتحدث" : "المايك مفتوح - اضغط للكتم"}
+            >
+              <span>{isMuted ? "🔇" : "🎤"}</span>
+              <span className="hidden sm:inline">{isMuted ? "كتم الصوت" : "التحدث نشط"}</span>
+            </button>
+          )}
+        </div>
+
         <span className="text-sm md:text-base font-black tracking-widest text-rose-400">
           صراع الأعضاء
         </span>
+
         <button
           onClick={() => setSettingsOpen(true)}
           className="absolute right-2 p-1.5 rounded-lg border border-slate-850 bg-slate-900/60 text-slate-400 hover:text-white hover:border-slate-700 hover:bg-slate-900 transition-all cursor-pointer"
@@ -603,6 +665,9 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                         className="inline-flex items-center justify-center rounded-full border border-amber-400/30 bg-amber-500/10 px-4 py-1 text-[11px] font-bold text-amber-300"
                       >
                         <span className="max-w-[12rem] truncate">{roomPlayer.name}</span>
+                        {roomPlayer.isMuted !== undefined && (
+                          <span className="mr-1.5 text-[9px]">{roomPlayer.isMuted ? "🔇" : "🎤"}</span>
+                        )}
                       </span>
                     ))}
 
@@ -612,9 +677,12 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                       .map((roomPlayer) => (
                         <span
                           key={roomPlayer.id}
-                          className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-slate-800/80 px-3 py-1 text-[11px] font-bold text-slate-200"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-800/80 px-3 py-1 text-[11px] font-bold text-slate-200"
                         >
                           <span className="max-w-[10rem] truncate">{roomPlayer.name}</span>
+                          {roomPlayer.isMuted !== undefined && (
+                            <span className="mr-1.5 text-[9px]">{roomPlayer.isMuted ? "🔇" : "🎤"}</span>
+                          )}
                         </span>
                       ))}
                   </div>

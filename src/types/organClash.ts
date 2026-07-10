@@ -36,6 +36,7 @@ export interface ClashPlayer {
   isHost: boolean;
   hasOrganicDiet?: boolean; // حصانة ضد المعدة، الكبد، والكوليسترول
   organicDietTurnsLeft?: number;
+  isMuted?: boolean; // مؤشر كتم المايكروفون
 }
 
 export interface PendingAction {
