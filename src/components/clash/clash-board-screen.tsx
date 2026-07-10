@@ -59,7 +59,13 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
               <span className="text-sm font-black text-white flex items-center gap-1.5">
                 <span>{opp.name}</span>
                 {opp.isMuted !== undefined && (
-                  <span className="text-[11px]" title={opp.isMuted ? "صامت" : "يتحدث"}>{opp.isMuted ? "🔇" : "🎤"}</span>
+                  <span className="flex items-center" title={opp.isMuted ? "صامت" : "يتحدث"}>
+                    {opp.isMuted ? (
+                      <img src="/mute.png" className="w-3.5 h-3.5 object-contain" alt="Muted" />
+                    ) : (
+                      <span className="text-[11px]">🎤</span>
+                    )}
+                  </span>
                 )}
               </span>
               {opp.isZombie && <span className="text-[9px] bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 px-1.5 py-0.5 rounded-md animate-pulse">Zombie 🧟</span>}
@@ -94,7 +100,13 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
                 <span className="text-xs font-bold text-white flex items-center gap-1">
                   <span className="truncate max-w-[65px]">{opp.name}</span>
                   {opp.isMuted !== undefined && (
-                    <span className="text-[10px]">{opp.isMuted ? "🔇" : "🎤"}</span>
+                    <span className="flex items-center">
+                      {opp.isMuted ? (
+                        <img src="/mute.png" className="w-3 h-3 object-contain" alt="Muted" />
+                      ) : (
+                        <span className="text-[10px]">🎤</span>
+                      )}
+                    </span>
                   )}
                 </span>
                 {isLobby && (
@@ -129,7 +141,13 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
                 <span className="text-[10px] font-black text-white flex items-center gap-1">
                   <span className="truncate max-w-[50px]">{opp.name}</span>
                   {opp.isMuted !== undefined && (
-                    <span className="text-[8px]">{opp.isMuted ? "🔇" : "🎤"}</span>
+                    <span className="flex items-center">
+                      {opp.isMuted ? (
+                        <img src="/mute.png" className="w-2.5 h-2.5 object-contain" alt="Muted" />
+                      ) : (
+                        <span className="text-[8px]">🎤</span>
+                      )}
+                    </span>
                   )}
                 </span>
                 {isLobby && (
@@ -164,7 +182,13 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
               <span className="text-[10px] font-black text-white flex items-center gap-1">
                 <span className="truncate max-w-[55px]">{opp.name}</span>
                 {opp.isMuted !== undefined && (
-                  <span className="text-[8px]">{opp.isMuted ? "🔇" : "🎤"}</span>
+                  <span className="flex items-center">
+                    {opp.isMuted ? (
+                      <img src="/mute.png" className="w-2.5 h-2.5 object-contain" alt="Muted" />
+                    ) : (
+                      <span className="text-[8px]">🎤</span>
+                    )}
+                  </span>
                 )}
               </span>
               {isLobby && (
@@ -636,7 +660,13 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                       >
                         <span className="max-w-[12rem] truncate">{roomPlayer.name}</span>
                         {roomPlayer.isMuted !== undefined && (
-                          <span className="mr-1.5 text-[9px]">{roomPlayer.isMuted ? "🔇" : "🎤"}</span>
+                          <span className="mr-1.5 flex items-center">
+                            {roomPlayer.isMuted ? (
+                              <img src="/mute.png" className="w-3 h-3 object-contain" alt="Muted" />
+                            ) : (
+                              <span className="text-[9px]">🎤</span>
+                            )}
+                          </span>
                         )}
                       </span>
                     ))}
@@ -651,7 +681,13 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                         >
                           <span className="max-w-[10rem] truncate">{roomPlayer.name}</span>
                           {roomPlayer.isMuted !== undefined && (
-                            <span className="mr-1.5 text-[9px]">{roomPlayer.isMuted ? "🔇" : "🎤"}</span>
+                            <span className="mr-1.5 flex items-center">
+                              {roomPlayer.isMuted ? (
+                                <img src="/mute.png" className="w-3 h-3 object-contain" alt="Muted" />
+                              ) : (
+                                <span className="text-[9px]">🎤</span>
+                              )}
+                            </span>
                           )}
                         </span>
                       ))}
@@ -820,9 +856,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 >
                   {!voiceActive || isMuted ? (
                     /* Mic Off Icon */
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.622 18.024A9 9 0 0 0 12 18.75c3.728 0 6.75-3.022 6.75-6.75v-1.5M9 10.5v.75a3 3 0 0 0 3 3v0M9 6.75A3 3 0 0 1 12 3.75c1.657 0 3 1.343 3 3v0M3 3l18 18M12 18.75v3.75m-3.75 0h7.5" />
-                    </svg>
+                    <img src="/mute.png" className="w-3.5 h-3.5 object-contain" alt="Muted" />
                   ) : (
                     /* Mic On Icon */
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5">

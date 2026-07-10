@@ -74,10 +74,11 @@ export function useClashVoice(
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       localStreamRef.current = stream;
 
-      // Start muted by default
+      // Start muted by default: stop tracks immediately so the red browser recording dot disappears
       stream.getAudioTracks().forEach((track) => {
-        track.enabled = false;
+        track.stop();
       });
+      localStreamRef.current = null;
       setIsMuted(true);
       setVoiceActive(true);
 
@@ -91,15 +92,52 @@ export function useClashVoice(
   }, [roomId, playerId, database]);
 
   const toggleMute = useCallback(async () => {
-    if (!localStreamRef.current) return;
     const nextMuted = !isMuted;
-    localStreamRef.current.getAudioTracks().forEach((track) => {
-      track.enabled = !nextMuted;
-    });
-    setIsMuted(nextMuted);
+    try {
+      if (nextMuted) {
+        // Mute: Stop local tracks so the browser recording dot disappears
+        if (localStreamRef.current) {
+          localStreamRef.current.getTracks().forEach((track) => {
+            track.stop();
+          });
+          localStreamRef.current = null;
+        }
 
-    const playerMuteRef = ref(database, `clashRooms/${roomId}/players/${playerId}/isMuted`);
-    await set(playerMuteRef, nextMuted);
+        // Replace tracks in all peer connections with null
+        Object.values(pcsRef.current).forEach((pc) => {
+          pc.getSenders().forEach((sender) => {
+            if (sender.track?.kind === "audio" || sender.track === null) {
+              sender.replaceTrack(null).catch(console.error);
+            }
+          });
+        });
+
+        setIsMuted(true);
+      } else {
+        // Unmute: Re-acquire getUserMedia stream
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        localStreamRef.current = stream;
+
+        const newTrack = stream.getAudioTracks()[0];
+
+        // Replace tracks in all peer connections with the new track
+        Object.values(pcsRef.current).forEach((pc) => {
+          pc.getSenders().forEach((sender) => {
+            if (sender.track?.kind === "audio" || sender.track === null) {
+              sender.replaceTrack(newTrack).catch(console.error);
+            }
+          });
+        });
+
+        setIsMuted(false);
+      }
+
+      const playerMuteRef = ref(database, `clashRooms/${roomId}/players/${playerId}/isMuted`);
+      await set(playerMuteRef, nextMuted);
+    } catch (err) {
+      console.error("Error toggling mute/unmute:", err);
+      setError("تعذر فتح المايك. يرجى التأكد من صلاحيات المايكروفون.");
+    }
   }, [isMuted, roomId, playerId, database]);
 
   const toggleDeafen = useCallback(() => {
@@ -115,7 +153,7 @@ export function useClashVoice(
 
   // Handle building and breaking peer connections with other players
   useEffect(() => {
-    if (!voiceActive || !localStreamRef.current || !players) return;
+    if (!voiceActive || !players) return;
 
     const alivePeers = Object.keys(players).filter(
       (pid) => pid !== playerId && !players[pid].isZombie
@@ -140,11 +178,13 @@ export function useClashVoice(
       const pc = new RTCPeerConnection(peerConfig);
       pcsRef.current[peerId] = pc;
 
-      // Add local stream tracks to connection
+      // Add audio transceiver
+      const transceiver = pc.addTransceiver("audio", { direction: "sendrecv" });
       if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach((track) => {
-          pc.addTrack(track, localStreamRef.current!);
-        });
+        const track = localStreamRef.current.getAudioTracks()[0];
+        if (track) {
+          transceiver.sender.replaceTrack(track).catch(console.error);
+        }
       }
 
       pc.ontrack = (event) => {
