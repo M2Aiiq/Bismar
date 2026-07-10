@@ -61,7 +61,12 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
                 {opp.isMuted !== undefined && (
                   <span className="flex items-center" title={opp.isMuted ? "صامت" : "يتحدث"}>
                     {opp.isMuted ? (
-                      <img src="/mute.png" className="w-3.5 h-3.5 object-contain brightness-0 invert" alt="Muted" />
+                      <img
+                        src="/mute.png"
+                        className="w-3.5 h-3.5 object-contain"
+                        style={{ filter: "invert(40%) sepia(70%) saturate(3000%) hue-rotate(330deg) brightness(95%) contrast(100%)" }}
+                        alt="Muted"
+                      />
                     ) : (
                       <span className="text-[11px]">🎤</span>
                     )}
@@ -102,7 +107,12 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
                   {opp.isMuted !== undefined && (
                     <span className="flex items-center">
                       {opp.isMuted ? (
-                        <img src="/mute.png" className="w-3 h-3 object-contain brightness-0 invert" alt="Muted" />
+                        <img
+                          src="/mute.png"
+                          className="w-3 h-3 object-contain"
+                          style={{ filter: "invert(40%) sepia(70%) saturate(3000%) hue-rotate(330deg) brightness(95%) contrast(100%)" }}
+                          alt="Muted"
+                        />
                       ) : (
                         <span className="text-[10px]">🎤</span>
                       )}
@@ -143,7 +153,12 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
                   {opp.isMuted !== undefined && (
                     <span className="flex items-center">
                       {opp.isMuted ? (
-                        <img src="/mute.png" className="w-2.5 h-2.5 object-contain brightness-0 invert" alt="Muted" />
+                        <img
+                          src="/mute.png"
+                          className="w-2.5 h-2.5 object-contain"
+                          style={{ filter: "invert(40%) sepia(70%) saturate(3000%) hue-rotate(330deg) brightness(95%) contrast(100%)" }}
+                          alt="Muted"
+                        />
                       ) : (
                         <span className="text-[8px]">🎤</span>
                       )}
@@ -184,7 +199,12 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
                 {opp.isMuted !== undefined && (
                   <span className="flex items-center">
                     {opp.isMuted ? (
-                      <img src="/mute.png" className="w-2.5 h-2.5 object-contain brightness-0 invert" alt="Muted" />
+                      <img
+                        src="/mute.png"
+                        className="w-2.5 h-2.5 object-contain"
+                        style={{ filter: "invert(40%) sepia(70%) saturate(3000%) hue-rotate(330deg) brightness(95%) contrast(100%)" }}
+                        alt="Muted"
+                      />
                     ) : (
                       <span className="text-[8px]">🎤</span>
                     )}
@@ -662,7 +682,12 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                         {roomPlayer.isMuted !== undefined && (
                           <span className="mr-1.5 flex items-center">
                             {roomPlayer.isMuted ? (
-                              <img src="/mute.png" className="w-3 h-3 object-contain brightness-0 invert" alt="Muted" />
+                              <img
+                                src="/mute.png"
+                                className="w-3 h-3 object-contain"
+                                style={{ filter: "invert(40%) sepia(70%) saturate(3000%) hue-rotate(330deg) brightness(95%) contrast(100%)" }}
+                                alt="Muted"
+                              />
                             ) : (
                               <span className="text-[9px]">🎤</span>
                             )}
@@ -683,7 +708,12 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                           {roomPlayer.isMuted !== undefined && (
                             <span className="mr-1.5 flex items-center">
                               {roomPlayer.isMuted ? (
-                                <img src="/mute.png" className="w-3 h-3 object-contain brightness-0 invert" alt="Muted" />
+                                <img
+                                  src="/mute.png"
+                                  className="w-3 h-3 object-contain"
+                                  style={{ filter: "invert(40%) sepia(70%) saturate(3000%) hue-rotate(330deg) brightness(95%) contrast(100%)" }}
+                                  alt="Muted"
+                                />
                               ) : (
                                 <span className="text-[9px]">🎤</span>
                               )}
@@ -850,13 +880,22 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                     !voiceActive
                       ? "bg-slate-800/40 border-slate-700/50 text-slate-500 hover:bg-slate-700/30 hover:text-slate-300"
                       : isMuted
-                        ? "bg-amber-600/20 border-amber-500/30 text-amber-400 hover:bg-amber-600/30"
+                        ? "bg-rose-600/20 border-rose-500/30 text-rose-400 hover:bg-rose-600/30 animate-pulse"
                         : "bg-emerald-600/20 border-emerald-500/30 text-emerald-400 hover:bg-emerald-600/30 shadow-[0_0_8px_rgba(16,185,129,0.15)]"
                   }`}
                 >
                   {!voiceActive || isMuted ? (
                     /* Mic Off Icon */
-                    <img src="/mute.png" className={`w-3.5 h-3.5 object-contain brightness-0 invert ${!voiceActive ? "opacity-40" : ""}`} alt="Muted" />
+                    <img
+                      src="/mute.png"
+                      className="w-3.5 h-3.5 object-contain"
+                      style={
+                        !voiceActive
+                          ? { filter: "brightness(0) invert(1)", opacity: 0.4 }
+                          : { filter: "invert(40%) sepia(70%) saturate(3000%) hue-rotate(330deg) brightness(95%) contrast(100%)" }
+                      }
+                      alt="Muted"
+                    />
                   ) : (
                     /* Mic On Icon */
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5">
