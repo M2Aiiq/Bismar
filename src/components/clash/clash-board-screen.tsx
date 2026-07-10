@@ -217,9 +217,11 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   const {
     voiceActive,
     isMuted,
+    isDeafened,
     error: voiceError,
     initVoice,
     toggleMute,
+    toggleDeafen,
   } = useClashVoice(roomId, playerId, room?.players);
 
   const [lobbyName, setLobbyName] = useState("");
@@ -486,38 +488,6 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
     >
       {/* شريط الإعدادات والتحكم العلوي */}
       <div className="w-full max-w-3xl mx-auto relative flex items-center justify-center px-2 py-2 mb-2 select-none">
-        {/* زر المحادثة الصوتية (اليسار) */}
-        <div className="absolute left-2 flex items-center gap-2">
-          {voiceError && (
-            <span className="text-[10px] text-rose-500 bg-rose-950/20 px-2 py-0.5 rounded border border-rose-500/20 hidden md:inline">
-              {voiceError}
-            </span>
-          )}
-          {!voiceActive ? (
-            <button
-              onClick={() => void initVoice()}
-              className="px-2.5 py-1.5 rounded-lg border border-rose-500/30 bg-rose-950/40 text-xs font-bold text-rose-400 hover:bg-rose-900/50 hover:text-white transition-all cursor-pointer flex items-center gap-1.5 shadow-lg shadow-rose-900/20"
-              title="انضم للمحادثة الصوتية"
-            >
-              <span>🎙️</span>
-              <span className="hidden sm:inline">تشغيل الصوت</span>
-            </button>
-          ) : (
-            <button
-              onClick={() => void toggleMute()}
-              className={`px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-lg ${
-                isMuted
-                  ? "border-amber-500/40 bg-amber-950/40 text-amber-400 hover:bg-amber-900/50 hover:text-white shadow-amber-900/20"
-                  : "border-emerald-500/40 bg-emerald-950/40 text-emerald-400 hover:bg-emerald-900/50 hover:text-white shadow-emerald-900/20"
-              }`}
-              title={isMuted ? "المايك صامت - اضغط للتحدث" : "المايك مفتوح - اضغط للكتم"}
-            >
-              <span>{isMuted ? "🔇" : "🎤"}</span>
-              <span className="hidden sm:inline">{isMuted ? "كتم الصوت" : "التحدث نشط"}</span>
-            </button>
-          )}
-        </div>
-
         <span className="text-sm md:text-base font-black tracking-widest text-rose-400">
           صراع الأعضاء
         </span>
@@ -814,31 +784,110 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 )}
               </div>
 
-              {/* زر إيقاف وتشغيل اللعبة للمضيف */}
-              {isHost && (
+              {/* أزرار التحكم بالصوت والمايك واللعبة */}
+              <div className="flex gap-1.5 items-center">
+                {/* زر تشغيل/كتم المايك */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    void togglePauseClashGame();
+                    if (!voiceActive) {
+                      void initVoice();
+                    } else {
+                      void toggleMute();
+                    }
                   }}
-                  title={room.isPaused ? "تشغيل اللعبة" : "إيقاف اللعبة مؤقتاً"}
+                  title={
+                    !voiceActive
+                      ? "تشغيل الصوت والمايك"
+                      : isMuted
+                        ? "تشغيل المايك"
+                        : "كتم المايك"
+                  }
                   className={`h-7 w-7 rounded-xl border flex items-center justify-center transition active:scale-95 cursor-pointer ${
-                    room.isPaused
-                      ? "bg-emerald-600/20 border-emerald-500/30 text-emerald-400 hover:bg-emerald-600/30 animate-pulse"
-                      : "bg-amber-600/20 border-amber-500/30 text-amber-400 hover:bg-amber-600/30"
+                    !voiceActive
+                      ? "bg-slate-800/40 border-slate-700/50 text-slate-500 hover:bg-slate-700/30 hover:text-slate-300"
+                      : isMuted
+                        ? "bg-amber-600/20 border-amber-500/30 text-amber-400 hover:bg-amber-600/30"
+                        : "bg-emerald-600/20 border-emerald-500/30 text-emerald-400 hover:bg-emerald-600/30 shadow-[0_0_8px_rgba(16,185,129,0.15)]"
                   }`}
                 >
-                  {room.isPaused ? (
+                  {!voiceActive || isMuted ? (
+                    /* Mic Off Icon */
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.622 18.024A9 9 0 0 0 12 18.75c3.728 0 6.75-3.022 6.75-6.75v-1.5M9 10.5v.75a3 3 0 0 0 3 3v0M9 6.75A3 3 0 0 1 12 3.75c1.657 0 3 1.343 3 3v0M3 3l18 18M12 18.75v3.75m-3.75 0h7.5" />
                     </svg>
                   ) : (
+                    /* Mic On Icon */
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" />
                     </svg>
                   )}
                 </button>
-              )}
+
+                {/* زر تشغيل/كتم صوت الآخرين */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!voiceActive) {
+                      void initVoice();
+                    } else {
+                      void toggleDeafen();
+                    }
+                  }}
+                  title={
+                    !voiceActive
+                      ? "تشغيل الصوت والمايك"
+                      : isDeafened
+                        ? "تشغيل صوت الأعضاء"
+                        : "كتم صوت الأعضاء"
+                  }
+                  className={`h-7 w-7 rounded-xl border flex items-center justify-center transition active:scale-95 cursor-pointer ${
+                    !voiceActive
+                      ? "bg-slate-800/40 border-slate-700/50 text-slate-500 hover:bg-slate-700/30 hover:text-slate-300"
+                      : isDeafened
+                        ? "bg-rose-600/20 border-rose-500/30 text-rose-400 hover:bg-rose-600/30 animate-pulse"
+                        : "bg-emerald-600/20 border-emerald-500/30 text-emerald-400 hover:bg-emerald-600/30 shadow-[0_0_8px_rgba(16,185,129,0.15)]"
+                  }`}
+                >
+                  {!voiceActive || isDeafened ? (
+                    /* Speaker Off Icon */
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 9.75 19.5 12m0 0 2.25 2.25M19.5 12l2.25-2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6 4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
+                    </svg>
+                  ) : (
+                    /* Speaker On Icon */
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
+                    </svg>
+                  )}
+                </button>
+
+                {/* زر إيقاف وتشغيل اللعبة للمضيف */}
+                {isHost && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void togglePauseClashGame();
+                    }}
+                    title={room.isPaused ? "تشغيل اللعبة" : "إيقاف اللعبة مؤقتاً"}
+                    className={`h-7 w-7 rounded-xl border flex items-center justify-center transition active:scale-95 cursor-pointer ${
+                      room.isPaused
+                        ? "bg-emerald-600/20 border-emerald-500/30 text-emerald-400 hover:bg-emerald-600/30 animate-pulse"
+                        : "bg-amber-600/20 border-amber-500/30 text-amber-400 hover:bg-amber-600/30"
+                    }`}
+                  >
+                    {room.isPaused ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
+                      </svg>
+                    )}
+                  </button>
+                )}
+              </div>
             </>
           )}
         </div>

@@ -20,7 +20,13 @@ export function useClashVoice(
 ) {
   const [voiceActive, setVoiceActive] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const [isDeafened, setIsDeafened] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isDeafenedRef = useRef(false);
+  useEffect(() => {
+    isDeafenedRef.current = isDeafened;
+  }, [isDeafened]);
 
   const localStreamRef = useRef<MediaStream | null>(null);
   const pcsRef = useRef<Record<string, RTCPeerConnection>>({});
@@ -39,6 +45,7 @@ export function useClashVoice(
     }
     const stream = new MediaStream([track]);
     el.srcObject = stream;
+    el.muted = isDeafenedRef.current;
   }, []);
 
   const addDbListener = (peerId: string, pathStr: string, callback: (snap: any) => void) => {
@@ -94,6 +101,17 @@ export function useClashVoice(
     const playerMuteRef = ref(database, `clashRooms/${roomId}/players/${playerId}/isMuted`);
     await set(playerMuteRef, nextMuted);
   }, [isMuted, roomId, playerId, database]);
+
+  const toggleDeafen = useCallback(() => {
+    const nextDeafened = !isDeafened;
+    setIsDeafened(nextDeafened);
+
+    // Mute/unmute all active remote audio elements
+    const audios = document.querySelectorAll("audio[id^='audio-peer-']");
+    audios.forEach((el) => {
+      (el as HTMLAudioElement).muted = nextDeafened;
+    });
+  }, [isDeafened]);
 
   // Handle building and breaking peer connections with other players
   useEffect(() => {
@@ -241,8 +259,10 @@ export function useClashVoice(
   return {
     voiceActive,
     isMuted,
+    isDeafened,
     error,
     initVoice,
     toggleMute,
+    toggleDeafen,
   };
 }
