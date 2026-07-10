@@ -957,6 +957,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
       <AnimatePresence>
         {room.pendingAction &&
           room.pendingAction.targetPlayerId === playerId &&
+          !["acuteInflammation", "tumor"].includes(room.pendingAction.card.subType || "") &&
           counterCardsInHand.length > 0 && (
           <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/85 p-6 backdrop-blur-sm">
             <motion.div

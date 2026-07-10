@@ -154,8 +154,8 @@ export function createInitialDeck(): ActionCard[] {
 
   // E. Immunity (8 cards)
   const immunityTypes = [
-    { subType: "vaccine", name: "لقاح", desc: "يرتبط بعضو محدد بشكل غير مرئي. إذا تم استهدافه بهجوم، ينعكس الهجوم بالكامل على المهاجم." },
-    { subType: "organicDiet", name: "نظام غذائي", desc: "يحمي العضو المستهدف من أي هجوم. تنتهي الحماية عند عودة الدور إليك أو عند استهداف العضو بورم أو التهاب حاد." }
+    { subType: "vaccine", name: "لقاح", desc: "يرتبط بعضو محدد بشكل غير مرئي. إذا تم استهدافه بهجوم، ينعكس الهجوم على المهاجم. يختفي تلقائياً عند عودة الدور إليك." },
+    { subType: "organicDiet", name: "نظام غذائي", desc: "يحمي العضو المستهدف من أي هجوم. يبقى مفعول الحماية مستمراً على العضو لحين استهدافه بأحد الهجومات أو هجوم عام." }
   ] as const;
 
   let immIndex = 0;
@@ -351,11 +351,6 @@ function transitionToNextTurn(currentRoom: ClashRoomState) {
           currentRoom.status = "ended";
           currentRoom.winnerId = alivePlayers[0];
         }
-      } else {
-        // Clear organic diet from all organs of the next player starting their turn
-        nextPlayer.organs.forEach((organ) => {
-          organ.hasOrganicDiet = false;
-        });
       }
     }
   } catch (err) {
