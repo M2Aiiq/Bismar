@@ -1044,34 +1044,55 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
       {/* 4. نافذة تحديد الهدف المعلقة (Target Selector Overlay) */}
       <AnimatePresence>
         {targetSelectorOpen && selectedCard && (
-          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md">
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl text-center"
+              initial={{ scale: 0.92, y: 15, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.92, y: 15, opacity: 0 }}
+              transition={{ type: "spring", duration: 0.4 }}
+              className="w-full max-w-lg rounded-3xl border border-white/10 bg-slate-900/90 backdrop-blur-xl p-5 shadow-2xl text-center flex flex-col max-h-[85vh]"
             >
-              <h3 className="text-lg font-black text-rose-400 mb-2">اختر العضو المستهدف</h3>
-              <p className="text-xs text-slate-400 mb-6">لتطبيق كارت: {selectedCard.name}</p>
+              <div className="flex justify-between items-center mb-4 pb-3 border-b border-white/5">
+                <span className="text-sm font-semibold text-slate-400">
+                  تطبيق كارت: <span className="text-white font-black">{selectedCard.name}</span>
+                </span>
+                <h3 className="text-base font-black text-rose-400">اختر الهدف</h3>
+              </div>
 
-              <div className="space-y-4 max-h-[300px] overflow-y-auto">
+              <div className="space-y-4 flex-1 overflow-y-auto pr-1 scrollbar-thin">
                 {(selectedCard.type === "attack" || selectedCard.subType === "infection") &&
                   opponents.map((opp) => (
-                    <div key={opp.id} className="rounded-2xl border border-white/5 bg-[#181E2F]/40 p-3 text-right">
-                      <span className="text-xs font-bold block mb-2 text-rose-300">{opp.name}</span>
-                      <div className="grid grid-cols-2 gap-2">
+                    <div key={opp.id} className="rounded-2xl border border-white/5 bg-[#181E2F]/30 p-3 text-right">
+                      <span className="text-xs font-bold block mb-2.5 text-rose-300">{opp.name}</span>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {opp.organs?.map((o) => {
                           const isLegitimate = selectedCard.targetOrganId === "any" || selectedCard.targetOrganId === o.id || selectedCard.subType === "infection";
                           const isClickable = !o.isDead && isLegitimate;
+                          const hps = o.isDead ? 0 : o.hp;
+
                           return (
                             <button
                               key={o.id}
                               disabled={!isClickable}
                               onClick={() => executePlayOnTarget(opp.id, o.id)}
-                              className="rounded-xl border border-white/5 bg-slate-800/80 py-2 text-xs font-bold hover:bg-rose-900/30 hover:border-rose-500 disabled:opacity-30 transition flex flex-col items-center justify-center gap-0.5"
+                              className={`relative rounded-2xl border p-3 flex flex-col items-center justify-between transition-all active:scale-95 cursor-pointer h-24 ${
+                                isClickable
+                                  ? "border-white/5 bg-slate-800/60 hover:bg-rose-900/30 hover:border-rose-500/50 hover:shadow-lg hover:shadow-rose-950/20"
+                                  : "border-slate-850 bg-slate-950/40 opacity-40 cursor-not-allowed"
+                              }`}
                             >
-                              <span>{o.name}</span>
-                              <span className="text-[9px] text-slate-400">{o.isDead ? "🔒" : `${o.hp}/2HP`}</span>
+                              <span className="text-xs font-bold text-slate-200">{o.name}</span>
+                              
+                              <img
+                                src={o.isDead ? `/${o.id}_died.png` : `/${o.id}.png`}
+                                alt={o.name}
+                                className="w-8 h-8 object-contain my-1 select-none"
+                              />
+
+                              <div className="flex gap-1.5 justify-center w-full mt-1">
+                                <div className={`h-1.5 w-3.5 rounded-full ${hps >= 1 ? (hps === 2 ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.3)]" : "bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.3)]") : "bg-slate-800"}`} />
+                                <div className={`h-1.5 w-3.5 rounded-full ${hps === 2 ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.3)]" : "bg-slate-800"}`} />
+                              </div>
                             </button>
                           );
                         })}
@@ -1080,9 +1101,9 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   ))}
 
                 {(selectedCard.type === "cure" || selectedCard.subType === "vaccine" || selectedCard.subType === "organicDiet") && me && (
-                  <div className="rounded-2xl border border-white/5 bg-[#181E2F]/40 p-3 text-right">
-                    <span className="text-xs font-bold block mb-2 text-emerald-300">أعضاؤك الشخصية</span>
-                    <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-2xl border border-white/5 bg-[#181E2F]/30 p-3 text-right">
+                    <span className="text-xs font-bold block mb-2.5 text-emerald-300">أعضاؤك الشخصية</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {me.organs?.map((o) => {
                         const isOrganicDiet = selectedCard.subType === "organicDiet";
                         const isVaccine = selectedCard.subType === "vaccine";
@@ -1104,15 +1125,37 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                                     : o.hp < 2 || (o.afflictions && o.afflictions.length > 0)
                           );
 
+                        const hps = o.isDead ? 0 : o.hp;
+
                         return (
                           <button
                             key={o.id}
                             disabled={!isClickable}
                             onClick={() => executePlayOnTarget(playerId, o.id)}
-                            className="rounded-xl border border-white/5 bg-slate-800/80 py-2 text-xs font-bold hover:bg-emerald-900/30 hover:border-emerald-500 disabled:opacity-30 transition flex flex-col items-center justify-center gap-0.5"
+                            className={`relative rounded-2xl border p-3 flex flex-col items-center justify-between transition-all active:scale-95 cursor-pointer h-24 ${
+                              isClickable
+                                ? "border-white/5 bg-slate-800/60 hover:bg-emerald-900/30 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-950/20"
+                                : "border-slate-850 bg-slate-950/40 opacity-40 cursor-not-allowed"
+                            }`}
                           >
-                            <span>{o.name}</span>
-                            <span className="text-[9px] text-slate-400">{o.isDead ? "ميت 💀" : `${o.hp}HP`} {o.hasVaccine && "🛡️"} {o.hasOrganicDiet && "🥦"}</span>
+                            {/* شارات اللقاح والنظام الغذائي */}
+                            <div className="absolute top-1 left-2 flex gap-0.5">
+                              {o.hasVaccine && <span className="text-[9px]" title="لقاح">🛡️</span>}
+                              {o.hasOrganicDiet && <span className="text-[9px]" title="نظام غذائي">🥦</span>}
+                            </div>
+
+                            <span className="text-xs font-bold text-slate-200">{o.name}</span>
+                            
+                            <img
+                              src={o.isDead ? `/${o.id}_died.png` : `/${o.id}.png`}
+                              alt={o.name}
+                              className="w-8 h-8 object-contain my-1 select-none"
+                            />
+
+                            <div className="flex gap-1.5 justify-center w-full mt-1">
+                              <div className={`h-1.5 w-3.5 rounded-full ${hps >= 1 ? (hps === 2 ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.3)]" : "bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.3)]") : "bg-slate-800"}`} />
+                              <div className={`h-1.5 w-3.5 rounded-full ${hps === 2 ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.3)]" : "bg-slate-800"}`} />
+                            </div>
                           </button>
                         );
                       })}
@@ -1121,15 +1164,16 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 )}
 
                 {(selectedCard.subType === "steal" || selectedCard.subType === "swap") && (
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                     {opponents.map((opp) => (
                       <button
                         key={opp.id}
                         onClick={() => executePlayOnTarget(opp.id, "")}
                         disabled={opp.isZombie}
-                        className="w-full rounded-2xl bg-slate-800 border border-white/5 py-3.5 text-xs font-bold hover:bg-rose-900/20 hover:border-rose-500 disabled:opacity-30 transition"
+                        className="w-full rounded-2xl bg-slate-800 border border-white/5 py-4 text-xs font-black hover:bg-rose-900/20 hover:border-rose-500 disabled:opacity-30 transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
                       >
-                        {opp.name} {opp.isZombie && "🧟"}
+                        <span>{opp.name}</span>
+                        {opp.isZombie ? "🧟 (ميت)" : ""}
                       </button>
                     ))}
                   </div>
@@ -1141,7 +1185,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   setSelectedCard(null);
                   setTargetSelectorOpen(false);
                 }}
-                className="mt-6 w-full rounded-2xl border border-white/10 py-2.5 text-xs font-bold text-slate-400 hover:bg-slate-800 hover:text-white"
+                className="mt-5 w-full rounded-2xl border border-white/10 py-3 text-xs font-black text-slate-300 bg-slate-800/40 hover:bg-slate-800 hover:text-white transition active:scale-98 cursor-pointer"
               >
                 إلغاء التحديد
               </button>
