@@ -34,8 +34,9 @@ function saveSession(playerId: string, playerName: string) {
   }
 }
 
-export function createInitialDeck(): ActionCard[] {
+export function createInitialDeck(organsCount: number = 7): ActionCard[] {
   const deck: ActionCard[] = [];
+  const activeOrganIds = ["heart", "mind", "liver", "lung", "stomach", "kidney", "intestines"].slice(0, organsCount);
 
   // A. Afflictions (35 cards)
   const afflictionTypes = [
@@ -51,15 +52,19 @@ export function createInitialDeck(): ActionCard[] {
     { subType: "cough", target: "lung", name: "نوبة سعال", desc: "يُنقص نقاط حياة (HP) رئة الخصم بمقدار 1 HP." },
     { subType: "spicyFood", target: "stomach", name: "طعام حار", desc: "يُنقص نقاط حياة (HP) معدة الخصم بمقدار 1 HP." },
     { subType: "foodPoisoning", target: "stomach", name: "تسمم غذائي", desc: "يُنقص نقاط حياة (HP) معدة الخصم بمقدار 1 HP." },
-    { subType: "kidneyStone", target: "kidney", name: "حصوة كلى", desc: "يُنقص نقاط حياة (HP) معدة الخصم بمقدار 1 HP." },
+    { subType: "kidneyStone", target: "kidney", name: "حصوة كلى", desc: "يُنقص نقاط حياة (HP) كلية الخصم بمقدار 1 HP." },
     { subType: "dehydration", target: "kidney", name: "جفاف", desc: "يُنقص نقاط حياة (HP) كلية الخصم بمقدار 1 HP." },
-    { subType: "appendicitis", target: "intestines", name: "التهاب زائدة", desc: "يُنقص نقاط حياة (HP) الزائدة الدودية للخصم بمقدار 1 HP." }
+    { subType: "appendicitis", target: "intestines", name: "التهاب زائدة", desc: "يُنقص نقاط حياة (HP) الأمعاء للخصم بمقدار 1 HP." }
   ] as const;
 
+  const activeAffTypes = afflictionTypes.filter((aff) => activeOrganIds.includes(aff.target));
+
   let affIndex = 0;
-  afflictionTypes.forEach((aff) => {
-    const isThreeCopies = ["caffeine", "brokenHeart", "insomnia", "brainFreeze", "foodPoisoning"].includes(aff.subType);
-    const count = isThreeCopies ? 3 : 2;
+  const baseCount = Math.floor(35 / activeAffTypes.length);
+  const remainder = 35 % activeAffTypes.length;
+
+  activeAffTypes.forEach((aff, index) => {
+    const count = baseCount + (index < remainder ? 1 : 0);
     for (let k = 0; k < count; k++) {
       deck.push({
         id: `aff_${aff.subType}_${affIndex++}`,
@@ -174,8 +179,8 @@ export function createInitialDeck(): ActionCard[] {
   return deck;
 }
 
-export function createInitialOrgans(): OrganCard[] {
-  return [
+export function createInitialOrgans(organsCount: number = 7): OrganCard[] {
+  const standardOrgans = [
     { id: "heart", name: "القلب", hp: 2, isDead: false },
     { id: "mind", name: "الدماغ", hp: 2, isDead: false },
     { id: "liver", name: "الكبد", hp: 2, isDead: false },
@@ -184,6 +189,7 @@ export function createInitialOrgans(): OrganCard[] {
     { id: "kidney", name: "الكلى", hp: 2, isDead: false },
     { id: "intestines", name: "الأمعاء", hp: 2, isDead: false },
   ];
+  return standardOrgans.slice(0, organsCount);
 }
 
 function shuffleList<T>(list: T[]): T[] {
@@ -545,7 +551,7 @@ export function useClashRoom(roomId: string) {
   );
 
   const startClashGame = useCallback(
-    async (maxPlayers: number, initialHandSize: number, turnTimerSeconds?: number) => {
+    async (maxPlayers: number, initialHandSize: number, turnTimerSeconds?: number, organsCount: number = 7) => {
       const currentRoom = roomRef.current;
       if (!roomId || !currentRoom) return;
 
@@ -561,7 +567,8 @@ export function useClashRoom(roomId: string) {
             throw new Error("تحتاج إلى لاعبين على الأقل لبدء اللعبة.");
           }
 
-          let deck = shuffleList(createInitialDeck());
+          const activeOrgansCount = organsCount || 7;
+          let deck = shuffleList(createInitialDeck(activeOrgansCount));
 
           playerIds.forEach((pid) => {
             const playerHand: ActionCard[] = [];
@@ -601,7 +608,7 @@ export function useClashRoom(roomId: string) {
               currentRoom.players[pid].hand = playerHand;
             }
 
-            currentRoom.players[pid].organs = createInitialOrgans();
+            currentRoom.players[pid].organs = createInitialOrgans(activeOrgansCount);
             currentRoom.players[pid].isZombie = false;
           });
 
@@ -625,6 +632,7 @@ export function useClashRoom(roomId: string) {
             maxPlayers,
             initialHandSize,
             turnTimerSeconds: timerVal,
+            organsCount: activeOrgansCount,
           };
           currentRoom.logs = [{ id: "start", text: "بدأت المعركة الآن!", type: "system" }];
         } catch (err) {
@@ -1275,7 +1283,7 @@ export function useClashRoom(roomId: string) {
   }, [roomId]);
 
   const updateClashRoomSettings = useCallback(
-    async (maxPlayers: number, initialHandSize: number, turnTimerSeconds: number) => {
+    async (maxPlayers: number, initialHandSize: number, turnTimerSeconds: number, organsCount: number = 7) => {
       if (!roomId) return;
 
       const database = getRealtimeDatabase() || getDatabase();
@@ -1286,6 +1294,7 @@ export function useClashRoom(roomId: string) {
           maxPlayers,
           initialHandSize,
           turnTimerSeconds,
+          organsCount,
         });
       } catch (err) {
         console.error("Failed to update room settings:", err);

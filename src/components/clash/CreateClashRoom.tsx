@@ -16,6 +16,7 @@ export function CreateClashRoomButton() {
   const [maxPlayers, setMaxPlayers] = useState(4);
   const [initialHandSize, setInitialHandSize] = useState(5);
   const [turnTimerSeconds, setTurnTimerSeconds] = useState(30);
+  const [organsCount, setOrgansCount] = useState(7);
   const [creating, setCreating] = useState(false);
 
   const disabled = isBusy || !firebaseReady || !playerName || creating;
@@ -53,6 +54,7 @@ export function CreateClashRoomButton() {
           maxPlayers,
           initialHandSize,
           turnTimerSeconds: Math.max(5, Math.min(300, turnTimerSeconds || 30)),
+          organsCount,
         },
       };
 
@@ -149,7 +151,7 @@ export function CreateClashRoomButton() {
               </div>
 
               {/* مؤقت دور اللاعب بالثواني */}
-              <div className="mb-6">
+              <div className="mb-5">
                 <label className="block text-sm font-semibold text-slate-300 mb-2">
                   مؤقت دور اللاعب (بالثواني):
                 </label>
@@ -169,6 +171,28 @@ export function CreateClashRoomButton() {
                 </div>
                 <div className="text-[10px] text-slate-500 mt-1 text-right">
                   الحد الأدنى 5 ثوانٍ، الأقصى 300 ثانية.
+                </div>
+              </div>
+
+              {/* تحديد عدد الأعضاء لكل لاعب */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-slate-300 mb-2">
+                  عدد الأعضاء لكل لاعب: {organsCount} أعضاء
+                </label>
+                <div className="flex gap-1.5 justify-center">
+                  {[3, 4, 5, 6, 7].map((num) => (
+                    <button
+                      key={num}
+                      type="button"
+                      onClick={() => setOrgansCount(num)}
+                      className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition ${organsCount === num
+                          ? "bg-rose-600 text-white shadow-lg shadow-rose-600/30"
+                          : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                        }`}
+                    >
+                      {num}
+                    </button>
+                  ))}
                 </div>
               </div>
 

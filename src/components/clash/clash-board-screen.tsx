@@ -663,7 +663,14 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
             {isHost ? (
               <div className="fixed bottom-4 left-1/2 z-30 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 sm:bottom-6">
                 <button
-                  onClick={() => startClashGame(room.settings.maxPlayers, room.settings.initialHandSize, room.settings.turnTimerSeconds)}
+                  onClick={() =>
+                    startClashGame(
+                      room.settings.maxPlayers,
+                      room.settings.initialHandSize,
+                      room.settings.turnTimerSeconds,
+                      room.settings.organsCount ?? 7
+                    )
+                  }
                   disabled={Object.keys(room.players).length < 2}
                   className="w-full rounded-2xl bg-rose-600 py-3.5 font-bold text-white shadow-2xl shadow-rose-600/25 transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:bg-rose-900/40 disabled:text-white/40 text-xs cursor-pointer"
                 >
@@ -1242,7 +1249,8 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                                 void updateClashRoomSettings(
                                   num,
                                   room.settings?.initialHandSize || 5,
-                                  room.settings?.turnTimerSeconds || 30
+                                  room.settings?.turnTimerSeconds || 30,
+                                  room.settings?.organsCount || 7
                                 );
                               }}
                               className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${room.settings?.maxPlayers === num
@@ -1267,7 +1275,8 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                             void updateClashRoomSettings(
                               room.settings?.maxPlayers || 4,
                               Number(e.target.value),
-                              room.settings?.turnTimerSeconds || 30
+                              room.settings?.turnTimerSeconds || 30,
+                              room.settings?.organsCount || 7
                             );
                           }}
                           className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-rose-600"
@@ -1296,11 +1305,39 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                             void updateClashRoomSettings(
                               room.settings?.maxPlayers || 4,
                               room.settings?.initialHandSize || 5,
-                              clamped
+                              clamped,
+                              room.settings?.organsCount || 7
                             );
                           }}
                           className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white text-center font-bold font-mono outline-none"
                         />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-400 mb-1 text-[11px]">عدد الأعضاء لكل لاعب:</label>
+                        <div className="flex gap-1.5 justify-center">
+                          {[3, 4, 5, 6, 7].map((num) => (
+                            <button
+                              key={num}
+                              type="button"
+                              onClick={() => {
+                                void updateClashRoomSettings(
+                                  room.settings?.maxPlayers || 4,
+                                  room.settings?.initialHandSize || 5,
+                                  room.settings?.turnTimerSeconds || 30,
+                                  num
+                                );
+                              }}
+                              className={`flex-1 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
+                                (room.settings?.organsCount ?? 7) === num
+                                  ? "bg-rose-600 text-white shadow-sm"
+                                  : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                              }`}
+                            >
+                              {num}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   ) : (
@@ -1316,6 +1353,10 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                       <div className="flex justify-between">
                         <span className="text-slate-400">مؤقت الجولة:</span>
                         <span className="font-bold text-white">{room.settings?.turnTimerSeconds || 30} ثانية</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">عدد الأعضاء لكل لاعب:</span>
+                        <span className="font-bold text-white">{(room.settings?.organsCount ?? 7)} أعضاء</span>
                       </div>
                     </div>
                   )}

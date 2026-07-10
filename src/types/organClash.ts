@@ -69,6 +69,7 @@ export interface ClashRoomState {
     maxPlayers: number;
     initialHandSize: number;
     turnTimerSeconds: number;
+    organsCount: number;
   };
 }
 
