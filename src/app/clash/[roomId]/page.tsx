@@ -1,11 +1,39 @@
-"use client";
-
-import { useParams } from "next/navigation";
+import type { Metadata } from "next";
 import { ClashBoardScreen } from "../../../components/clash/clash-board-screen";
 
-export default function ClashRoomPage() {
-  const params = useParams();
-  const roomId = params?.roomId as string;
+interface PageProps {
+  params: Promise<{ roomId: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const resolvedParams = await params;
+  const roomId = resolvedParams?.roomId;
+
+  return {
+    title: `صراع الأعضاء - غرفة ${roomId || ""}`,
+    description: "العب لعبة صراع الأعضاء التكتيكية مع أصدقائك وحافظ على سلامة أعضائك الحيوية!",
+    openGraph: {
+      title: `صراع الأعضاء - غرفة ${roomId || ""}`,
+      description: "العب لعبة صراع الأعضاء التكتيكية مع أصدقائك وحافظ على سلامة أعضائك الحيوية!",
+      images: [
+        {
+          url: "/organs.jpeg",
+          alt: "صراع الأعضاء",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `صراع الأعضاء - غرفة ${roomId || ""}`,
+      description: "العب لعبة صراع الأعضاء التكتيكية مع أصدقائك وحافظ على سلامة أعضائك الحيوية!",
+      images: ["/organs.jpeg"],
+    },
+  };
+}
+
+export default async function ClashRoomPage({ params }: PageProps) {
+  const resolvedParams = await params;
+  const roomId = resolvedParams?.roomId;
 
   if (!roomId) {
     return (
