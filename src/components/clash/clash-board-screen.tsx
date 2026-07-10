@@ -61,7 +61,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
                 {opp.isMuted !== undefined && (
                   <span className="flex items-center" title={opp.isMuted ? "صامت" : "يتحدث"}>
                     {opp.isMuted ? (
-                      <img src="/mute.png" className="w-3.5 h-3.5 object-contain" alt="Muted" />
+                      <img src="/mute.png" className="w-3.5 h-3.5 object-contain brightness-0 invert" alt="Muted" />
                     ) : (
                       <span className="text-[11px]">🎤</span>
                     )}
@@ -102,7 +102,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
                   {opp.isMuted !== undefined && (
                     <span className="flex items-center">
                       {opp.isMuted ? (
-                        <img src="/mute.png" className="w-3 h-3 object-contain" alt="Muted" />
+                        <img src="/mute.png" className="w-3 h-3 object-contain brightness-0 invert" alt="Muted" />
                       ) : (
                         <span className="text-[10px]">🎤</span>
                       )}
@@ -143,7 +143,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
                   {opp.isMuted !== undefined && (
                     <span className="flex items-center">
                       {opp.isMuted ? (
-                        <img src="/mute.png" className="w-2.5 h-2.5 object-contain" alt="Muted" />
+                        <img src="/mute.png" className="w-2.5 h-2.5 object-contain brightness-0 invert" alt="Muted" />
                       ) : (
                         <span className="text-[8px]">🎤</span>
                       )}
@@ -184,7 +184,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
                 {opp.isMuted !== undefined && (
                   <span className="flex items-center">
                     {opp.isMuted ? (
-                      <img src="/mute.png" className="w-2.5 h-2.5 object-contain" alt="Muted" />
+                      <img src="/mute.png" className="w-2.5 h-2.5 object-contain brightness-0 invert" alt="Muted" />
                     ) : (
                       <span className="text-[8px]">🎤</span>
                     )}
@@ -662,7 +662,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                         {roomPlayer.isMuted !== undefined && (
                           <span className="mr-1.5 flex items-center">
                             {roomPlayer.isMuted ? (
-                              <img src="/mute.png" className="w-3 h-3 object-contain" alt="Muted" />
+                              <img src="/mute.png" className="w-3 h-3 object-contain brightness-0 invert" alt="Muted" />
                             ) : (
                               <span className="text-[9px]">🎤</span>
                             )}
@@ -683,7 +683,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                           {roomPlayer.isMuted !== undefined && (
                             <span className="mr-1.5 flex items-center">
                               {roomPlayer.isMuted ? (
-                                <img src="/mute.png" className="w-3 h-3 object-contain" alt="Muted" />
+                                <img src="/mute.png" className="w-3 h-3 object-contain brightness-0 invert" alt="Muted" />
                               ) : (
                                 <span className="text-[9px]">🎤</span>
                               )}
@@ -856,7 +856,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 >
                   {!voiceActive || isMuted ? (
                     /* Mic Off Icon */
-                    <img src="/mute.png" className="w-3.5 h-3.5 object-contain" alt="Muted" />
+                    <img src="/mute.png" className={`w-3.5 h-3.5 object-contain brightness-0 invert ${!voiceActive ? "opacity-40" : ""}`} alt="Muted" />
                   ) : (
                     /* Mic On Icon */
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5">
