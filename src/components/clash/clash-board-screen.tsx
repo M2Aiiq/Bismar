@@ -490,10 +490,15 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
 
   useEffect(() => {
     if (selectedCard) {
-      if (opponents.length === 1) {
-        setSelectedTargetPlayerId(opponents[0].id);
-      } else {
+      const isSpecificAttack = (selectedCard.type === "attack" || selectedCard.subType === "infection") && selectedCard.targetOrganId !== "any" && selectedCard.subType !== "infection";
+      if (isSpecificAttack) {
         setSelectedTargetPlayerId(null);
+      } else {
+        if (opponents.length === 1) {
+          setSelectedTargetPlayerId(opponents[0].id);
+        } else {
+          setSelectedTargetPlayerId(null);
+        }
       }
     } else {
       setSelectedTargetPlayerId(null);
@@ -520,8 +525,34 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
       ) {
         void playActionCard(card.id);
       } else {
-        setSelectedCard(card);
-        setTargetSelectorOpen(true);
+        const isSpecificAttack = (card.type === "attack" || card.subType === "infection") && card.targetOrganId !== "any" && card.subType !== "infection";
+
+        if (isSpecificAttack) {
+          if (opponents.length === 1) {
+            const opp = opponents[0];
+            const targetOrgan = opp.organs?.find((o) => o.id === card.targetOrganId);
+            if (targetOrgan && !targetOrgan.isDead) {
+              void playActionCard(card.id, opp.id, card.targetOrganId);
+            } else {
+              setToastMessage("العضو المستهدف ميت أو غير موجود لدى الخصم!");
+            }
+          } else {
+            // Check if there is at least one targetable opponent
+            const hasTargetableOpponent = opponents.some((opp) => {
+              const organ = opp.organs?.find((o) => o.id === card.targetOrganId);
+              return !opp.isZombie && organ && !organ.isDead;
+            });
+            if (hasTargetableOpponent) {
+              setSelectedCard(card);
+              setTargetSelectorOpen(true);
+            } else {
+              setToastMessage("العضو المستهدف ميت أو غير موجود لدى أي من اللاعبين!");
+            }
+          }
+        } else {
+          setSelectedCard(card);
+          setTargetSelectorOpen(true);
+        }
       }
     } else {
       setSelectedHandCardId(card.id);
@@ -1079,17 +1110,35 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                     <div className="space-y-3">
                       <p className="text-xs text-slate-400">اختر اللاعب الذي تريد مهاجمته:</p>
                       <div className="grid grid-cols-1 gap-2">
-                        {opponents.map((opp) => (
-                          <button
-                            key={opp.id}
-                            onClick={() => setSelectedTargetPlayerId(opp.id)}
-                            disabled={opp.isZombie}
-                            className="w-full rounded-2xl bg-slate-800/80 border border-white/5 py-4 text-xs font-black hover:bg-rose-900/20 hover:border-rose-500 disabled:opacity-30 transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
-                          >
-                            <span>{opp.name}</span>
-                            {opp.isZombie ? "🧟 (ميت)" : ""}
-                          </button>
-                        ))}
+                        {opponents.map((opp) => {
+                          const isSpecificAttack = (selectedCard.type === "attack" || selectedCard.subType === "infection") && selectedCard.targetOrganId !== "any" && selectedCard.subType !== "infection";
+                          let isPlayerTargetable = !opp.isZombie;
+                          if (isSpecificAttack) {
+                            const organ = opp.organs?.find(o => o.id === selectedCard.targetOrganId);
+                            if (!organ || organ.isDead) {
+                              isPlayerTargetable = false;
+                            }
+                          }
+
+                          return (
+                            <button
+                              key={opp.id}
+                              onClick={() => {
+                                if (isSpecificAttack) {
+                                  executePlayOnTarget(opp.id, selectedCard.targetOrganId || "");
+                                } else {
+                                  setSelectedTargetPlayerId(opp.id);
+                                }
+                              }}
+                              disabled={!isPlayerTargetable}
+                              className="w-full rounded-2xl bg-slate-800/80 border border-white/5 py-4 text-xs font-black hover:bg-rose-900/20 hover:border-rose-500 disabled:opacity-30 transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+                            >
+                              <span>{opp.name}</span>
+                              {opp.isZombie ? "🧟 (ميت)" : ""}
+                              {isSpecificAttack && !isPlayerTargetable && " (عضو ميت/غير متوفر)"}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   ) : (
