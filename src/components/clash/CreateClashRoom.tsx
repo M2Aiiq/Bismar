@@ -134,8 +134,8 @@ export function CreateClashRoomButton() {
                   type="button"
                   onClick={() => setRulesTab("rules")}
                   className={`flex-1 py-2 text-center rounded-xl transition ${rulesTab === "rules"
-                      ? "bg-rose-600 text-white shadow-lg shadow-rose-600/30"
-                      : "text-slate-400 hover:text-slate-200"
+                    ? "bg-rose-600 text-white shadow-lg shadow-rose-600/30"
+                    : "text-slate-400 hover:text-slate-200"
                     }`}
                 >
                   قوانين اللعبة
@@ -144,8 +144,8 @@ export function CreateClashRoomButton() {
                   type="button"
                   onClick={() => setRulesTab("types")}
                   className={`flex-1 py-2 text-center rounded-xl transition ${rulesTab === "types"
-                      ? "bg-rose-600 text-white shadow-lg shadow-rose-600/30"
-                      : "text-slate-400 hover:text-slate-200"
+                    ? "bg-rose-600 text-white shadow-lg shadow-rose-600/30"
+                    : "text-slate-400 hover:text-slate-200"
                     }`}
                 >
                   أنواع الكروت
@@ -154,8 +154,8 @@ export function CreateClashRoomButton() {
                   type="button"
                   onClick={() => setRulesTab("cards")}
                   className={`flex-1 py-2 text-center rounded-xl transition ${rulesTab === "cards"
-                      ? "bg-rose-600 text-white shadow-lg shadow-rose-600/30"
-                      : "text-slate-400 hover:text-slate-200"
+                    ? "bg-rose-600 text-white shadow-lg shadow-rose-600/30"
+                    : "text-slate-400 hover:text-slate-200"
                     }`}
                 >
                   شرح الكروت
@@ -324,7 +324,7 @@ export function CreateClashRoomButton() {
 
                     {/* الكروت الفورية باللون الأزرق */}
                     <div>
-                      <h4 className="font-black text-sky-400 text-sm border-b border-white/10 pb-1.5 mb-2">🔵 الكروت الفورية (باللون الأزرق)</h4>
+                      <h4 className="font-black text-sky-400 text-sm border-b border-white/10 pb-1.5 mb-2">🔵 الكروت الفورية</h4>
                       <div className="space-y-2">
                         <div className="bg-slate-950/30 p-2.5 rounded-xl border border-sky-500/20">
                           <strong className="text-sky-300 text-xs block">أجسام مضادة:</strong>
@@ -339,7 +339,7 @@ export function CreateClashRoomButton() {
 
                     {/* كروت التكتيك باللون البنفسجي */}
                     <div>
-                      <h4 className="font-black text-purple-400 text-sm border-b border-white/10 pb-1.5 mb-2">🔮 كروت التكتيك (باللون البنفسجي)</h4>
+                      <h4 className="font-black text-purple-400 text-sm border-b border-white/10 pb-1.5 mb-2">🔮 كروت التكتيك</h4>
                       <div className="space-y-2">
                         <div className="bg-slate-950/30 p-2.5 rounded-xl border border-purple-500/20">
                           <strong className="text-purple-300 text-xs block">سرقة:</strong>

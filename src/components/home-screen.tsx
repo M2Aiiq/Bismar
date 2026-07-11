@@ -8,6 +8,7 @@ import { getRealtimeDatabase } from "../lib/firebase";
 import { ref, get } from "firebase/database";
 import { CreateBlitzRoomButton } from "./blitz/CreateBlitzRoom";
 import { CreateClashRoomButton } from "./clash/CreateClashRoom";
+import { motion, AnimatePresence } from "framer-motion";
 
 function normalizeRoomCode(value: string | null) {
   return (value ?? "").replace(/\D/g, "").slice(0, 5);
@@ -71,6 +72,8 @@ export function HomeScreen() {
   const [isConfirmingReset, setIsConfirmingReset] = useState(false);
   const [clashStats, setClashStats] = useState<{ played: number; won: number; lost: number }>({ played: 0, won: 0, lost: 0 });
   const [activeStatsTab, setActiveStatsTab] = useState<"clash" | "blitz">("clash");
+  const [isCodenamesRulesOpen, setIsCodenamesRulesOpen] = useState(false);
+  const [codenamesTab, setCodenamesTab] = useState<"rules" | "cards">("rules");
 
   useEffect(() => {
     const rawClash = localStorage.getItem("clash-game-stats");
@@ -332,14 +335,167 @@ export function HomeScreen() {
       ) : null}
 
       <div className="relative z-10 grid w-full gap-4">
-        <button
-          type="button"
-          onClick={() => createRoom(playerName)}
-          disabled={isBusy || !firebaseReady || !playerName}
-          className="rounded-2xl bg-[#2563EB] px-5 py-4 text-base font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
-        >
-          العب الان
-        </button>
+        <div className="flex gap-2 w-full">
+          <button
+            type="button"
+            onClick={() => createRoom(playerName)}
+            disabled={isBusy || !firebaseReady || !playerName}
+            className="flex-1 rounded-2xl bg-[#2563EB] px-5 py-4 text-base font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
+          >
+            العب الآن
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsCodenamesRulesOpen(true)}
+            className="w-14 rounded-2xl border border-blue-500/30 bg-[#1E3A8A]/20 flex items-center justify-center text-[#93C5FD] hover:bg-[#1E3A8A]/45 hover:border-blue-500 transition text-xl font-black cursor-pointer shadow-lg shadow-blue-950/20"
+            title="كيفية اللعب وقوانين كود نيمز"
+          >
+            ؟
+          </button>
+        </div>
+
+        {/* نافذة قوانين كود نيمز */}
+        <AnimatePresence>
+          {isCodenamesRulesOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 px-4 backdrop-blur-md">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsCodenamesRulesOpen(false)}
+                className="absolute inset-0 cursor-pointer"
+              />
+
+              <motion.div
+                initial={{ scale: 0.92, opacity: 0, y: 15 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.92, opacity: 0, y: 15 }}
+                transition={{ type: "spring", duration: 0.4 }}
+                className="relative w-full max-w-xl rounded-3xl border border-white/10 bg-slate-900 p-5 md:p-7 shadow-2xl text-[#F8FAFC] flex flex-col max-h-[80vh]"
+              >
+                {/* زر الإغلاق */}
+                <button
+                  type="button"
+                  onClick={() => setIsCodenamesRulesOpen(false)}
+                  className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 text-xl font-bold text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+                >
+                  ×
+                </button>
+
+                <h2 className="text-xl md:text-2xl font-black text-[#60A5FA] mb-4 text-center">
+                  دليل وقوانين لعبة كود نيمز (Codenames)
+                </h2>
+
+                {/* أزرار التبويب */}
+                <div className="flex bg-slate-950/50 border border-white/5 rounded-2xl p-1 mb-5 select-none text-xs md:text-sm font-black">
+                  <button
+                    type="button"
+                    onClick={() => setCodenamesTab("rules")}
+                    className={`flex-1 py-2 text-center rounded-xl transition ${
+                      codenamesTab === "rules"
+                        ? "bg-[#2563EB] text-white shadow-lg shadow-blue-600/30"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    قوانين اللعبة
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCodenamesTab("cards")}
+                    className={`flex-1 py-2 text-center rounded-xl transition ${
+                      codenamesTab === "cards"
+                        ? "bg-[#2563EB] text-white shadow-lg shadow-blue-600/30"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    تفاصيل الأدوار والألوان
+                  </button>
+                </div>
+
+                {/* محتوى التبويبات */}
+                <div className="flex-1 overflow-y-auto pr-1 text-right text-sm leading-relaxed space-y-4 scrollbar-thin">
+                  {codenamesTab === "rules" && (
+                    <div className="space-y-4">
+                      <div className="bg-slate-950/30 border border-white/5 rounded-2xl p-4">
+                        <h3 className="font-black text-[#60A5FA] text-base mb-2">🎯 الهدف من اللعبة</h3>
+                        <p className="text-slate-350">
+                          كود نيمز هي لعبة ذكاء وتواصل بين فريقين (الأحمر والأزرق). الهدف هو كشف جميع كلمات فريقك الموجودة على اللوحة بناءً على تلميحات "مرشد الشفرة". الفريق الذي يكشف جميع كلماته أولاً هو الفائز!
+                        </p>
+                      </div>
+
+                      <div className="bg-slate-950/30 border border-white/5 rounded-2xl p-4">
+                        <h3 className="font-black text-[#60A5FA] text-base mb-2">👥 تكوين الفرق والأدوار</h3>
+                        <p className="text-slate-350">
+                          ينقسم كل فريق إلى دورين أساسيين:
+                        </p>
+                        <ul className="list-disc list-inside mt-2 space-y-2 text-slate-350 mr-2">
+                          <li>
+                            <strong>مرشد الشفرة (Spymaster):</strong> شخص واحد من كل فريق يعرف الألوان الحقيقية للكلمات، ومهمته إعطاء تلميحات ذكية دون كشف الكلمات مباشرة.
+                          </li>
+                          <li>
+                            <strong>المخمنون (Guessers):</strong> باقي أعضاء الفريق الذين يحللون التلميح ويختارون الكلمات من اللوحة.
+                          </li>
+                        </ul>
+                      </div>
+
+                      <div className="bg-slate-950/30 border border-white/5 rounded-2xl p-4">
+                        <h3 className="font-black text-[#60A5FA] text-base mb-2">💬 تقديم التلميح</h3>
+                        <p className="text-slate-350">
+                          في دوره، يعطي مرشد الشفرة تلميحاً من <strong>(كلمة واحدة + رقم)</strong> مثل: <code className="bg-slate-950 px-1.5 py-0.5 rounded text-rose-400 font-mono font-bold">بحر 3</code>. الكلمة تدل على الرابط المشترك بين الكلمات، والرقم يدل على عدد الكلمات المرتبطة بهذا التلميح على اللوحة.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {codenamesTab === "cards" && (
+                    <div className="space-y-4">
+                      <div className="bg-slate-950/30 border border-white/5 rounded-2xl p-4">
+                        <h3 className="font-black text-[#60A5FA] text-base mb-2">🎨 ألوان اللوحة وتصنيفها</h3>
+                        <p className="text-slate-350 mb-3">تتكون اللوحة من 25 كلمة موزعة بألوان سرية يعرفها المرشدون فقط:</p>
+                        <div className="space-y-2.5">
+                          <div className="flex gap-3 items-center bg-rose-950/20 border border-rose-900/40 rounded-xl p-2.5">
+                            <span className="w-5 h-5 bg-rose-600 rounded-lg shadow-md shadow-rose-600/30 flex-shrink-0" />
+                            <span className="text-slate-300 text-xs"><strong>الكلمات الحمراء:</strong> تابعة للفريق الأحمر.</span>
+                          </div>
+                          <div className="flex gap-3 items-center bg-blue-950/20 border border-blue-900/40 rounded-xl p-2.5">
+                            <span className="w-5 h-5 bg-blue-600 rounded-lg shadow-md shadow-blue-600/30 flex-shrink-0" />
+                            <span className="text-slate-300 text-xs"><strong>الكلمات الزرقاء:</strong> تابعة للفريق الأزرق.</span>
+                          </div>
+                          <div className="flex gap-3 items-center bg-slate-950/40 border border-slate-800 rounded-xl p-2.5">
+                            <span className="w-5 h-5 bg-slate-400 rounded-lg shadow-md flex-shrink-0" />
+                            <span className="text-slate-300 text-xs"><strong>الكلمات المحايدة (المدنيين):</strong> لا تمنح نقاطاً لأي فريق، وكشفها ينهي دور فريقك فوراً.</span>
+                          </div>
+                          <div className="flex gap-3 items-center bg-zinc-950 border border-zinc-800 rounded-xl p-2.5">
+                            <span className="w-5 h-5 bg-zinc-900 rounded-lg border border-white/10 flex-shrink-0" />
+                            <span className="text-rose-400 text-xs font-black">💀 الكارت الأسود (القاتل): تجنبوه تماماً! الفريق الذي يضغط عليه يخسر اللعبة فوراً!</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-950/30 border border-white/5 rounded-2xl p-4">
+                        <h3 className="font-black text-[#60A5FA] text-base mb-2">⚖️ قوانين التخمين</h3>
+                        <p className="text-slate-350">
+                          يمكن للمخمنين إجراء تخمينات حتى يصلوا للعدد المذكور في التلميح بالإضافة لتخمين واحد إضافي (مثال: إذا كان التلميح 2، يمكنهم التخمين حتى 3 مرات). ينتهي دور الفريق فوراً عند اختيار كلمة خاطئة أو محايدة أو اختيار التوقف اختيارياً.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* زر إغلاق سفلي */}
+                <div className="mt-6 border-t border-white/10 pt-4 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setIsCodenamesRulesOpen(false)}
+                    className="rounded-xl bg-slate-800 px-5 py-2 text-xs font-bold text-slate-300 transition hover:bg-slate-700 hover:text-white cursor-pointer"
+                  >
+                    فهمت ذلك!
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
         <CreateBlitzRoomButton />
 
