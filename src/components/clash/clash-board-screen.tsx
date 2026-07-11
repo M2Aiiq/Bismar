@@ -278,6 +278,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   const [localTimer, setLocalTimer] = useState(30);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [selectedHandCardId, setSelectedHandCardId] = useState<string | null>(null);
+  const [selectedTargetPlayerId, setSelectedTargetPlayerId] = useState<string | null>(null);
 
   useEffect(() => {
     if (toastMessage) {
@@ -509,6 +510,12 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
       } else {
         setSelectedCard(card);
         setTargetSelectorOpen(true);
+        // التحديد التلقائي إذا كان هناك لاعب خصم واحد فقط
+        if (opponents.length === 1) {
+          setSelectedTargetPlayerId(opponents[0].id);
+        } else {
+          setSelectedTargetPlayerId(null);
+        }
       }
     } else {
       setSelectedHandCardId(card.id);
@@ -520,6 +527,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
     void playActionCard(selectedCard.id, targetPid, targetOrganId);
     setSelectedCard(null);
     setTargetSelectorOpen(false);
+    setSelectedTargetPlayerId(null);
   };
 
   // كروت المقاطعة المتوفرة في يد اللاعب الحالي
@@ -1060,45 +1068,93 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
               </div>
 
               <div className="space-y-4 flex-1 overflow-y-auto pr-1 scrollbar-thin">
-                {(selectedCard.type === "attack" || selectedCard.subType === "infection") &&
-                  opponents.map((opp) => (
-                    <div key={opp.id} className="rounded-2xl border border-white/5 bg-[#181E2F]/30 p-3 text-right">
-                      <span className="text-xs font-bold block mb-2.5 text-rose-300">{opp.name}</span>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {opp.organs?.map((o) => {
-                          const isLegitimate = selectedCard.targetOrganId === "any" || selectedCard.targetOrganId === o.id || selectedCard.subType === "infection";
-                          const isClickable = !o.isDead && isLegitimate;
-                          const hps = o.isDead ? 0 : o.hp;
-
-                          return (
+                {(selectedCard.type === "attack" || selectedCard.subType === "infection") && (
+                  <>
+                    {opponents.length > 1 && !selectedTargetPlayerId ? (
+                      // المرحلة الأولى: اختيار اللاعب الخصم
+                      <div className="space-y-3 text-right">
+                        <span className="text-xs text-slate-400 block mb-1">اختر اللاعب الذي تريد مهاجمته:</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {opponents.map((opp) => (
                             <button
-                              key={o.id}
-                              disabled={!isClickable}
-                              onClick={() => executePlayOnTarget(opp.id, o.id)}
-                              className={`relative rounded-2xl border p-3 flex flex-col items-center justify-between transition-all active:scale-95 cursor-pointer h-24 ${
-                                isClickable
-                                  ? "border-white/5 bg-slate-800/60 hover:bg-rose-900/30 hover:border-rose-500/50 hover:shadow-lg hover:shadow-rose-950/20"
-                                  : "border-slate-850 bg-slate-950/40 opacity-40 cursor-not-allowed"
-                              }`}
+                              key={opp.id}
+                              onClick={() => setSelectedTargetPlayerId(opp.id)}
+                              disabled={opp.isZombie}
+                              className="w-full rounded-2xl bg-slate-800/80 border border-white/5 py-4 px-3 text-sm font-black hover:bg-rose-900/20 hover:border-rose-500 disabled:opacity-30 transition active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1.5"
                             >
-                              <span className="text-xs font-bold text-slate-200">{o.name}</span>
-                              
-                              <img
-                                src={o.isDead ? `/${o.id}_died.png` : `/${o.id}.png`}
-                                alt={o.name}
-                                className="w-8 h-8 object-contain my-1 select-none"
-                              />
-
-                              <div className="flex gap-1.5 justify-center w-full mt-1">
-                                <div className={`h-1.5 w-3.5 rounded-full ${hps >= 1 ? (hps === 2 ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.3)]" : "bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.3)]") : "bg-slate-800"}`} />
-                                <div className={`h-1.5 w-3.5 rounded-full ${hps === 2 ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.3)]" : "bg-slate-800"}`} />
-                              </div>
+                              <span className="text-rose-300 font-bold">{opp.name}</span>
+                              <span className="text-[10px] text-slate-400">
+                                {opp.isZombie
+                                  ? "🧟 ميت"
+                                  : `الأعضاء الفعالة: ${opp.organs?.filter((o) => !o.isDead).length || 0}`}
+                              </span>
                             </button>
-                          );
-                        })}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ) : (
+                      // المرحلة الثانية: اختيار العضو التابع للاعب المختار (أو الخصم الوحيد تلقائياً)
+                      (() => {
+                        const targetOppId = selectedTargetPlayerId || opponents[0]?.id;
+                        const opp = opponents.find((o) => o.id === targetOppId);
+                        if (!opp) return null;
+
+                        return (
+                          <div className="rounded-2xl border border-white/5 bg-[#181E2F]/30 p-3 text-right">
+                            {opponents.length > 1 && (
+                              <div className="flex justify-between items-center mb-3 pb-2 border-b border-white/5">
+                                <button
+                                  onClick={() => setSelectedTargetPlayerId(null)}
+                                  className="px-2.5 py-1 rounded-xl bg-slate-800 border border-white/5 text-[10px] font-bold text-slate-300 hover:bg-slate-700 hover:text-white transition active:scale-95 cursor-pointer"
+                                >
+                                  ➡️ رجوع لتغيير اللاعب
+                                </button>
+                                <span className="text-xs font-bold text-rose-300">أعضاء اللاعب: {opp.name}</span>
+                              </div>
+                            )}
+                            {opponents.length === 1 && (
+                              <span className="text-xs font-bold block mb-2.5 text-rose-300">{opp.name}</span>
+                            )}
+
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                              {opp.organs?.map((o) => {
+                                const isLegitimate = selectedCard.targetOrganId === "any" || selectedCard.targetOrganId === o.id || selectedCard.subType === "infection";
+                                const isClickable = !o.isDead && isLegitimate;
+                                const hps = o.isDead ? 0 : o.hp;
+
+                                return (
+                                  <button
+                                    key={o.id}
+                                    disabled={!isClickable}
+                                    onClick={() => executePlayOnTarget(opp.id, o.id)}
+                                    className={`relative rounded-2xl border p-3 flex flex-col items-center justify-between transition-all active:scale-95 cursor-pointer h-24 ${
+                                      isClickable
+                                        ? "border-white/5 bg-slate-800/60 hover:bg-rose-900/30 hover:border-rose-500/50 hover:shadow-lg hover:shadow-rose-950/20"
+                                        : "border-slate-850 bg-slate-950/40 opacity-40 cursor-not-allowed"
+                                    }`}
+                                  >
+                                    <span className="text-xs font-bold text-slate-200">{o.name}</span>
+                                    
+                                    <img
+                                      src={o.isDead ? `/${o.id}_died.png` : `/${o.id}.png`}
+                                      alt={o.name}
+                                      className="w-8 h-8 object-contain my-1 select-none"
+                                    />
+
+                                    <div className="flex gap-1.5 justify-center w-full mt-1">
+                                      <div className={`h-1.5 w-3.5 rounded-full ${hps >= 1 ? (hps === 2 ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.3)]" : "bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.3)]") : "bg-slate-800"}`} />
+                                      <div className={`h-1.5 w-3.5 rounded-full ${hps === 2 ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.3)]" : "bg-slate-800"}`} />
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })()
+                    )}
+                  </>
+                )}
 
                 {(selectedCard.type === "cure" || selectedCard.subType === "vaccine" || selectedCard.subType === "organicDiet") && me && (
                   <div className="rounded-2xl border border-white/5 bg-[#181E2F]/30 p-3 text-right">
@@ -1184,6 +1240,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 onClick={() => {
                   setSelectedCard(null);
                   setTargetSelectorOpen(false);
+                  setSelectedTargetPlayerId(null);
                 }}
                 className="mt-5 w-full rounded-2xl border border-white/10 py-3 text-xs font-black text-slate-300 bg-slate-800/40 hover:bg-slate-800 hover:text-white transition active:scale-98 cursor-pointer"
               >
