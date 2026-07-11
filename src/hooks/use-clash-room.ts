@@ -808,6 +808,14 @@ export function useClashRoom(roomId: string) {
                     targetOrgan.hp = 2;
                   }
                 } else if (card.subType === "surgery") {
+                  const hasAnyDead = targetPlayer?.organs?.some(o => o.isDead);
+                  if (hasAnyDead) {
+                    if (!targetOrgan.isDead) return currentRoom;
+                  } else {
+                    const isInjured = targetOrgan.hp < 2 || (targetOrgan.afflictions && targetOrgan.afflictions.length > 0);
+                    if (!isInjured) return currentRoom;
+                  }
+
                   targetOrgan.isDead = false;
                   targetOrgan.hp = 2;
                   targetOrgan.afflictions = [];
@@ -1048,6 +1056,14 @@ export function useClashRoom(roomId: string) {
               targetOrgan.hp = 2;
             }
           } else if (card.subType === "surgery") {
+            const hasAnyDead = targetPlayer.organs.some(o => o.isDead);
+            if (hasAnyDead) {
+              if (!targetOrgan.isDead) return currentRoom;
+            } else {
+              const isInjured = targetOrgan.hp < 2 || (targetOrgan.afflictions && targetOrgan.afflictions.length > 0);
+              if (!isInjured) return currentRoom;
+            }
+
             targetOrgan.isDead = false;
             targetOrgan.hp = 2;
             targetOrgan.afflictions = [];

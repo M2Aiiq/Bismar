@@ -1318,8 +1318,11 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                         const isVitamin = selectedCard.subType === "vitamin";
                         const isIcu = selectedCard.subType === "icu";
 
+                        const hasAnyDeadOrgan = me.organs?.some((org) => org.isDead);
                         const isClickable = isSurgery
-                          ? true
+                          ? hasAnyDeadOrgan
+                            ? o.isDead
+                            : !o.isDead && (o.hp < 2 || (o.afflictions && o.afflictions.length > 0))
                           : !o.isDead && (
                             isOrganicDiet
                               ? !o.hasOrganicDiet
