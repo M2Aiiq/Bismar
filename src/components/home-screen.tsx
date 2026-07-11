@@ -389,30 +389,31 @@ export function HomeScreen() {
                 transition={{ type: "spring", duration: 0.4 }}
                 className="relative w-full max-w-xl rounded-3xl border border-white/10 bg-slate-900 p-5 md:p-7 shadow-2xl text-[#F8FAFC] flex flex-col max-h-[80vh]"
               >
-                {/* أزرار التحكم العلوية (النسخ والإغلاق) */}
-                <div className="absolute left-4 top-4 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={handleCopyCodenamesLink}
-                    className="flex h-8 px-3 items-center justify-center rounded-xl border border-white/10 text-xs font-bold text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer gap-1.5"
-                  >
-                    <span>{copied ? "تم النسخ!" : "نسخ الرابط"}</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsCodenamesRulesOpen(false)}
-                    className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 text-xl font-bold text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
-                  >
-                    ×
-                  </button>
+                {/* الهيدر العلوي */}
+                <div className="flex justify-between items-center mb-5 pb-3 border-b border-white/5 select-none gap-4">
+                  <h2 className="text-lg md:text-xl font-black text-[#60A5FA] text-right">
+                    دليل وقوانين لعبة كود نيمز (Codenames)
+                  </h2>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={handleCopyCodenamesLink}
+                      className="flex h-8 px-3 items-center justify-center rounded-xl border border-white/10 text-xs font-bold text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer gap-1.5"
+                    >
+                      <span>{copied ? "تم النسخ!" : "نسخ الرابط"}</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsCodenamesRulesOpen(false)}
+                      className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 text-xl font-bold text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
-
-                <h2 className="text-xl md:text-2xl font-black text-[#60A5FA] mb-4 text-center">
-                  دليل وقوانين لعبة كود نيمز (Codenames)
-                </h2>
 
                 {/* أزرار التبويب */}
                 <div className="flex bg-slate-950/50 border border-white/5 rounded-2xl p-1 mb-5 select-none text-xs md:text-sm font-black">
