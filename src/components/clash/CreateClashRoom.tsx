@@ -27,8 +27,9 @@ export function CreateClashRoomButton() {
     const rulesParam = searchParams.get("rules");
     if (rulesParam === "clash") {
       setIsRulesOpen(true);
+      router.replace(window.location.pathname);
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   function handleCopyLink() {
     const shareUrl = `${window.location.origin}${window.location.pathname}?rules=clash`;

@@ -24,8 +24,9 @@ export function CreateBlitzRoomButton() {
     const rulesParam = searchParams.get("rules");
     if (rulesParam === "blitz") {
       setIsRulesOpen(true);
+      router.replace(window.location.pathname);
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   function handleCopyLink() {
     const shareUrl = `${window.location.origin}${window.location.pathname}?rules=blitz`;

@@ -80,8 +80,9 @@ export function HomeScreen() {
     const rulesParam = searchParams.get("rules");
     if (rulesParam === "codenames") {
       setIsCodenamesRulesOpen(true);
+      router.replace(window.location.pathname);
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   function handleCopyCodenamesLink() {
     const shareUrl = `${window.location.origin}${window.location.pathname}?rules=codenames`;
