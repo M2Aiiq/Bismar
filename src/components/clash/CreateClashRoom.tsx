@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getDatabase, ref, set } from "firebase/database";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameRoom } from "../../context/game-room-context";
@@ -11,15 +11,32 @@ import type { ClashRoomState } from "../../types/organClash";
 
 export function CreateClashRoomButton() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { playerId, playerName, firebaseReady, isBusy } = useGameRoom();
   const [isOpen, setIsOpen] = useState(false);
   const [isRulesOpen, setIsRulesOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [rulesTab, setRulesTab] = useState<"rules" | "types" | "cards">("rules");
   const [maxPlayers, setMaxPlayers] = useState(4);
   const [initialHandSize, setInitialHandSize] = useState(5);
   const [turnTimerSeconds, setTurnTimerSeconds] = useState(30);
   const [organsCount, setOrgansCount] = useState(7);
   const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    const rulesParam = searchParams.get("rules");
+    if (rulesParam === "clash") {
+      setIsRulesOpen(true);
+    }
+  }, [searchParams]);
+
+  function handleCopyLink() {
+    const shareUrl = `${window.location.origin}${window.location.pathname}?rules=clash`;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
 
   const disabled = isBusy || !firebaseReady || !playerName || creating;
 
@@ -115,14 +132,26 @@ export function CreateClashRoomButton() {
               transition={{ type: "spring", duration: 0.4 }}
               className="relative w-full max-w-2xl rounded-3xl border border-white/10 bg-slate-900 p-5 md:p-7 shadow-2xl text-[#F8FAFC] flex flex-col max-h-[85vh]"
             >
-              {/* زر الإغلاق */}
-              <button
-                type="button"
-                onClick={() => setIsRulesOpen(false)}
-                className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 text-xl font-bold text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
-              >
-                ×
-              </button>
+              {/* أزرار التحكم العلوية (النسخ والإغلاق) */}
+              <div className="absolute left-4 top-4 flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="flex h-8 px-3 items-center justify-center rounded-xl border border-white/10 text-xs font-bold text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer gap-1.5"
+                >
+                  <span>{copied ? "تم النسخ!" : "نسخ الرابط"}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsRulesOpen(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 text-xl font-bold text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+                >
+                  ×
+                </button>
+              </div>
 
               <h2 className="text-xl md:text-2xl font-black text-rose-400 mb-4 text-center">
                 دليل وقوانين لعبة صراع الأعضاء
