@@ -143,3 +143,88 @@ input::placeholder {
     display: none !important;
   }
 }
+
+/* ===== Tablet Portrait Orientation Fixes ===== */
+/* iPad and tablet portrait mode: width 768px-1024px, portrait */
+@media screen and (min-width: 640px) and (max-width: 1023px) and (orientation: portrait) {
+  /* Hand cards - larger in portrait tablet */
+  .clash-hand-card {
+    min-width: 148px !important;
+    width: 148px !important;
+  }
+
+  /* Organ image sizing in portrait tablet */
+  .clash-organ-img {
+    width: 4.5rem !important;
+    height: 4.5rem !important;
+  }
+
+  /* Organ card text */
+  .clash-organ-name {
+    font-size: 0.75rem !important;
+  }
+
+  /* Card badge text */
+  .clash-card-badge {
+    font-size: 9px !important;
+  }
+
+  /* Card name text */
+  .clash-card-name {
+    font-size: 13px !important;
+  }
+
+  /* Card description text */
+  .clash-card-desc {
+    font-size: 9.5px !important;
+  }
+
+  /* HP bar height */
+  .clash-hp-bar {
+    height: 6px !important;
+  }
+
+  /* Organ grid max-height - allow more space in portrait */
+  .clash-organs-grid {
+    max-height: 32vh !important;
+    gap: 1rem !important;
+  }
+}
+
+/* Large iPad Pro portrait (1024px wide) */
+@media screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: portrait) {
+  .clash-hand-card {
+    min-width: 175px !important;
+    width: 175px !important;
+  }
+
+  .clash-organ-img {
+    width: 5.5rem !important;
+    height: 5.5rem !important;
+  }
+
+  .clash-organ-name {
+    font-size: 0.875rem !important;
+  }
+
+  .clash-card-badge {
+    font-size: 10px !important;
+  }
+
+  .clash-card-name {
+    font-size: 15px !important;
+  }
+
+  .clash-card-desc {
+    font-size: 11px !important;
+  }
+
+  .clash-hp-bar {
+    height: 7px !important;
+  }
+
+  .clash-organs-grid {
+    max-height: 30vh !important;
+    gap: 1.25rem !important;
+  }
+}
