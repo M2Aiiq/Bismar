@@ -39,7 +39,7 @@ interface OpponentsRadarProps {
 function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: OpponentsRadarProps) {
   if (opponents.length === 0) {
     return (
-      <div className="w-full max-w-3xl mx-auto h-20 flex items-center justify-center text-xs font-semibold text-slate-500 select-none">
+      <div className="w-full max-w-3xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto h-20 flex items-center justify-center text-xs md:text-sm font-semibold text-slate-500 select-none">
         بانتظار انضمام منافسين...
       </div>
     );
@@ -51,40 +51,40 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
     const opp = opponents[0];
     const isTurn = currentTurnPlayerId === opp.id;
     return (
-      <div className="w-full max-w-3xl mx-auto h-24 px-4 py-2 select-none">
-        <div className={`w-full h-full rounded-2xl border bg-slate-900/80 p-3 flex items-center justify-between transition-all ${isTurn ? "border-rose-500 shadow-md shadow-rose-500/10" : "border-slate-800"
+      <div className="w-full max-w-3xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto h-24 md:h-28 px-4 py-2 select-none">
+        <div className={`w-full h-full rounded-2xl border bg-slate-900/80 p-3 md:p-4 flex items-center justify-between transition-all ${isTurn ? "border-rose-500 shadow-md shadow-rose-500/10" : "border-slate-800"
           }`}>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-black text-white flex items-center gap-1.5">
+              <span className="text-sm md:text-base lg:text-lg font-black text-white flex items-center gap-1.5">
                 <span>{opp.name}</span>
                 {opp.isMuted !== undefined && (
                   <span className="flex items-center" title={opp.isMuted ? "صامت" : "يتحدث"}>
                     {opp.isMuted ? (
                       <img
                         src="/mute.png"
-                        className="w-3.5 h-3.5 object-contain"
+                        className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 object-contain"
                         style={{ filter: "invert(40%) sepia(70%) saturate(3000%) hue-rotate(330deg) brightness(95%) contrast(100%)" }}
                         alt="Muted"
                       />
                     ) : (
-                      <span className="text-[11px]">🎤</span>
+                      <span className="text-[11px] md:text-xs">🎤</span>
                     )}
                   </span>
                 )}
               </span>
-              {opp.isZombie && <span className="text-[9px] bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 px-1.5 py-0.5 rounded-md animate-pulse">Zombie 🧟</span>}
+              {opp.isZombie && <span className="text-[9px] md:text-xs bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 px-1.5 py-0.5 rounded-md animate-pulse">Zombie 🧟</span>}
             </div>
             {isLobby && (
-              <span className="text-[10px] text-slate-400 mt-1">
+              <span className="text-[10px] md:text-xs text-slate-400 mt-1">
                 🟢 متصل - في الانتظار
               </span>
             )}
           </div>
           {!isLobby && (
-            <div className="flex gap-1.5 justify-end flex-wrap max-w-[70%]">
+            <div className="flex gap-1.5 md:gap-2.5 justify-end flex-wrap max-w-[70%]">
               {opp.organs?.map((o) => (
-                <MiniOrganBadge key={o.id} organ={o} className="h-8 w-8 sm:h-10 sm:w-10" />
+                <MiniOrganBadge key={o.id} organ={o} className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 lg:h-14 lg:w-14" />
               ))}
             </div>
           )}
@@ -95,40 +95,40 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
 
   if (opponents.length === 2) {
     return (
-      <div className="w-full max-w-3xl mx-auto h-24 grid grid-cols-2 gap-2 px-4 py-2 select-none">
+      <div className="w-full max-w-3xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto h-24 md:h-28 grid grid-cols-2 gap-2 px-4 py-2 select-none">
         {opponents.map((opp) => {
           const isTurn = currentTurnPlayerId === opp.id;
           return (
-            <div key={opp.id} className={`rounded-2xl border bg-slate-900/80 p-3 flex flex-col justify-between transition-all ${isTurn ? "border-rose-500 shadow-md shadow-rose-500/10" : "border-slate-800"
+            <div key={opp.id} className={`rounded-2xl border bg-slate-900/80 p-3 md:p-4 flex flex-col justify-between transition-all ${isTurn ? "border-rose-500 shadow-md shadow-rose-500/10" : "border-slate-800"
               }`}>
               <div className="flex justify-between items-center">
-                <span className="text-xs font-bold text-white flex items-center gap-1">
-                  <span className="truncate max-w-[65px]">{opp.name}</span>
+                <span className="text-xs md:text-sm lg:text-base font-bold text-white flex items-center gap-1">
+                  <span className="truncate max-w-[65px] md:max-w-[120px]">{opp.name}</span>
                   {opp.isMuted !== undefined && (
                     <span className="flex items-center">
                       {opp.isMuted ? (
                         <img
                           src="/mute.png"
-                          className="w-3 h-3 object-contain"
+                          className="w-3 h-3 md:w-4 md:h-4 object-contain"
                           style={{ filter: "invert(40%) sepia(70%) saturate(3000%) hue-rotate(330deg) brightness(95%) contrast(100%)" }}
                           alt="Muted"
                         />
                       ) : (
-                        <span className="text-[10px]">🎤</span>
+                        <span className="text-[10px] md:text-xs">🎤</span>
                       )}
                     </span>
                   )}
                 </span>
                 {isLobby && (
-                  <span className="text-[9px] text-slate-400 font-mono">
+                  <span className="text-[9px] md:text-xs text-slate-400 font-mono">
                     🟢 متصل
                   </span>
                 )}
               </div>
               {!isLobby && (
-                <div className="grid grid-cols-4 gap-1 mt-2">
+                <div className="grid grid-cols-4 gap-1 md:gap-1.5 mt-2">
                   {opp.organs?.map((o) => (
-                    <MiniOrganBadge key={o.id} organ={o} className="h-7 w-7 sm:h-8 sm:w-8" />
+                    <MiniOrganBadge key={o.id} organ={o} className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-11 lg:w-11" />
                   ))}
                 </div>
               )}
@@ -141,40 +141,40 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
 
   if (opponents.length === 3) {
     return (
-      <div className="w-full max-w-3xl mx-auto h-20 grid grid-cols-3 gap-1.5 px-3 py-1.5 select-none">
+      <div className="w-full max-w-3xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto h-20 md:h-24 grid grid-cols-3 gap-1.5 px-3 py-1.5 select-none">
         {opponents.map((opp) => {
           const isTurn = currentTurnPlayerId === opp.id;
           return (
-            <div key={opp.id} className={`rounded-xl border bg-slate-900/90 p-2.5 flex flex-col justify-between transition-all ${isTurn ? "border-rose-500 shadow-sm shadow-rose-500/10" : "border-slate-800"
+            <div key={opp.id} className={`rounded-xl border bg-slate-900/90 p-2.5 md:p-3.5 flex flex-col justify-between transition-all ${isTurn ? "border-rose-500 shadow-sm shadow-rose-500/10" : "border-slate-800"
               }`}>
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black text-white flex items-center gap-1">
-                  <span className="truncate max-w-[50px]">{opp.name}</span>
+                <span className="text-[10px] sm:text-xs md:text-sm lg:text-base font-black text-white flex items-center gap-1">
+                  <span className="truncate max-w-[50px] md:max-w-[100px]">{opp.name}</span>
                   {opp.isMuted !== undefined && (
                     <span className="flex items-center">
                       {opp.isMuted ? (
                         <img
                           src="/mute.png"
-                          className="w-2.5 h-2.5 object-contain"
+                          className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 object-contain"
                           style={{ filter: "invert(40%) sepia(70%) saturate(3000%) hue-rotate(330deg) brightness(95%) contrast(100%)" }}
                           alt="Muted"
                         />
                       ) : (
-                        <span className="text-[8px]">🎤</span>
+                        <span className="text-[8px] md:text-[10px]">🎤</span>
                       )}
                     </span>
                   )}
                 </span>
                 {isLobby && (
-                  <span className="text-[8px] text-slate-400 font-mono">
+                  <span className="text-[8px] md:text-[10px] text-slate-400 font-mono">
                     🟢 متصل
                   </span>
                 )}
               </div>
               {!isLobby && (
-                <div className="grid grid-cols-4 gap-0.5 mt-1.5">
+                <div className="grid grid-cols-4 gap-0.5 md:gap-1 mt-1.5">
                   {opp.organs?.map((o) => (
-                    <MiniOrganBadge key={o.id} organ={o} className="h-7 w-7" />
+                    <MiniOrganBadge key={o.id} organ={o} className="h-7 w-7 md:h-8 md:w-8 lg:h-10 lg:w-10" />
                   ))}
                 </div>
               )}
@@ -187,32 +187,32 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
 
   // 4 opponents (5-player game) -> horizontal swiper
   return (
-    <div className="w-full max-w-3xl mx-auto h-20 flex overflow-x-auto gap-2 px-4 py-1.5 snap-x scrollbar-none select-none">
+    <div className="w-full max-w-3xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto h-20 md:h-24 flex overflow-x-auto gap-2 md:gap-3 px-4 py-1.5 snap-x scrollbar-none select-none">
       {opponents.map((opp) => {
         const isTurn = currentTurnPlayerId === opp.id;
         return (
-          <div key={opp.id} className={`min-w-[130px] snap-center rounded-xl border bg-slate-900/90 p-2.5 flex flex-col justify-between transition-all ${isTurn ? "border-rose-500 shadow-sm shadow-rose-500/10" : "border-slate-800"
+          <div key={opp.id} className={`min-w-[130px] md:min-w-[155px] lg:min-w-[185px] snap-center rounded-xl border bg-slate-900/90 p-2.5 md:p-3.5 flex flex-col justify-between transition-all ${isTurn ? "border-rose-500 shadow-sm shadow-rose-500/10" : "border-slate-800"
             }`}>
             <div className="flex justify-between items-center">
-              <span className="text-[10px] font-black text-white flex items-center gap-1">
-                <span className="truncate max-w-[55px]">{opp.name}</span>
+              <span className="text-[10px] sm:text-xs md:text-sm lg:text-base font-black text-white flex items-center gap-1">
+                <span className="truncate max-w-[55px] md:max-w-[110px]">{opp.name}</span>
                 {opp.isMuted !== undefined && (
                   <span className="flex items-center">
                     {opp.isMuted ? (
                       <img
                         src="/mute.png"
-                        className="w-2.5 h-2.5 object-contain"
+                        className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 object-contain"
                         style={{ filter: "invert(40%) sepia(70%) saturate(3000%) hue-rotate(330deg) brightness(95%) contrast(100%)" }}
                         alt="Muted"
                       />
                     ) : (
-                      <span className="text-[8px]">🎤</span>
+                      <span className="text-[8px] md:text-[10px]">🎤</span>
                     )}
                   </span>
                 )}
               </span>
               {isLobby && (
-                <span className="text-[8px] text-slate-400 font-mono">
+                <span className="text-[8px] md:text-[10px] text-slate-400 font-mono">
                   🟢 متصل
                 </span>
               )}
@@ -220,7 +220,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
             {!isLobby && (
               <div className="grid grid-cols-4 gap-1 mt-1">
                 {opp.organs?.map((o) => (
-                  <MiniOrganBadge key={o.id} organ={o} className="h-6 w-6 sm:h-7 sm:w-7" />
+                  <MiniOrganBadge key={o.id} organ={o} className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-9 lg:w-9" />
                 ))}
               </div>
             )}
@@ -643,7 +643,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
       className="relative h-screen w-screen overflow-hidden p-3 bg-slate-950 text-white flex flex-col justify-between select-none"
     >
       {/* شريط الإعدادات والتحكم العلوي */}
-      <div className="w-full max-w-3xl mx-auto relative flex items-center justify-center px-2 py-2 mb-2 select-none">
+      <div className="w-full max-w-3xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto relative flex items-center justify-center px-2 py-2 mb-2 select-none">
         <span className="text-sm md:text-base font-black tracking-widest text-rose-400">
           صراع الأعضاء
         </span>
@@ -666,7 +666,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
       ) : null}
 
       {/* 2. منطقة المعركة واللاعب الحالي (Middle Zone - Player Battlefield & Turn Ticker) */}
-      <div className="flex-1 flex flex-col items-center justify-center py-2 relative w-full max-w-3xl mx-auto">
+      <div className="flex-1 flex flex-col items-center justify-center py-2 relative w-full max-w-3xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto">
         {/* Turn Ticker */}
         {room.status === "playing" && (
           <div className="w-full max-w-md md:max-w-xl flex flex-col items-center mb-3">
@@ -886,7 +886,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5 sm:gap-2.5 my-auto max-h-[30vh] md:max-h-[22vh] w-full max-w-sm sm:max-w-4xl px-2">
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5 sm:gap-2.5 md:gap-3.5 lg:gap-4 my-auto max-h-[30vh] md:max-h-[26vh] w-full max-w-sm sm:max-w-4xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl px-2">
             {me?.organs?.map((o) => {
               const isDead = o.isDead;
               const hpColor = o.hp === 2
@@ -898,7 +898,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
               return (
                 <div
                   key={o.id}
-                  className={`relative overflow-hidden rounded-xl border p-1.5 sm:p-2 flex flex-col justify-between transition-all aspect-square ${isDead
+                  className={`relative overflow-hidden rounded-xl border p-1.5 sm:p-2 md:p-3 lg:p-4 flex flex-col justify-between transition-all aspect-square ${isDead
                     ? "border-slate-800 bg-slate-950/60 text-slate-600 grayscale contrast-75 opacity-60 pointer-events-none"
                     : o.hp === 2
                       ? "border-emerald-500/20 bg-emerald-950/10 shadow-lg shadow-emerald-500/5 text-emerald-200"
@@ -907,21 +907,21 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 >
                   {/* Vaccine badge */}
                   {o.hasVaccine && (
-                    <span className="absolute top-1 left-1 text-[9px] sm:text-[11px]" title="محصن باللقاح">🛡️</span>
+                    <span className="absolute top-1 left-1 text-[9px] sm:text-[11px] md:text-xs lg:text-sm" title="محصن باللقاح">🛡️</span>
                   )}
                   {o.hasOrganicDiet && (
-                    <span className="absolute top-1 left-4 text-[9px] sm:text-[11px]" title="نظام غذائي عضوي">🥦</span>
+                    <span className="absolute top-1 left-4 text-[9px] sm:text-[11px] md:text-xs lg:text-sm" title="نظام غذائي عضوي">🥦</span>
                   )}
 
                   {/* Afflictions count badge */}
                   {o.afflictions && o.afflictions.length > 0 && (
-                    <span className="absolute top-1 right-1 text-[8px] sm:text-[9px] bg-rose-600 text-white px-1.5 py-0.5 rounded-full font-black animate-pulse">
+                    <span className="absolute top-1 right-1 text-[8px] sm:text-[9px] md:text-xs lg:text-sm bg-rose-600 text-white px-1.5 py-0.5 rounded-full font-black animate-pulse">
                       {o.afflictions.length}
                     </span>
                   )}
 
                   <div className="flex justify-center items-center w-full">
-                    <span className="text-[9px] sm:text-[11px] font-black text-slate-300 tracking-wide truncate">{o.name}</span>
+                    <span className="text-[9px] sm:text-[11px] md:text-xs lg:text-sm xl:text-base font-black text-slate-300 tracking-wide truncate">{o.name}</span>
                   </div>
 
                   {/* Organ Image Display */}
@@ -929,14 +929,14 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                     <img
                       src={o.isDead ? `/${o.id}_died.png` : `/${o.id}.png`}
                       alt={o.name}
-                      className="w-10 h-10 sm:w-14 sm:h-14 object-contain max-h-full"
+                      className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 object-contain max-h-full"
                     />
                   </div>
 
                   {/* 2-segment HP bar */}
                   <div className="flex gap-1 w-full mt-0.5">
-                    <div className={`h-1 flex-1 rounded-full ${o.hp >= 1 ? hpColor : "bg-slate-800"}`} />
-                    <div className={`h-1 flex-1 rounded-full ${o.hp === 2 ? hpColor : "bg-slate-800"}`} />
+                    <div className={`h-1 md:h-1.5 lg:h-2 flex-1 rounded-full ${o.hp >= 1 ? hpColor : "bg-slate-800"}`} />
+                    <div className={`h-1 md:h-1.5 lg:h-2 flex-1 rounded-full ${o.hp === 2 ? hpColor : "bg-slate-800"}`} />
                   </div>
                 </div>
               );
@@ -1108,7 +1108,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
           )}
         </div>
         {room.status !== "lobby" && me?.hand && me.hand.length > 0 ? (
-          <div className="flex gap-2 overflow-x-auto py-2 scrollbar-none snap-x dir-rtl justify-start md:justify-center">
+          <div className="flex gap-2 md:gap-3 lg:gap-4 overflow-x-auto py-2 scrollbar-none snap-x dir-rtl justify-start md:justify-center">
             {me.hand.map((card) => {
               const borderColors = {
                 attack: "border-rose-600/50 hover:border-rose-500 shadow-rose-900/10",
@@ -1143,7 +1143,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 return (
                   <div
                     key={card.id}
-                    className="min-w-[95px] w-[95px] sm:min-w-[115px] sm:w-[115px] aspect-[2/3] rounded-2xl border-2 border-dashed border-slate-800 bg-slate-950/40"
+                    className="min-w-[95px] w-[95px] sm:min-w-[115px] sm:w-[115px] md:min-w-[135px] md:w-[135px] lg:min-w-[160px] lg:w-[160px] xl:min-w-[180px] xl:w-[180px] aspect-[2/3] rounded-2xl border-2 border-dashed border-slate-800 bg-slate-950/40"
                   />
                 );
               }
@@ -1157,22 +1157,22 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                     e.stopPropagation();
                     handleCardClick(card);
                   }}
-                  className={`min-w-[95px] w-[95px] sm:min-w-[115px] sm:w-[115px] aspect-[2/3] rounded-2xl border-2 bg-slate-900/95 p-2 flex flex-col justify-between cursor-pointer snap-center relative overflow-hidden select-none ${borderColors[card.type]}`}
+                  className={`min-w-[95px] w-[95px] sm:min-w-[115px] sm:w-[115px] md:min-w-[135px] md:w-[135px] lg:min-w-[160px] lg:w-[160px] xl:min-w-[180px] xl:w-[180px] aspect-[2/3] rounded-2xl border-2 bg-slate-900/95 p-2.5 md:p-3.5 lg:p-4.5 flex flex-col justify-between cursor-pointer snap-center relative overflow-hidden select-none ${borderColors[card.type]}`}
                 >
-                  <div className="flex flex-col gap-1 w-full text-right">
+                  <div className="flex flex-col gap-1 md:gap-1.5 w-full text-right">
                     <div className="flex gap-1 flex-wrap">
-                      <span className={`text-[7px] sm:text-[8px] px-1.5 py-0.5 rounded font-black self-start ${badgeColors[card.type]}`}>
+                      <span className={`text-[7px] sm:text-[8px] md:text-[9px] lg:text-[10px] xl:text-[11px] px-1.5 py-0.5 rounded font-black self-start ${badgeColors[card.type]}`}>
                         {cardTypeLabels[card.type]}
                       </span>
                       {card.type === "attack" && card.targetOrganId && card.targetOrganId !== "any" && organNames[card.targetOrganId] && (
-                        <span className={`text-[7px] sm:text-[8px] px-1.5 py-0.5 rounded font-black self-start ${badgeColors[card.type]}`}>
+                        <span className={`text-[7px] sm:text-[8px] md:text-[9px] lg:text-[10px] xl:text-[11px] px-1.5 py-0.5 rounded font-black self-start ${badgeColors[card.type]}`}>
                           {organNames[card.targetOrganId]}
                         </span>
                       )}
                     </div>
-                    <span className="text-[10px] sm:text-[12px] font-black leading-tight text-white">{card.name}</span>
+                    <span className="text-[10px] sm:text-[12px] md:text-[14px] lg:text-[16px] xl:text-[18px] font-black leading-tight text-white">{card.name}</span>
                   </div>
-                  <span className="text-[7px] sm:text-[8.5px] text-slate-400 leading-normal line-clamp-3 text-right">{card.description}</span>
+                  <span className="text-[7px] sm:text-[8.5px] md:text-[10px] lg:text-[11.5px] xl:text-[13px] text-slate-400 leading-normal line-clamp-3 text-right">{card.description}</span>
                 </motion.div>
               );
             })}
@@ -1786,28 +1786,28 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   e.stopPropagation();
                   handleCardClick(card);
                 }}
-                className={`w-48 h-64 rounded-3xl border-2 bg-slate-900/98 p-4 flex flex-col justify-between cursor-pointer select-none shadow-2xl text-right ${borderColors[card.type]}`}
+                className={`w-48 h-64 md:w-56 md:h-[19rem] lg:w-64 lg:h-[22rem] xl:w-72 xl:h-[25rem] rounded-3xl border-2 bg-slate-900/98 p-4 md:p-5 lg:p-6 xl:p-8 flex flex-col justify-between cursor-pointer select-none shadow-2xl text-right ${borderColors[card.type]}`}
                 transition={{ type: "spring", stiffness: 350, damping: 25 }}
               >
-                <div className="flex flex-col gap-1.5 w-full text-right">
+                <div className="flex flex-col gap-1.5 md:gap-2 w-full text-right">
                   <div className="flex gap-1 flex-wrap">
-                    <span className={`text-[7px] sm:text-[8px] px-1.5 py-0.5 rounded font-black self-start ${badgeColors[card.type]}`}>
+                    <span className={`text-[7px] sm:text-[8px] md:text-[9px] lg:text-[10px] xl:text-[11px] px-1.5 py-0.5 rounded font-black self-start ${badgeColors[card.type]}`}>
                       {cardTypeLabels[card.type]}
                     </span>
                     {card.type === "attack" && card.targetOrganId && card.targetOrganId !== "any" && organNames[card.targetOrganId] && (
-                      <span className={`text-[7px] sm:text-[8px] px-1.5 py-0.5 rounded font-black self-start ${badgeColors[card.type]}`}>
+                      <span className={`text-[7px] sm:text-[8px] md:text-[9px] lg:text-[10px] xl:text-[11px] px-1.5 py-0.5 rounded font-black self-start ${badgeColors[card.type]}`}>
                         {organNames[card.targetOrganId]}
                       </span>
                     )}
                   </div>
-                  <span className="text-sm font-black leading-tight text-white">{card.name}</span>
+                  <span className="text-sm md:text-base lg:text-lg xl:text-xl font-black leading-tight text-white">{card.name}</span>
                 </div>
 
-                <div className="text-[10px] sm:text-[11px] text-slate-300 leading-normal my-auto text-right">
+                <div className="text-[10px] sm:text-[11px] md:text-xs lg:text-sm xl:text-base text-slate-300 leading-normal my-auto text-right">
                   {card.description}
                 </div>
 
-                <div className="text-[9px] text-amber-400 text-center animate-pulse border-t border-white/5 pt-1.5 font-bold">
+                <div className="text-[9px] md:text-[11px] lg:text-[12px] xl:text-[13px] text-amber-400 text-center animate-pulse border-t border-white/5 pt-1.5 font-bold">
                   انقر على الكارت مجدداً للاستخدام
                 </div>
               </motion.div>
