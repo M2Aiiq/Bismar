@@ -133,35 +133,32 @@ export function CreateClashRoomButton() {
                 <button
                   type="button"
                   onClick={() => setRulesTab("rules")}
-                  className={`flex-1 py-2 text-center rounded-xl transition ${
-                    rulesTab === "rules"
+                  className={`flex-1 py-2 text-center rounded-xl transition ${rulesTab === "rules"
                       ? "bg-rose-600 text-white shadow-lg shadow-rose-600/30"
                       : "text-slate-400 hover:text-slate-200"
-                  }`}
+                    }`}
                 >
                   قوانين اللعبة
                 </button>
                 <button
                   type="button"
                   onClick={() => setRulesTab("types")}
-                  className={`flex-1 py-2 text-center rounded-xl transition ${
-                    rulesTab === "types"
+                  className={`flex-1 py-2 text-center rounded-xl transition ${rulesTab === "types"
                       ? "bg-rose-600 text-white shadow-lg shadow-rose-600/30"
                       : "text-slate-400 hover:text-slate-200"
-                  }`}
+                    }`}
                 >
                   أنواع الكروت
                 </button>
                 <button
                   type="button"
                   onClick={() => setRulesTab("cards")}
-                  className={`flex-1 py-2 text-center rounded-xl transition ${
-                    rulesTab === "cards"
+                  className={`flex-1 py-2 text-center rounded-xl transition ${rulesTab === "cards"
                       ? "bg-rose-600 text-white shadow-lg shadow-rose-600/30"
                       : "text-slate-400 hover:text-slate-200"
-                  }`}
+                    }`}
                 >
-                  شرح الكروت بالتفصيل
+                  شرح الكروت
                 </button>
               </div>
 
@@ -250,18 +247,54 @@ export function CreateClashRoomButton() {
                 )}
 
                 {rulesTab === "cards" && (
-                  <div className="space-y-4">
+                  <div className="space-y-4 text-xs md:text-sm">
+                    {/* كروت الاعتلال الخاصة بالأعضاء */}
+                    <div>
+                      <h4 className="font-black text-rose-500 text-sm border-b border-white/10 pb-1.5 mb-2">🔴 كروت اعتلال الأعضاء (تستهدف أعضاء محددة)</h4>
+                      <p className="text-slate-400 text-xs mb-2">تُسبب ضرراً بمقدار -1 HP للعضو المستهدف ولا تصيب غيره:</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-rose-900/30">
+                          <strong className="text-rose-300 text-xs block">❤️ القلب:</strong>
+                          <span className="text-slate-350 text-[11px] leading-relaxed">جرعة كافيين زائدة / قلب مكسور / انسداد كوليسترول</span>
+                        </div>
+                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-rose-900/30">
+                          <strong className="text-rose-300 text-xs block">🧠 الدماغ:</strong>
+                          <span className="text-slate-350 text-[11px] leading-relaxed">أرق / تجمد الدماغ / نوبة نسيان</span>
+                        </div>
+                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-rose-900/30">
+                          <strong className="text-rose-300 text-xs block">🧪 الكبد:</strong>
+                          <span className="text-slate-350 text-[11px] leading-relaxed">جرعة سامة / كبد دهني</span>
+                        </div>
+                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-rose-900/30">
+                          <strong className="text-rose-300 text-xs block">🫁 الرئتين:</strong>
+                          <span className="text-slate-350 text-[11px] leading-relaxed">سحابة دخان / نوبة سعال</span>
+                        </div>
+                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-rose-900/30">
+                          <strong className="text-rose-300 text-xs block">🍕 المعدة:</strong>
+                          <span className="text-slate-350 text-[11px] leading-relaxed">طعام حار / تسمم غذائي</span>
+                        </div>
+                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-rose-900/30">
+                          <strong className="text-rose-300 text-xs block">💧 الكلى:</strong>
+                          <span className="text-slate-350 text-[11px] leading-relaxed">حصوة كلى / جفاف</span>
+                        </div>
+                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-rose-900/30 md:col-span-2">
+                          <strong className="text-rose-300 text-xs block">🧬 الأمعاء:</strong>
+                          <span className="text-slate-350 text-[11px] leading-relaxed">التهاب زائدة</span>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* هجوم عام */}
                     <div>
-                      <h4 className="font-black text-rose-400 text-sm border-b border-white/10 pb-1.5 mb-2">💥 هجوم عام (أقوى أنواع الهجوم)</h4>
+                      <h4 className="font-black text-rose-450 text-sm border-b border-white/10 pb-1.5 mb-2">💥 هجوم عام (أقوى أنواع الهجوم)</h4>
                       <div className="space-y-2">
-                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-white/5">
+                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-rose-500/10">
                           <strong className="text-rose-300 text-xs block">التهاب حاد:</strong>
-                          <span className="text-slate-350 text-xs">يستهدف أي عضو ويسبب له -1 صحة، ويدمر أي لقاح أو نظام غذائي عليه بالكامل دون إمكانية إلغائه بكروت المقاطعة.</span>
+                          <span className="text-slate-350 text-[11px]">يستهدف أي عضو ويسبب له -1 صحة، ويدمر أي لقاح أو نظام غذائي عليه بالكامل دون إمكانية إلغائه بكروت المقاطعة.</span>
                         </div>
-                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-white/5">
+                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-rose-500/10">
                           <strong className="text-rose-300 text-xs block">ورم:</strong>
-                          <span className="text-slate-350 text-xs">يستهدف أي عضو ويسبب له -2 صحة فوراً (تدمير كامل)، ويلغي الحصانة ولا يمكن مقاطعته.</span>
+                          <span className="text-slate-350 text-[11px]">يستهدف أي عضو ويسبب له -2 صحة فوراً (تدمير كامل)، ويلغي الحصانة ولا يمكن مقاطعته.</span>
                         </div>
                       </div>
                     </div>
@@ -270,52 +303,59 @@ export function CreateClashRoomButton() {
                     <div>
                       <h4 className="font-black text-emerald-400 text-sm border-b border-white/10 pb-1.5 mb-2">💚 كروت العلاج المتقدمة</h4>
                       <div className="space-y-2">
-                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-white/5">
+                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-emerald-500/10">
                           <strong className="text-emerald-300 text-xs block">مضاد حيوي:</strong>
-                          <span className="text-slate-350 text-xs">يزيل اعتلالاً نشطاً واحداً عن أي عضو ويعالجه +1 صحة.</span>
+                          <span className="text-slate-350 text-[11px]">يزيل اعتلالاً نشطاً واحداً عن أي عضو ويعالجه +1 صحة.</span>
                         </div>
-                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-white/5">
+                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-emerald-500/10">
                           <strong className="text-emerald-300 text-xs block">جرعة فيتامين:</strong>
-                          <span className="text-slate-350 text-xs">تزيد صحة أي عضو غير مصاب بمقدار +1.</span>
+                          <span className="text-slate-350 text-[11px]">تزيد صحة أي عضو غير مصاب بمقدار +1.</span>
                         </div>
-                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-white/5">
+                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-emerald-500/10">
                           <strong className="text-emerald-300 text-xs block">عناية مركزة (ICU):</strong>
-                          <span className="text-slate-350 text-xs">تعيد العضو شبه الميت (1 HP) إلى كامل صحته القصوى (2 HP) فوراً.</span>
+                          <span className="text-slate-350 text-[11px]">تعيد العضو شبه الميت (1 HP) إلى كامل صحته القصوى (2 HP) فوراً.</span>
                         </div>
-                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-white/5">
+                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-emerald-500/10">
                           <strong className="text-emerald-300 text-xs block">عملية جراحية:</strong>
-                          <span className="text-slate-350 text-xs">تُحيي العضو المدمر بالكامل (0 HP) وتعيده للعب بصحة 1 HP.</span>
+                          <span className="text-slate-350 text-[11px]">تُحيي العضو المدمر بالكامل (0 HP) وتعيده للعب بصحة 1 HP.</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* تكتيك وفوري */}
+                    {/* الكروت الفورية باللون الأزرق */}
                     <div>
-                      <h4 className="font-black text-purple-400 text-sm border-b border-white/10 pb-1.5 mb-2">⚡ كروت تكتيكية وفورية</h4>
+                      <h4 className="font-black text-sky-400 text-sm border-b border-white/10 pb-1.5 mb-2">🔵 الكروت الفورية (باللون الأزرق)</h4>
                       <div className="space-y-2">
-                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-white/5">
-                          <strong className="text-purple-300 text-xs block">أجسام مضادة (فوري):</strong>
-                          <span className="text-slate-350 text-xs">تُلعب خارج دورك فور تعرضك للهجوم لإلغاء وإبطال الهجوم القادم تماماً.</span>
+                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-sky-500/20">
+                          <strong className="text-sky-300 text-xs block">أجسام مضادة:</strong>
+                          <span className="text-slate-350 text-[11px]">تُلعب خارج دورك فور تعرضك للهجوم لإلغاء وإبطال الهجوم القادم تماماً.</span>
                         </div>
-                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-white/5">
-                          <strong className="text-purple-300 text-xs block">عدوى متحورة (فوري):</strong>
-                          <span className="text-slate-350 text-xs">تُلعب خارج دورك لعكس الهجوم الموجه إليك ليصيب اللاعب الذي هاجمك بدلاً منك.</span>
+                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-sky-500/20">
+                          <strong className="text-sky-300 text-xs block">عدوى متحورة:</strong>
+                          <span className="text-slate-350 text-[11px]">تُلعب خارج دورك لعكس الهجوم الموجه إليك ليصيب اللاعب الذي هاجمك بدلاً منك.</span>
                         </div>
-                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-white/5">
-                          <strong className="text-[#60A5FA] text-xs block">سرقة:</strong>
-                          <span className="text-slate-350 text-xs">تأخذ كارت عشوائي واحد من يد الخصم المختار وتضيفه ليدك.</span>
+                      </div>
+                    </div>
+
+                    {/* كروت التكتيك باللون البنفسجي */}
+                    <div>
+                      <h4 className="font-black text-purple-400 text-sm border-b border-white/10 pb-1.5 mb-2">🔮 كروت التكتيك (باللون البنفسجي)</h4>
+                      <div className="space-y-2">
+                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-purple-500/20">
+                          <strong className="text-purple-300 text-xs block">سرقة:</strong>
+                          <span className="text-slate-350 text-[11px]">تأخذ كارت عشوائي واحد من يد الخصم المختار وتضيفه ليدك.</span>
                         </div>
-                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-white/5">
-                          <strong className="text-[#60A5FA] text-xs block">تخدير عام:</strong>
-                          <span className="text-slate-350 text-xs">تجبر جميع اللاعبين على تفويت أدوارهم، ليصبح دورك التالي مباشرة.</span>
+                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-purple-500/20">
+                          <strong className="text-purple-300 text-xs block">تخدير عام:</strong>
+                          <span className="text-slate-350 text-[11px]">تجبر جميع اللاعبين على تفويت أدوارهم، ليصبح دورك التالي مباشرة.</span>
                         </div>
-                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-white/5">
-                          <strong className="text-[#60A5FA] text-xs block">تبادل الأيدي:</strong>
-                          <span className="text-slate-350 text-xs">تُبدل جميع كروت يدك الحالية بكروت يد خصمك بالكامل.</span>
+                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-purple-500/20">
+                          <strong className="text-purple-300 text-xs block">تبادل الأيدي:</strong>
+                          <span className="text-slate-350 text-[11px]">تُبدل جميع كروت يدك الحالية بكروت يد خصمك بالكامل.</span>
                         </div>
-                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-white/5">
-                          <strong className="text-[#60A5FA] text-xs block">سحب مزدوج:</strong>
-                          <span className="text-slate-350 text-xs">تسمح لك بسحب كارتين إضافيين لتوسيع يدك خلال دورك الحالي.</span>
+                        <div className="bg-slate-950/30 p-2.5 rounded-xl border border-purple-500/20">
+                          <strong className="text-purple-300 text-xs block">سحب مزدوج:</strong>
+                          <span className="text-slate-350 text-[11px]">تسمح لك بسحب كارتين إضافيين لتوسيع يدك خلال دورك الحالي.</span>
                         </div>
                       </div>
                     </div>
@@ -374,8 +414,8 @@ export function CreateClashRoomButton() {
                       type="button"
                       onClick={() => setMaxPlayers(num)}
                       className={`flex-1 py-2 text-sm font-bold rounded-xl transition ${maxPlayers === num
-                          ? "bg-rose-600 text-white shadow-lg shadow-rose-600/30"
-                          : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                        ? "bg-rose-600 text-white shadow-lg shadow-rose-600/30"
+                        : "bg-slate-800 text-slate-400 hover:bg-slate-700"
                         }`}
                     >
                       {num}
@@ -440,8 +480,8 @@ export function CreateClashRoomButton() {
                       type="button"
                       onClick={() => setOrgansCount(num)}
                       className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition ${organsCount === num
-                          ? "bg-rose-600 text-white shadow-lg shadow-rose-600/30"
-                          : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                        ? "bg-rose-600 text-white shadow-lg shadow-rose-600/30"
+                        : "bg-slate-800 text-slate-400 hover:bg-slate-700"
                         }`}
                     >
                       {num}
