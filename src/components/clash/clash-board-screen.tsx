@@ -886,7 +886,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5 sm:gap-2.5 md:gap-3.5 lg:gap-4 my-auto max-h-[30vh] md:max-h-[26vh] w-full max-w-sm sm:max-w-4xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl px-2">
+          <div className="grid grid-cols-4 landscape:grid-cols-7 lg:grid-cols-7 gap-1.5 sm:gap-2.5 md:gap-3.5 lg:gap-4 my-auto max-h-[32vh] portrait:max-h-[45vh] lg:max-h-[24vh] w-full max-w-sm lg:max-w-6xl xl:max-w-7xl px-2">
             {me?.organs?.map((o) => {
               const isDead = o.isDead;
               const hpColor = o.hp === 2
@@ -947,10 +947,10 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
 
       {/* 3. منطقة اليد (Bottom Zone - Player Hand Cards) */}
       <div className="w-screen -mx-3 pb-2 bg-transparent select-none overflow-hidden">
-        <div className="flex justify-between items-center px-3 mb-1.5 w-full">
+        <div className="flex justify-between items-center px-3 md:px-6 mb-1.5 w-full max-w-3xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto">
           {room.status === "playing" && (
             <>
-              <div className="flex gap-2">
+              <div className="flex gap-2 md:gap-3">
                 <button
                   onClick={async (e) => {
                     e.stopPropagation();
@@ -970,7 +970,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                     setToastMessage("تم استبدال كارت عشوائي!");
                   }}
                   disabled={room.hasReplacedCardThisTurn || !!room.isPaused}
-                  className="px-3 py-1 bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 text-amber-400 font-bold rounded-xl text-[9px] cursor-pointer transition disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="px-3 py-1 md:px-4 md:py-2 bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 text-amber-400 font-bold rounded-xl text-[9px] md:text-[11px] lg:text-xs cursor-pointer transition disabled:opacity-30 disabled:cursor-not-allowed shadow-md"
                 >
                   {room.hasReplacedCardThisTurn ? "تم السحب" : "سحب كارت"}
                 </button>
@@ -986,7 +986,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                       void endClashTurn(false);
                     }}
                     disabled={!!room.isPaused}
-                    className="px-3 py-1 bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 text-slate-300 font-bold rounded-xl text-[9px] cursor-pointer transition disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="px-3 py-1 md:px-4 md:py-2 bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/50 text-slate-300 font-bold rounded-xl text-[9px] md:text-[11px] lg:text-xs cursor-pointer transition disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     تخطي الدور
                   </button>
@@ -994,7 +994,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
               </div>
 
               {/* أزرار التحكم بالصوت والمايك واللعبة */}
-              <div className="flex gap-1.5 items-center">
+              <div className="flex gap-1.5 md:gap-2.5 items-center">
                 {/* زر تشغيل/كتم المايك */}
                 <button
                   onClick={(e) => {
@@ -1012,7 +1012,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                         ? "تشغيل المايك"
                         : "كتم المايك"
                   }
-                  className={`h-7 w-7 rounded-xl border flex items-center justify-center transition active:scale-95 cursor-pointer ${
+                  className={`h-7 w-7 md:h-9 md:w-9 lg:h-10 lg:w-10 rounded-xl border flex items-center justify-center transition active:scale-95 cursor-pointer ${
                     !voiceActive
                       ? "bg-slate-800/40 border-slate-700/50 text-slate-500 hover:bg-slate-700/30 hover:text-slate-300"
                       : isMuted
@@ -1024,7 +1024,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                     /* Mic Off Icon */
                     <img
                       src="/mute.png"
-                      className="w-3.5 h-3.5 object-contain"
+                      className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 object-contain"
                       style={
                         !voiceActive
                           ? { filter: "brightness(0) invert(1)", opacity: 0.4 }
@@ -1034,7 +1034,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                     />
                   ) : (
                     /* Mic On Icon */
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5 md:w-4.5 md:h-4.5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" />
                     </svg>
                   )}
@@ -1057,7 +1057,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                         ? "تشغيل صوت الأعضاء"
                         : "كتم صوت الأعضاء"
                   }
-                  className={`h-7 w-7 rounded-xl border flex items-center justify-center transition active:scale-95 cursor-pointer ${
+                  className={`h-7 w-7 md:h-9 md:w-9 lg:h-10 lg:w-10 rounded-xl border flex items-center justify-center transition active:scale-95 cursor-pointer ${
                     !voiceActive
                       ? "bg-slate-800/40 border-slate-700/50 text-slate-500 hover:bg-slate-700/30 hover:text-slate-300"
                       : isDeafened
@@ -1067,12 +1067,12 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 >
                   {!voiceActive || isDeafened ? (
                     /* Speaker Off Icon */
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5 md:w-4.5 md:h-4.5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 9.75 19.5 12m0 0 2.25 2.25M19.5 12l2.25-2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6 4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
                     </svg>
                   ) : (
                     /* Speaker On Icon */
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5 md:w-4.5 md:h-4.5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
                     </svg>
                   )}
@@ -1086,18 +1086,18 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                       void togglePauseClashGame();
                     }}
                     title={room.isPaused ? "تشغيل اللعبة" : "إيقاف اللعبة مؤقتاً"}
-                    className={`h-7 w-7 rounded-xl border flex items-center justify-center transition active:scale-95 cursor-pointer ${
+                    className={`h-7 w-7 md:h-9 md:w-9 lg:h-10 lg:w-10 rounded-xl border flex items-center justify-center transition active:scale-95 cursor-pointer ${
                       room.isPaused
                         ? "bg-emerald-600/20 border-emerald-500/30 text-emerald-400 hover:bg-emerald-600/30 animate-pulse"
                         : "bg-amber-600/20 border-amber-500/30 text-amber-400 hover:bg-amber-600/30"
                     }`}
                   >
                     {room.isPaused ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5 md:w-4.5 md:h-4.5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
                       </svg>
                     ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5 md:w-4.5 md:h-4.5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
                       </svg>
                     )}
@@ -1170,9 +1170,9 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                         </span>
                       )}
                     </div>
-                    <span className="text-[10px] sm:text-[12px] md:text-[14px] lg:text-[16px] xl:text-[18px] font-black leading-tight text-white">{card.name}</span>
+                    <span className="text-[11px] sm:text-[13px] md:text-[15px] lg:text-[17px] xl:text-[19px] font-black leading-tight text-white">{card.name}</span>
                   </div>
-                  <span className="text-[7px] sm:text-[8.5px] md:text-[10px] lg:text-[11.5px] xl:text-[13px] text-slate-400 leading-normal line-clamp-3 text-right">{card.description}</span>
+                  <span className="text-[8px] sm:text-[9.5px] md:text-[11px] lg:text-[12px] xl:text-[13.5px] text-slate-400 leading-normal line-clamp-3 text-right">{card.description}</span>
                 </motion.div>
               );
             })}
