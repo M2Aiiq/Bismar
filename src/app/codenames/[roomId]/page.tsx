@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function RoomPage({ params }: PageProps) {
+export default async function CodenamesRoomPage({ params }: PageProps) {
   const resolvedParams = await params;
   const roomId = resolvedParams?.roomId;
 

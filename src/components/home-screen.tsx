@@ -136,9 +136,7 @@ export function HomeScreen() {
     }
 
     autoJoinAttemptRef.current = inviteRoomCode;
-    void joinRoom(inviteRoomCode, playerName).then(() => {
-      router.replace(`/room/${inviteRoomCode}`);
-    }).catch(() => {
+    void joinRoom(inviteRoomCode, playerName).catch(() => {
       autoJoinAttemptRef.current = null;
     });
   }, [firebaseReady, inviteRoomCode, isNameDialogOpen, joinRoom, playerName, leftRoomCode, router]);
@@ -181,7 +179,7 @@ export function HomeScreen() {
         // التحقق من وجود غرفة كود نيمز بهذا الرمز
         const codenamesSnapshot = await get(ref(database, `rooms/${roomCode}`));
         if (codenamesSnapshot.exists()) {
-          router.push(`/room/${roomCode}`);
+          router.push(`/codenames/${roomCode}`);
           setIsJoinExpanded(false);
           return;
         }
@@ -367,7 +365,7 @@ export function HomeScreen() {
             onClick={async () => {
               const nextRoomId = await createRoom(playerName);
               if (nextRoomId) {
-                router.push(`/room/${nextRoomId}`);
+                router.push(`/codenames/${nextRoomId}`);
               }
             }}
             disabled={isBusy || !firebaseReady || !playerName}

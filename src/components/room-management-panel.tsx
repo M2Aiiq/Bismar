@@ -54,7 +54,7 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
       return "";
     }
 
-    return `${origin}/room/${roomId}`;
+    return `${origin}/codenames/${roomId}`;
   }, [origin, roomId]);
 
   async function copyValue(value: string, type: "code" | "link") {
