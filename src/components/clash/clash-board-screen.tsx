@@ -136,7 +136,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus, activeAnim
           {!isLobby && (
             <div className="flex gap-1.5 md:gap-2.5 justify-end flex-wrap max-w-[70%]">
               {opp.organs?.map((o) => (
-                <MiniOrganBadge key={o.id} organ={o} activeAnim={activeAnimations[o.id]} className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 lg:h-14 lg:w-14" />
+                <MiniOrganBadge key={o.id} organ={o} activeAnim={activeAnimations[`${opp.id}:${o.id}`]} className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 lg:h-14 lg:w-14" />
               ))}
             </div>
           )}
@@ -180,7 +180,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus, activeAnim
               {!isLobby && (
                 <div className="grid grid-cols-4 gap-1 md:gap-1.5 mt-2">
                   {opp.organs?.map((o) => (
-                    <MiniOrganBadge key={o.id} organ={o} activeAnim={activeAnimations[o.id]} className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-11 lg:w-11" />
+                    <MiniOrganBadge key={o.id} organ={o} activeAnim={activeAnimations[`${opp.id}:${o.id}`]} className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-11 lg:w-11" />
                   ))}
                 </div>
               )}
@@ -226,7 +226,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus, activeAnim
               {!isLobby && (
                 <div className="grid grid-cols-4 gap-0.5 md:gap-1 mt-1.5">
                   {opp.organs?.map((o) => (
-                    <MiniOrganBadge key={o.id} organ={o} activeAnim={activeAnimations[o.id]} className="h-7 w-7 md:h-8 md:w-8 lg:h-10 lg:w-10" />
+                    <MiniOrganBadge key={o.id} organ={o} activeAnim={activeAnimations[`${opp.id}:${o.id}`]} className="h-7 w-7 md:h-8 md:w-8 lg:h-10 lg:w-10" />
                   ))}
                 </div>
               )}
@@ -272,7 +272,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus, activeAnim
             {!isLobby && (
               <div className="grid grid-cols-4 gap-1 mt-1">
                 {opp.organs?.map((o) => (
-                  <MiniOrganBadge key={o.id} organ={o} activeAnim={activeAnimations[o.id]} className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-9 lg:w-9" />
+                  <MiniOrganBadge key={o.id} organ={o} activeAnim={activeAnimations[`${opp.id}:${o.id}`]} className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-9 lg:w-9" />
                 ))}
               </div>
             )}
@@ -347,7 +347,6 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [activeAnimations, setActiveAnimations] = useState<Record<string, "damage" | "heal" | "death" | "immunity" | null>>({});
-  const [showYourTurnBanner, setShowYourTurnBanner] = useState(false);
   const prevOrgansRef = useRef<Record<string, { hp: number; isDead: boolean; hasVaccine: boolean; hasOrganicDiet: boolean }>>({});
   const prevTurnPlayerIdRef = useRef<string>("");
   const prevWinnerIdRef = useRef<string | null>(null);
@@ -359,10 +358,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
     if (room.currentTurnPlayerId !== prevTurnPlayerIdRef.current) {
       if (room.currentTurnPlayerId === playerId && prevTurnPlayerIdRef.current !== "") {
         playTurnSound();
-        setShowYourTurnBanner(true);
-        const t = setTimeout(() => setShowYourTurnBanner(false), 2000);
         prevTurnPlayerIdRef.current = room.currentTurnPlayerId;
-        return () => clearTimeout(t);
       }
       prevTurnPlayerIdRef.current = room.currentTurnPlayerId;
     }
@@ -390,19 +386,19 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
         const prev = prevOrgansRef.current[uniqueId];
         if (prev) {
           if (!prev.isDead && o.isDead) {
-            newAnims[o.id] = "death";
+            newAnims[uniqueId] = "death";
             playDeathSound();
           } else if (prev.isDead && !o.isDead) {
-            newAnims[o.id] = "heal";
+            newAnims[uniqueId] = "heal";
             playCureSound();
           } else if (o.hp < prev.hp) {
-            newAnims[o.id] = "damage";
+            newAnims[uniqueId] = "damage";
             playAttackSound();
           } else if (o.hp > prev.hp) {
-            newAnims[o.id] = "heal";
+            newAnims[uniqueId] = "heal";
             playCureSound();
           } else if ((!prev.hasVaccine && o.hasVaccine) || (!prev.hasOrganicDiet && o.hasOrganicDiet)) {
-            newAnims[o.id] = "immunity";
+            newAnims[uniqueId] = "immunity";
             playImmunitySound();
           }
         }
@@ -2037,21 +2033,6 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
               </div>
             </motion.div>
           </div>
-        )}
-      </AnimatePresence>
-
-      {/* Your Turn Banner Alert */}
-      <AnimatePresence>
-        {showYourTurnBanner && (
-          <motion.div
-            initial={{ opacity: 0, y: -50, scale: 0.8 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.9 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className="fixed top-24 left-1/2 -translate-x-1/2 z-40 bg-gradient-to-r from-emerald-600 to-teal-600 border border-emerald-400/30 px-6 py-3 rounded-2xl shadow-[0_4px_20px_rgba(16,185,129,0.35)] flex items-center gap-2 select-none pointer-events-none"
-          >
-            <span className="text-lg font-black text-white tracking-wider">🔔 حان دورك الآن!</span>
-          </motion.div>
         )}
       </AnimatePresence>
     </div>
