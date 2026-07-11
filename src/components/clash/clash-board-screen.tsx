@@ -507,15 +507,34 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
         card.type === "useless"
       ) {
         void playActionCard(card.id);
-      } else {
-        setSelectedCard(card);
-        setTargetSelectorOpen(true);
-        // التحديد التلقائي إذا كان هناك لاعب خصم واحد فقط
+        return;
+      }
+
+      // تحقق مما إذا كان كارت اعتلال يستهدف عضواً محدداً
+      const isSpecificAffliction = card.type === "attack" && card.targetOrganId !== "any";
+      if (isSpecificAffliction) {
         if (opponents.length === 1) {
-          setSelectedTargetPlayerId(opponents[0].id);
-        } else {
-          setSelectedTargetPlayerId(null);
+          // لعبة من لاعبين (خصم واحد): لعب الكارت مباشرة على العضو المتاح
+          const targetOpp = opponents[0];
+          const targetOrgan = targetOpp.organs?.find(
+            (o) => o.id === card.targetOrganId && !o.isDead
+          );
+          if (targetOrgan) {
+            void playActionCard(card.id, targetOpp.id, card.targetOrganId);
+          } else {
+            setToastMessage("العضو المستهدف غير متوفر أو مدمر لدى الخصم!");
+          }
+          return;
         }
+      }
+
+      setSelectedCard(card);
+      setTargetSelectorOpen(true);
+      // التحديد التلقائي إذا كان هناك لاعب خصم واحد فقط
+      if (opponents.length === 1) {
+        setSelectedTargetPlayerId(opponents[0].id);
+      } else {
+        setSelectedTargetPlayerId(null);
       }
     } else {
       setSelectedHandCardId(card.id);
@@ -1075,21 +1094,39 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                       <div className="space-y-3 text-right">
                         <span className="text-xs text-slate-400 block mb-1">اختر اللاعب الذي تريد مهاجمته:</span>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {opponents.map((opp) => (
-                            <button
-                              key={opp.id}
-                              onClick={() => setSelectedTargetPlayerId(opp.id)}
-                              disabled={opp.isZombie}
-                              className="w-full rounded-2xl bg-slate-800/80 border border-white/5 py-4 px-3 text-sm font-black hover:bg-rose-900/20 hover:border-rose-500 disabled:opacity-30 transition active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1.5"
-                            >
-                              <span className="text-rose-300 font-bold">{opp.name}</span>
-                              <span className="text-[10px] text-slate-400">
-                                {opp.isZombie
-                                  ? "🧟 ميت"
-                                  : `الأعضاء الفعالة: ${opp.organs?.filter((o) => !o.isDead).length || 0}`}
-                              </span>
-                            </button>
-                          ))}
+                          {opponents.map((opp) => {
+                            const isSpecificAffliction = selectedCard.type === "attack" && selectedCard.targetOrganId !== "any";
+                            const hasTargetOrgan = opp.organs?.some(
+                              (o) => o.id === selectedCard.targetOrganId && !o.isDead
+                            );
+                            const isDisabled = opp.isZombie || (isSpecificAffliction && !hasTargetOrgan);
+
+                            return (
+                              <button
+                                key={opp.id}
+                                disabled={isDisabled}
+                                onClick={() => {
+                                  if (isSpecificAffliction) {
+                                    executePlayOnTarget(opp.id, selectedCard.targetOrganId || "");
+                                  } else {
+                                    setSelectedTargetPlayerId(opp.id);
+                                  }
+                                }}
+                                className="w-full rounded-2xl bg-slate-800/80 border border-white/5 py-4 px-3 text-sm font-black hover:bg-rose-900/20 hover:border-rose-500 disabled:opacity-30 transition active:scale-95 cursor-pointer flex flex-col items-center justify-center gap-1.5"
+                              >
+                                <span className="text-rose-300 font-bold">{opp.name}</span>
+                                <span className="text-[10px] text-slate-400">
+                                  {opp.isZombie
+                                    ? "🧟 ميت"
+                                    : isSpecificAffliction
+                                      ? !hasTargetOrgan
+                                        ? "العضو غير متوفر أو مدمر"
+                                        : `استهداف: ${opp.organs?.find((o) => o.id === selectedCard.targetOrganId)?.name}`
+                                      : `الأعضاء الفعالة: ${opp.organs?.filter((o) => !o.isDead).length || 0}`}
+                                </span>
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     ) : (
