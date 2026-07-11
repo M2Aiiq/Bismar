@@ -108,7 +108,7 @@ export function createInitialDeck(organsCount: number = 7): ActionCard[] {
   // C. Tactical (20 cards)
   const tacticalTypes = [
     { subType: "antibody", type: "instant" as const, name: "أجسام مضادة", desc: "يلعب فوراً خارج دورك لتقويض وإلغاء أي هجوم قادم." },
-    { subType: "infection", type: "tactical" as const, name: "عدوى متحورة", desc: "ينقل هجوماً نشطاً من أحد أعضائك إلى عضو صالح للخصم." },
+    { subType: "infection", type: "instant" as const, name: "عدوى متحورة", desc: "يلعب فوراً ككارت مقاطعة لعكس الهجوم على الخصم." },
     { subType: "steal", type: "tactical" as const, name: "سرقة", desc: "يسرق كارت عشوائي واحد من يد الخصم ويضيفه ليدك." },
     { subType: "sedative", type: "tactical" as const, name: "تخدير عام", desc: "يجبر جميع المنافسين على تخطي أدوارهم، ليعود الدور إليك فوراً." },
     { subType: "swap", type: "tactical" as const, name: "تبادل الأيدي", desc: "يجبر كلا اللاعبين على تبادل كامل أيديهما." },
@@ -717,8 +717,8 @@ export function useClashRoom(roomId: string) {
 
           const card = player.hand[cardIndex];
 
-          // 1. كروت الهجوم والاعتلال والعدوى فقط تذهب لـ pendingAction للفرصة المقاطعة
-          if (card.type === "attack" || card.subType === "infection") {
+          // 1. كروت الهجوم والاعتلال تذهب لـ pendingAction للفرصة المقاطعة
+          if (card.type === "attack") {
             player.hand.splice(cardIndex, 1);
 
             const targetPlayer = targetPlayerId ? currentRoom.players[targetPlayerId] : null;

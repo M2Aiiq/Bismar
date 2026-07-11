@@ -547,6 +547,13 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
 
     if (selectedHandCardId === card.id) {
       setSelectedHandCardId(null);
+
+      // منع لعب كروت المقاطعة (أجسام مضادة وعدوى متحورة) في الدور العادي
+      if (card.type === "instant") {
+        setToastMessage("كروت المقاطعة تلعب فقط في نافذة التنبيه الحرج!");
+        return;
+      }
+
       if (
         card.subType === "sedative" ||
         card.subType === "doubleDraw" ||
@@ -596,7 +603,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   };
 
   // كروت المقاطعة المتوفرة في يد اللاعب الحالي
-  const counterCardsInHand = me?.hand?.filter((c) => c.type === "instant" || c.subType === "infection") || [];
+  const counterCardsInHand = me?.hand?.filter((c) => c.type === "instant") || [];
 
   return (
     <div

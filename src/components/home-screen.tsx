@@ -77,7 +77,7 @@ export function HomeScreen() {
     if (rawClash) {
       try {
         setClashStats(JSON.parse(rawClash));
-      } catch {}
+      } catch { }
     }
   }, []);
 
@@ -228,13 +228,12 @@ export function HomeScreen() {
               setActiveStatsTab("clash");
               setIsConfirmingReset(false);
             }}
-            className={`flex-1 py-1 text-[10px] font-black rounded-lg transition-all cursor-pointer ${
-              activeStatsTab === "clash"
-                ? "bg-rose-600/20 text-rose-400 border border-rose-500/10 shadow-sm"
-                : "text-slate-450 hover:text-slate-200"
-            }`}
+            className={`flex-1 py-1 text-[10px] font-black rounded-lg transition-all cursor-pointer ${activeStatsTab === "clash"
+              ? "bg-rose-600/20 text-rose-400 border border-rose-500/10 shadow-sm"
+              : "text-slate-450 hover:text-slate-200"
+              }`}
           >
-            صراع الأعضاء ⚔️
+            صراع الأعضاء
           </button>
           <button
             type="button"
@@ -242,13 +241,12 @@ export function HomeScreen() {
               setActiveStatsTab("blitz");
               setIsConfirmingReset(false);
             }}
-            className={`flex-1 py-1 text-[10px] font-black rounded-lg transition-all cursor-pointer ${
-              activeStatsTab === "blitz"
-                ? "bg-[#3B82F6]/20 text-[#60A5FA] border border-[#3B82F6]/10 shadow-sm"
-                : "text-slate-450 hover:text-slate-200"
-            }`}
+            className={`flex-1 py-1 text-[10px] font-black rounded-lg transition-all cursor-pointer ${activeStatsTab === "blitz"
+              ? "bg-[#3B82F6]/20 text-[#60A5FA] border border-[#3B82F6]/10 shadow-sm"
+              : "text-slate-450 hover:text-slate-200"
+              }`}
           >
-            شفرة الكلمات (بليتز) 🕵️
+            كود نيمز
           </button>
         </div>
 
@@ -318,8 +316,8 @@ export function HomeScreen() {
               }
             }}
             className={`text-[10px] font-semibold transition-all duration-205 ${isConfirmingReset
-                ? "text-[#EF4444] animate-pulse"
-                : "text-[#94A3B8]/50 hover:text-[#EF4444]"
+              ? "text-[#EF4444] animate-pulse"
+              : "text-[#94A3B8]/50 hover:text-[#EF4444]"
               }`}
           >
             {isConfirmingReset ? "تأكيد إعادة تعيين الإحصائيات؟" : "إعادة تعيين الإحصائيات"}
@@ -358,8 +356,8 @@ export function HomeScreen() {
             }}
             disabled={isBusy || !firebaseReady || !playerName || isJoinExpanded}
             className={`absolute inset-0 flex items-center justify-center px-5 text-base font-black text-[#F8FAFC] transition-all duration-300 ${isJoinExpanded
-                ? "pointer-events-none translate-y-5 opacity-0"
-                : "translate-y-0 opacity-100 hover:border-[#2563EB] hover:bg-[#1E40AF]/25"
+              ? "pointer-events-none translate-y-5 opacity-0"
+              : "translate-y-0 opacity-100 hover:border-[#2563EB] hover:bg-[#1E40AF]/25"
               } disabled:cursor-not-allowed disabled:text-[#F8FAFC]/40`}
           >
             الانضمام الى لعبة
