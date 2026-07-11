@@ -1501,9 +1501,16 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                     لعبة جديدة
                   </button>
                 ) : (
-                  <p className="text-xs text-slate-500 animate-pulse">
-                    بانتظار مضيف الغرفة لإعادتكم للوبي...
-                  </p>
+                  <div className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-amber-500/10 border border-amber-500/20 p-4 text-center animate-pulse">
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                      </span>
+                      <span className="text-sm font-black text-amber-400">بانتظار مضيف الغرفة لإعادتكم للوبي...</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400">سيبدأ المضيف لعبة جديدة قريباً، يرجى عدم المغادرة</p>
+                  </div>
                 )}
                 <button
                   onClick={leaveClashRoom}
