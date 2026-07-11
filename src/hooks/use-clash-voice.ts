@@ -13,17 +13,49 @@ const peerConfig: RTCConfiguration = {
   ],
 };
 
+// مفتاح localStorage لحفظ تفضيلات الصوت
+const VOICE_PREFS_KEY = "clash_voice_prefs";
+
+interface VoicePrefs {
+  voiceActive: boolean;
+  isMuted: boolean;
+  isDeafened: boolean;
+}
+
+function loadVoicePrefs(): VoicePrefs {
+  if (typeof window === "undefined") return { voiceActive: false, isMuted: true, isDeafened: false };
+  try {
+    const raw = localStorage.getItem(VOICE_PREFS_KEY);
+    if (!raw) return { voiceActive: false, isMuted: true, isDeafened: false };
+    return JSON.parse(raw) as VoicePrefs;
+  } catch {
+    return { voiceActive: false, isMuted: true, isDeafened: false };
+  }
+}
+
+function saveVoicePrefs(prefs: VoicePrefs) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(VOICE_PREFS_KEY, JSON.stringify(prefs));
+  } catch {
+    // تجاهل أخطاء التخزين
+  }
+}
+
 export function useClashVoice(
   roomId: string,
   playerId: string,
   players: Record<string, ClashPlayer> | undefined
 ) {
-  const [voiceActive, setVoiceActive] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
-  const [isDeafened, setIsDeafened] = useState(false);
+  // تحميل التفضيلات المحفوظة عند بدء التشغيل
+  const savedPrefs = loadVoicePrefs();
+
+  const [voiceActive, setVoiceActive] = useState(savedPrefs.voiceActive);
+  const [isMuted, setIsMuted] = useState(savedPrefs.isMuted);
+  const [isDeafened, setIsDeafened] = useState(savedPrefs.isDeafened);
   const [error, setError] = useState<string | null>(null);
 
-  const isDeafenedRef = useRef(false);
+  const isDeafenedRef = useRef(savedPrefs.isDeafened);
   useEffect(() => {
     isDeafenedRef.current = isDeafened;
   }, [isDeafened]);
@@ -31,8 +63,50 @@ export function useClashVoice(
   const localStreamRef = useRef<MediaStream | null>(null);
   const pcsRef = useRef<Record<string, RTCPeerConnection>>({});
   const listenersRef = useRef<Record<string, { path: string; cb: any }[]>>({});
+  // تتبع ما إذا تم الاستعادة التلقائية من localStorage
+  const autoRestoredRef = useRef(false);
 
   const database = getRealtimeDatabase() || getDatabase();
+
+  // حفظ حالة الصوت في localStorage عند كل تغيير
+  useEffect(() => {
+    saveVoicePrefs({ voiceActive, isMuted, isDeafened });
+  }, [voiceActive, isMuted, isDeafened]);
+
+  // استعادة تلقائية عند تحميل الصفحة إذا كان الصوت مفعّلاً سابقاً
+  useEffect(() => {
+    if (autoRestoredRef.current) return;
+    autoRestoredRef.current = true;
+
+    if (!savedPrefs.voiceActive) return;
+
+    // إذا كان الصوت مفعّلاً سابقاً: أعد بناء اتصالات الاستماع تلقائياً
+    const restoreVoice = async () => {
+      try {
+        // صحّح حالة الكتم في Firebase
+        const playerMuteRef = ref(database, `clashRooms/${roomId}/players/${playerId}/isMuted`);
+        await set(playerMuteRef, true); // دائماً مكتوم عند إعادة التحميل حتى يضغط المستخدم مجدداً
+
+        // إذا كان المايك مفتوحاً سابقاً، حاول إعادة فتحه
+        if (!savedPrefs.isMuted) {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            localStreamRef.current = stream;
+            setIsMuted(false);
+            await set(playerMuteRef, false);
+          } catch {
+            // لم يتمكن من فتح المايك تلقائياً، يظل مكتوماً
+            setIsMuted(true);
+          }
+        }
+      } catch (err) {
+        console.error("Error restoring voice state:", err);
+      }
+    };
+
+    void restoreVoice();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleTrack = useCallback((peerId: string, track: MediaStreamTrack) => {
     let el = document.getElementById(`audio-peer-${peerId}`) as HTMLAudioElement;
@@ -43,7 +117,6 @@ export function useClashVoice(
       el.hidden = true;
       document.body.appendChild(el);
     }
-    // استخدام stream موجود أو إنشاء جديد
     const existing = el.srcObject as MediaStream | null;
     if (existing) {
       existing.addTrack(track);
@@ -74,15 +147,12 @@ export function useClashVoice(
   };
 
   // تفعيل نظام الصوت للاستماع فقط (بدون فتح المايك)
-  // سيبدأ بناء الـ peer connections للاستقبال فوراً
   const initVoice = useCallback(async () => {
     try {
       setError(null);
-      // فعّل نظام الصوت - سيبدأ useEffect ببناء الـ peer connections تلقائياً
       setIsMuted(true);
       setVoiceActive(true);
 
-      // ضع حالة الكتم في Firebase
       const playerMuteRef = ref(database, `clashRooms/${roomId}/players/${playerId}/isMuted`);
       await set(playerMuteRef, true);
     } catch (err: any) {
@@ -103,7 +173,6 @@ export function useClashVoice(
           localStreamRef.current = null;
         }
 
-        // أزل المسارات من جميع الـ peer connections
         Object.values(pcsRef.current).forEach((pc) => {
           pc.getSenders().forEach((sender) => {
             if (sender.track?.kind === "audio" || sender.track === null) {
@@ -114,17 +183,15 @@ export function useClashVoice(
 
         setIsMuted(true);
       } else {
-        // إذا لم يكن الصوت مفعلاً، فعّله أولاً
+        // فتح المايك
         if (!voiceActive) {
           setVoiceActive(true);
         }
 
-        // فتح المايك: احصل على stream جديد
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         localStreamRef.current = stream;
         const newTrack = stream.getAudioTracks()[0];
 
-        // أضف المسار لجميع الـ peer connections الموجودة
         Object.values(pcsRef.current).forEach((pc) => {
           pc.getSenders().forEach((sender) => {
             if (sender.track?.kind === "audio" || sender.track === null) {
@@ -149,7 +216,6 @@ export function useClashVoice(
     setIsDeafened(nextDeafened);
     isDeafenedRef.current = nextDeafened;
 
-    // كتم/فتح جميع عناصر الصوت البعيدة
     const audios = document.querySelectorAll("audio[id^='audio-peer-']");
     audios.forEach((el) => {
       (el as HTMLAudioElement).muted = nextDeafened;
@@ -157,7 +223,6 @@ export function useClashVoice(
   }, [isDeafened]);
 
   // بناء وكسر الـ peer connections مع اللاعبين الآخرين
-  // يعمل بمجرد تفعيل voiceActive حتى بدون مايك (للاستماع فقط)
   useEffect(() => {
     if (!voiceActive || !players) return;
 
@@ -165,7 +230,7 @@ export function useClashVoice(
       (pid) => pid !== playerId && !players[pid].isZombie
     );
 
-    // 1. تنظيف الاتصالات المنقطعة
+    // تنظيف الاتصالات المنقطعة
     Object.keys(pcsRef.current).forEach((peerId) => {
       if (!alivePeers.includes(peerId)) {
         pcsRef.current[peerId].close();
@@ -176,17 +241,14 @@ export function useClashVoice(
       }
     });
 
-    // 2. إنشاء اتصالات مع اللاعبين الجدد
+    // إنشاء اتصالات مع اللاعبين الجدد
     alivePeers.forEach(async (peerId) => {
-      if (pcsRef.current[peerId]) return; // الاتصال موجود بالفعل
+      if (pcsRef.current[peerId]) return;
 
       const isInitiator = playerId < peerId;
       const pc = new RTCPeerConnection(peerConfig);
       pcsRef.current[peerId] = pc;
 
-      // أضف transceiver للصوت
-      // sendrecv: إذا كان هناك مسار صوت محلي (المايك مفعّل)
-      // sendrecv أيضاً في وضع الاستماع فقط لأن الطرف الآخر يحتاج لـ sendrecv لإرسال صوته
       const transceiver = pc.addTransceiver("audio", { direction: "sendrecv" });
       if (localStreamRef.current) {
         const track = localStreamRef.current.getAudioTracks()[0];
@@ -194,8 +256,6 @@ export function useClashVoice(
           transceiver.sender.replaceTrack(track).catch(console.error);
         }
       }
-      // إذا لم يكن هناك مسار محلي، نترك الـ sender بدون track (null)
-      // هذا يسمح لنا بالاستقبال بينما لا نرسل شيئاً
 
       pc.ontrack = (event) => {
         if (event.track.kind === "audio") {
@@ -219,13 +279,11 @@ export function useClashVoice(
       };
 
       if (isInitiator) {
-        // المبادر بالاتصال
         try {
           const offer = await pc.createOffer();
           await pc.setLocalDescription(offer);
           await set(ref(database, `${signalingPath}/offer`), { sdp: offer.sdp, type: offer.type });
 
-          // استمع للرد
           addDbListener(peerId, `${signalingPath}/answer`, (snapshot) => {
             if (snapshot.exists() && pc.signalingState === "have-local-offer") {
               const answer = snapshot.val();
@@ -233,7 +291,6 @@ export function useClashVoice(
             }
           });
 
-          // استمع لمرشحي المستقبِل
           const addedCands = new Set<string>();
           addDbListener(peerId, `${signalingPath}/receiverCandidates`, (snapshot) => {
             if (snapshot.exists()) {
@@ -253,7 +310,6 @@ export function useClashVoice(
           console.error("Error initiating connection to", peerId, err);
         }
       } else {
-        // المستقبِل
         addDbListener(peerId, `${signalingPath}/offer`, async (snapshot) => {
           if (snapshot.exists() && pc.signalingState === "stable") {
             const offer = snapshot.val();
@@ -268,7 +324,6 @@ export function useClashVoice(
           }
         });
 
-        // استمع لمرشحي المبادر
         const addedCands = new Set<string>();
         addDbListener(peerId, `${signalingPath}/callerCandidates`, (snapshot) => {
           if (snapshot.exists()) {
@@ -288,7 +343,7 @@ export function useClashVoice(
     });
   }, [voiceActive, players, roomId, playerId, database, handleTrack]);
 
-  // تنظيف عند إلغاء التحميل أو مغادرة الجلسة
+  // تنظيف عند إلغاء التحميل - لكن لا نحذف التفضيلات من localStorage
   useEffect(() => {
     return () => {
       if (localStreamRef.current) {
