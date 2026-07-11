@@ -69,40 +69,6 @@ export function HomeScreen() {
   const [isJoinExpanded, setIsJoinExpanded] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
   const [isConfirmingReset, setIsConfirmingReset] = useState(false);
-  const [activeStatsTab, setActiveStatsTab] = useState<"bismar" | "clash">("bismar");
-  const [clashStats, setClashStats] = useState<{ played: number; won: number; lost: number }>({ played: 0, won: 0, lost: 0 });
-
-  const loadClashStats = useCallback(() => {
-    if (typeof window !== "undefined") {
-      const STATS_KEY = "clash-stats";
-      const raw = localStorage.getItem(STATS_KEY);
-      try {
-        if (raw) {
-          setClashStats(JSON.parse(raw));
-        } else {
-          setClashStats({ played: 0, won: 0, lost: 0 });
-        }
-      } catch {
-        setClashStats({ played: 0, won: 0, lost: 0 });
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    loadClashStats();
-  }, [loadClashStats]);
-
-  const handleResetStats = () => {
-    if (activeStatsTab === "bismar") {
-      resetPlayerStats();
-    } else {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("clash-stats");
-        localStorage.removeItem("clash-processed-rooms");
-        setClashStats({ played: 0, won: 0, lost: 0 });
-      }
-    }
-  };
 
 
 
@@ -243,90 +209,34 @@ export function HomeScreen() {
         {/* خط فاصل */}
         <div className="border-t border-white/5"></div>
 
-        {/* التبديل بين إحصائيات الألعاب */}
-        <div className="flex gap-2 mb-3 bg-slate-950/40 p-1 rounded-xl border border-white/5 mt-2">
-          <button
-            type="button"
-            onClick={() => setActiveStatsTab("bismar")}
-            className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
-              activeStatsTab === "bismar"
-                ? "bg-[#2563EB] text-white shadow-sm"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            كود نيمز
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveStatsTab("clash")}
-            className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
-              activeStatsTab === "clash"
-                ? "bg-[#2563EB] text-white shadow-sm"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            صراع الأعضاء
-          </button>
-        </div>
-
         {/* الجزء الأوسط: الإحصائيات بشكل أفقي مع فواصل عمودية */}
-        {activeStatsTab === "bismar" ? (
-          <div className="grid grid-cols-4 gap-1 text-center py-2">
-            {/* لعبت */}
-            <div className="flex flex-col items-center">
-              <span className="text-base font-black text-[#F8FAFC]">{playerStats?.played ?? 0}</span>
-              <span className="text-[10px] font-bold text-[#94A3B8] mt-0.5">لعبت</span>
-            </div>
-
-            {/* فزت */}
-            <div className="flex flex-col items-center border-r border-white/5">
-              <span className="text-base font-black text-[#34D399]">{playerStats?.won ?? 0}</span>
-              <span className="text-[10px] font-bold text-[#94A3B8] mt-0.5">فوز</span>
-            </div>
-
-            {/* خسرت */}
-            <div className="flex flex-col items-center border-r border-white/5">
-              <span className="text-base font-black text-[#F87171]">{playerStats?.lost ?? 0}</span>
-              <span className="text-[10px] font-bold text-[#94A3B8] mt-0.5">خسارة</span>
-            </div>
-
-            {/* نسبة الفوز */}
-            <div className="flex flex-col items-center border-r border-white/5">
-              <span className="text-base font-black text-[#FBBF24]">
-                {playerStats && playerStats.played > 0 ? Math.round((playerStats.won / playerStats.played) * 100) : 0}%
-              </span>
-              <span className="text-[10px] font-bold text-[#94A3B8] mt-0.5">نسبة الفوز</span>
-            </div>
+        <div className="grid grid-cols-4 gap-1 text-center py-2">
+          {/* لعبت */}
+          <div className="flex flex-col items-center">
+            <span className="text-base font-black text-[#F8FAFC]">{playerStats?.played ?? 0}</span>
+            <span className="text-[10px] font-bold text-[#94A3B8] mt-0.5">لعبت</span>
           </div>
-        ) : (
-          <div className="grid grid-cols-4 gap-1 text-center py-2">
-            {/* لعبت */}
-            <div className="flex flex-col items-center">
-              <span className="text-base font-black text-[#F8FAFC]">{clashStats.played}</span>
-              <span className="text-[10px] font-bold text-[#94A3B8] mt-0.5">لعبت</span>
-            </div>
 
-            {/* فزت */}
-            <div className="flex flex-col items-center border-r border-white/5">
-              <span className="text-base font-black text-[#34D399]">{clashStats.won}</span>
-              <span className="text-[10px] font-bold text-[#94A3B8] mt-0.5">فوز</span>
-            </div>
-
-            {/* خسرت */}
-            <div className="flex flex-col items-center border-r border-white/5">
-              <span className="text-base font-black text-[#F87171]">{clashStats.lost}</span>
-              <span className="text-[10px] font-bold text-[#94A3B8] mt-0.5">خسارة</span>
-            </div>
-
-            {/* نسبة الفوز */}
-            <div className="flex flex-col items-center border-r border-white/5">
-              <span className="text-base font-black text-[#FBBF24]">
-                {clashStats.played > 0 ? Math.round((clashStats.won / clashStats.played) * 100) : 0}%
-              </span>
-              <span className="text-[10px] font-bold text-[#94A3B8] mt-0.5">نسبة الفوز</span>
-            </div>
+          {/* فزت */}
+          <div className="flex flex-col items-center border-r border-white/5">
+            <span className="text-base font-black text-[#34D399]">{playerStats?.won ?? 0}</span>
+            <span className="text-[10px] font-bold text-[#94A3B8] mt-0.5">فوز</span>
           </div>
-        )}
+
+          {/* خسرت */}
+          <div className="flex flex-col items-center border-r border-white/5">
+            <span className="text-base font-black text-[#F87171]">{playerStats?.lost ?? 0}</span>
+            <span className="text-[10px] font-bold text-[#94A3B8] mt-0.5">خسارة</span>
+          </div>
+
+          {/* نسبة الفوز */}
+          <div className="flex flex-col items-center border-r border-white/5">
+            <span className="text-base font-black text-[#FBBF24]">
+              {playerStats && playerStats.played > 0 ? Math.round((playerStats.won / playerStats.played) * 100) : 0}%
+            </span>
+            <span className="text-[10px] font-bold text-[#94A3B8] mt-0.5">نسبة الفوز</span>
+          </div>
+        </div>
 
         {/* خط فاصل */}
         <div className="border-t border-white/5"></div>
@@ -337,7 +247,7 @@ export function HomeScreen() {
             type="button"
             onClick={() => {
               if (isConfirmingReset) {
-                handleResetStats();
+                resetPlayerStats();
                 setIsConfirmingReset(false);
               } else {
                 setIsConfirmingReset(true);

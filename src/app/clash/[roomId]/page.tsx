@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ClashBoardWrapper } from "../../../components/clash/clash-board-wrapper";
+import { ClashBoardScreen } from "../../../components/clash/clash-board-screen";
 
 interface PageProps {
   params: Promise<{ roomId: string }>;
@@ -43,5 +43,5 @@ export default async function ClashRoomPage({ params }: PageProps) {
     );
   }
 
-  return <ClashBoardWrapper roomId={roomId} />;
+  return <ClashBoardScreen roomId={roomId} />;
 }
