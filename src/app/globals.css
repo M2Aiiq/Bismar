@@ -228,3 +228,33 @@ input::placeholder {
     gap: 1.25rem !important;
   }
 }
+
+/* Animations for Clash Game Effects */
+@keyframes clashShake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+.clash-animate-shake {
+  animation: clashShake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes clashFlashRed {
+  0%, 100% { border-color: rgba(239, 68, 68, 0.2); background-color: rgba(127, 29, 29, 0.1); }
+  50% { border-color: rgba(239, 68, 68, 1); background-color: rgba(127, 29, 29, 0.45); }
+}
+
+.clash-animate-flash-red {
+  animation: clashFlashRed 0.5s ease-in-out 2;
+}
+
+@keyframes clashFlashGreen {
+  0%, 100% { border-color: rgba(16, 185, 129, 0.2); background-color: rgba(6, 78, 59, 0.1); }
+  50% { border-color: rgba(16, 185, 129, 1); background-color: rgba(6, 78, 59, 0.45); }
+}
+
+.clash-animate-flash-green {
+  animation: clashFlashGreen 0.5s ease-in-out 2;
+}
+

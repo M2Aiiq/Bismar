@@ -7,7 +7,24 @@ import { useClashVoice } from "../../hooks/use-clash-voice";
 import { motion, AnimatePresence } from "framer-motion";
 import type { ActionCard, OrganCard, ClashPlayer } from "../../types/organClash";
 
-function MiniOrganBadge({ organ, className = "h-7 w-7" }: { organ: OrganCard; className?: string }) {
+import {
+  playAttackSound,
+  playCureSound,
+  playImmunitySound,
+  playDeathSound,
+  playTurnSound,
+  playWinSound,
+} from "../../lib/clash-sound";
+
+function MiniOrganBadge({
+  organ,
+  className = "h-7 w-7",
+  activeAnim,
+}: {
+  organ: OrganCard;
+  className?: string;
+  activeAnim?: "damage" | "heal" | "death" | "immunity" | null;
+}) {
   const hpColors = organ.isDead
     ? "bg-slate-900/60 border-slate-800 grayscale"
     : organ.hp === 2
@@ -16,9 +33,15 @@ function MiniOrganBadge({ organ, className = "h-7 w-7" }: { organ: OrganCard; cl
 
   const imgPath = organ.isDead ? `/${organ.id}_died.png` : `/${organ.id}.png`;
 
+  const animClass = activeAnim === "damage" || activeAnim === "death"
+    ? "clash-animate-shake clash-animate-flash-red"
+    : activeAnim === "heal"
+      ? "clash-animate-flash-green"
+      : "";
+
   return (
     <div
-      className={`rounded-lg flex items-center justify-center border transition relative overflow-hidden p-0.5 ${className} ${hpColors}`}
+      className={`rounded-lg flex items-center justify-center border transition relative overflow-hidden p-0.5 ${className} ${hpColors} ${animClass}`}
       title={`${organ.name}: ${organ.hp} HP`}
     >
       <img
@@ -26,6 +49,34 @@ function MiniOrganBadge({ organ, className = "h-7 w-7" }: { organ: OrganCard; cl
         alt={organ.name}
         className="w-full h-full object-contain"
       />
+
+      <AnimatePresence>
+        {activeAnim && (
+          <motion.span
+            initial={{ opacity: 1, y: 5, scale: 0.7 }}
+            animate={{ opacity: 0, y: -25, scale: 1.05 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+            className={`absolute inset-0 flex items-center justify-center z-25 font-black text-[9px] sm:text-xs pointer-events-none drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.85)] ${
+              activeAnim === "damage"
+                ? "text-rose-500"
+                : activeAnim === "heal"
+                  ? "text-emerald-400"
+                  : activeAnim === "death"
+                    ? "text-rose-600 font-extrabold"
+                    : "text-amber-400"
+            }`}
+          >
+            {activeAnim === "damage"
+              ? "-1"
+              : activeAnim === "heal"
+                ? "+1"
+                : activeAnim === "death"
+                  ? "💀"
+                  : "🛡️"}
+          </motion.span>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -34,9 +85,10 @@ interface OpponentsRadarProps {
   opponents: ClashPlayer[];
   currentTurnPlayerId: string;
   gameStatus: "lobby" | "playing" | "ended";
+  activeAnimations: Record<string, "damage" | "heal" | "death" | "immunity" | null>;
 }
 
-function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: OpponentsRadarProps) {
+function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus, activeAnimations }: OpponentsRadarProps) {
   if (opponents.length === 0) {
     return (
       <div className="w-full max-w-3xl md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto h-20 flex items-center justify-center text-xs md:text-sm font-semibold text-slate-500 select-none">
@@ -84,7 +136,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
           {!isLobby && (
             <div className="flex gap-1.5 md:gap-2.5 justify-end flex-wrap max-w-[70%]">
               {opp.organs?.map((o) => (
-                <MiniOrganBadge key={o.id} organ={o} className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 lg:h-14 lg:w-14" />
+                <MiniOrganBadge key={o.id} organ={o} activeAnim={activeAnimations[o.id]} className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 lg:h-14 lg:w-14" />
               ))}
             </div>
           )}
@@ -128,7 +180,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
               {!isLobby && (
                 <div className="grid grid-cols-4 gap-1 md:gap-1.5 mt-2">
                   {opp.organs?.map((o) => (
-                    <MiniOrganBadge key={o.id} organ={o} className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-11 lg:w-11" />
+                    <MiniOrganBadge key={o.id} organ={o} activeAnim={activeAnimations[o.id]} className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-11 lg:w-11" />
                   ))}
                 </div>
               )}
@@ -174,7 +226,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
               {!isLobby && (
                 <div className="grid grid-cols-4 gap-0.5 md:gap-1 mt-1.5">
                   {opp.organs?.map((o) => (
-                    <MiniOrganBadge key={o.id} organ={o} className="h-7 w-7 md:h-8 md:w-8 lg:h-10 lg:w-10" />
+                    <MiniOrganBadge key={o.id} organ={o} activeAnim={activeAnimations[o.id]} className="h-7 w-7 md:h-8 md:w-8 lg:h-10 lg:w-10" />
                   ))}
                 </div>
               )}
@@ -220,7 +272,7 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
             {!isLobby && (
               <div className="grid grid-cols-4 gap-1 mt-1">
                 {opp.organs?.map((o) => (
-                  <MiniOrganBadge key={o.id} organ={o} className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-9 lg:w-9" />
+                  <MiniOrganBadge key={o.id} organ={o} activeAnim={activeAnimations[o.id]} className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-9 lg:w-9" />
                 ))}
               </div>
             )}
@@ -293,6 +345,86 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   const [selectedLobbyPlayerId, setSelectedLobbyPlayerId] = useState<string | null>(null);
   const [lobbyActionOpen, setLobbyActionOpen] = useState(false);
   const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [activeAnimations, setActiveAnimations] = useState<Record<string, "damage" | "heal" | "death" | "immunity" | null>>({});
+  const [showYourTurnBanner, setShowYourTurnBanner] = useState(false);
+  const prevOrgansRef = useRef<Record<string, { hp: number; isDead: boolean; hasVaccine: boolean; hasOrganicDiet: boolean }>>({});
+  const prevTurnPlayerIdRef = useRef<string>("");
+  const prevWinnerIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!room || room.status !== "playing") return;
+
+    // 1. Check for turn change to current player
+    if (room.currentTurnPlayerId !== prevTurnPlayerIdRef.current) {
+      if (room.currentTurnPlayerId === playerId && prevTurnPlayerIdRef.current !== "") {
+        playTurnSound();
+        setShowYourTurnBanner(true);
+        const t = setTimeout(() => setShowYourTurnBanner(false), 2000);
+        prevTurnPlayerIdRef.current = room.currentTurnPlayerId;
+        return () => clearTimeout(t);
+      }
+      prevTurnPlayerIdRef.current = room.currentTurnPlayerId;
+    }
+
+    // 2. Check for winner fanfare
+    if (room.winnerId && room.winnerId !== prevWinnerIdRef.current) {
+      playWinSound();
+      prevWinnerIdRef.current = room.winnerId;
+    }
+
+    // 3. Track organ changes (HP, death, immunity)
+    const newOrgansMap: Record<string, { hp: number; isDead: boolean; hasVaccine: boolean; hasOrganicDiet: boolean }> = {};
+    const newAnims: Record<string, "damage" | "heal" | "death" | "immunity"> = {};
+
+    Object.values(room.players).forEach((p) => {
+      p.organs?.forEach((o) => {
+        const uniqueId = `${p.id}:${o.id}`;
+        newOrgansMap[uniqueId] = {
+          hp: o.hp,
+          isDead: !!o.isDead,
+          hasVaccine: !!o.hasVaccine,
+          hasOrganicDiet: !!o.hasOrganicDiet,
+        };
+
+        const prev = prevOrgansRef.current[uniqueId];
+        if (prev) {
+          if (!prev.isDead && o.isDead) {
+            newAnims[o.id] = "death";
+            playDeathSound();
+          } else if (prev.isDead && !o.isDead) {
+            newAnims[o.id] = "heal";
+            playCureSound();
+          } else if (o.hp < prev.hp) {
+            newAnims[o.id] = "damage";
+            playAttackSound();
+          } else if (o.hp > prev.hp) {
+            newAnims[o.id] = "heal";
+            playCureSound();
+          } else if ((!prev.hasVaccine && o.hasVaccine) || (!prev.hasOrganicDiet && o.hasOrganicDiet)) {
+            newAnims[o.id] = "immunity";
+            playImmunitySound();
+          }
+        }
+      });
+    });
+
+    prevOrgansRef.current = newOrgansMap;
+
+    if (Object.keys(newAnims).length > 0) {
+      setActiveAnimations((prev) => ({ ...prev, ...newAnims }));
+      const t = setTimeout(() => {
+        setActiveAnimations((prev) => {
+          const cleared = { ...prev };
+          Object.keys(newAnims).forEach((key) => {
+            cleared[key] = null;
+          });
+          return cleared;
+        });
+      }, 1500);
+      return () => clearTimeout(t);
+    }
+  }, [room, playerId]);
 
   const startLongPress = (targetPlayerId: string) => {
     if (!isHost || targetPlayerId === playerId) return;
@@ -662,7 +794,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
 
       {/* 1. منطقة الخصوم (Top Zone - Enemy Radar) */}
       {room.status !== "lobby" ? (
-        <OpponentsRadar opponents={opponents} currentTurnPlayerId={room.currentTurnPlayerId} gameStatus={room.status} />
+        <OpponentsRadar opponents={opponents} currentTurnPlayerId={room.currentTurnPlayerId} gameStatus={room.status} activeAnimations={activeAnimations} />
       ) : null}
 
       {/* 2. منطقة المعركة واللاعب الحالي (Middle Zone - Player Battlefield & Turn Ticker) */}
@@ -895,6 +1027,13 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]"
                   : "bg-slate-800";
 
+              const activeAnim = activeAnimations[o.id];
+              const animClass = activeAnim === "damage" || activeAnim === "death"
+                ? "clash-animate-shake clash-animate-flash-red"
+                : activeAnim === "heal"
+                  ? "clash-animate-flash-green"
+                  : "";
+
               return (
                 <div
                   key={o.id}
@@ -903,8 +1042,37 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                     : o.hp === 2
                       ? "border-emerald-500/20 bg-emerald-950/10 shadow-lg shadow-emerald-500/5 text-emerald-200"
                       : "border-amber-500/20 bg-amber-950/10 shadow-lg shadow-amber-500/5 text-amber-200"
-                    }`}
+                    } ${animClass}`}
                 >
+                  {/* Floating effect text */}
+                  <AnimatePresence>
+                    {activeAnim && (
+                      <motion.span
+                        initial={{ opacity: 1, y: 10, scale: 0.8 }}
+                        animate={{ opacity: 0, y: -45, scale: 1.2 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 1.2, ease: "easeOut" }}
+                        className={`absolute inset-0 flex items-center justify-center z-25 font-black text-xs sm:text-sm md:text-base pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] ${
+                          activeAnim === "damage"
+                            ? "text-rose-500"
+                            : activeAnim === "heal"
+                              ? "text-emerald-400"
+                              : activeAnim === "death"
+                                ? "text-rose-600 font-extrabold"
+                                : "text-amber-400"
+                        }`}
+                      >
+                        {activeAnim === "damage"
+                          ? "-1 HP"
+                          : activeAnim === "heal"
+                            ? "+1 HP"
+                            : activeAnim === "death"
+                              ? "💀 مات!"
+                              : "🛡️ محصن"}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+
                   {/* Vaccine badge */}
                   {o.hasVaccine && (
                     <span className="absolute top-1 left-1 text-[9px] sm:text-[11px] md:text-xs lg:text-sm" title="محصن باللقاح">🛡️</span>
@@ -1869,6 +2037,21 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* Your Turn Banner Alert */}
+      <AnimatePresence>
+        {showYourTurnBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="fixed top-24 left-1/2 -translate-x-1/2 z-40 bg-gradient-to-r from-emerald-600 to-teal-600 border border-emerald-400/30 px-6 py-3 rounded-2xl shadow-[0_4px_20px_rgba(16,185,129,0.35)] flex items-center gap-2 select-none pointer-events-none"
+          >
+            <span className="text-lg font-black text-white tracking-wider">🔔 حان دورك الآن!</span>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
