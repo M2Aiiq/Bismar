@@ -132,31 +132,11 @@ export function CreateClashRoomButton() {
               transition={{ type: "spring", duration: 0.4 }}
               className="relative w-full max-w-2xl rounded-3xl border border-white/10 bg-slate-900 p-5 md:p-7 shadow-2xl text-[#F8FAFC] flex flex-col max-h-[85vh]"
             >
-              {/* الهيدر العلوي */}
-              <div className="flex justify-between items-center mb-5 pb-3 border-b border-white/5 select-none gap-4">
-                <h2 className="text-lg md:text-xl font-black text-rose-400 text-right">
-                  دليل وقوانين لعبة صراع الأعضاء
-                </h2>
-                <div className="flex gap-2 flex-shrink-0">
-                  <button
-                    type="button"
-                    onClick={handleCopyLink}
-                    className="flex h-8 px-3 items-center justify-center rounded-xl border border-white/10 text-xs font-bold text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer gap-1.5"
-                  >
-                    <span>{copied ? "تم النسخ!" : "نسخ الرابط"}</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsRulesOpen(false)}
-                    className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 text-xl font-bold text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
+
+
+              <h2 className="text-xl md:text-2xl font-black text-rose-400 mb-4 text-center">
+                دليل وقوانين لعبة صراع الأعضاء
+              </h2>
 
               {/* أزرار التبويب */}
               <div className="flex bg-slate-950/50 border border-white/5 rounded-2xl p-1 mb-5 select-none text-xs md:text-sm font-black">
@@ -393,12 +373,22 @@ export function CreateClashRoomButton() {
                 )}
               </div>
 
-              {/* زر إغلاق سفلي */}
-              <div className="mt-6 border-t border-white/10 pt-4 flex justify-end">
+              {/* أزرار الإجراءات بالأسفل */}
+              <div className="mt-6 border-t border-white/10 pt-4 flex justify-start gap-3 flex-row-reverse">
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="rounded-2xl border border-rose-500/30 bg-rose-950/20 text-rose-300 hover:bg-rose-950/40 hover:border-rose-500 px-5 py-2.5 text-xs font-black transition duration-200 active:scale-95 cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>{copied ? "تم النسخ!" : "نسخ رابط الشرح"}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-3.5 h-3.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                  </svg>
+                </button>
                 <button
                   type="button"
                   onClick={() => setIsRulesOpen(false)}
-                  className="rounded-xl bg-slate-800 px-5 py-2 text-xs font-bold text-slate-300 transition hover:bg-slate-700 hover:text-white cursor-pointer"
+                  className="rounded-2xl bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-450 text-white font-black px-6 py-2.5 text-xs transition duration-200 active:scale-95 cursor-pointer shadow-lg shadow-rose-600/25"
                 >
                   فهمت ذلك!
                 </button>
