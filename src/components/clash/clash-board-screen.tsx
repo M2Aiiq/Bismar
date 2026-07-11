@@ -313,6 +313,44 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
     turnEndsAtRef.current = room?.turnEndsAt;
   }, [isMyTurn, isHost, room?.currentTurnPlayerId, room?.turnEndsAt]);
 
+  // Clash Game Stats Tracking
+  useEffect(() => {
+    if (!room || !room.winnerId || room.status !== "ended") return;
+
+    const STATS_KEY = "clash-stats";
+    const PROCESSED_GAMES_KEY = "clash-processed-rooms";
+
+    const rawProcessed = localStorage.getItem(PROCESSED_GAMES_KEY);
+    let processed: string[] = [];
+    try {
+      processed = rawProcessed ? JSON.parse(rawProcessed) : [];
+    } catch {
+      processed = [];
+    }
+
+    if (processed.includes(room.roomId)) return;
+
+    // Load stats
+    const rawStats = localStorage.getItem(STATS_KEY);
+    let stats = { played: 0, won: 0, lost: 0 };
+    try {
+      if (rawStats) stats = JSON.parse(rawStats);
+    } catch {}
+
+    stats.played += 1;
+    if (room.winnerId === playerId) {
+      stats.won += 1;
+    } else {
+      stats.lost += 1;
+    }
+
+    processed.push(room.roomId);
+    if (processed.length > 50) processed.shift();
+
+    localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+    localStorage.setItem(PROCESSED_GAMES_KEY, JSON.stringify(processed));
+  }, [room?.status, room?.winnerId, room?.roomId, playerId]);
+
   useEffect(() => {
     if (room?.status !== "playing" || !room.turnEndsAt) return;
 
