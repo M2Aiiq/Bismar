@@ -271,7 +271,6 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   const [lobbyName, setLobbyName] = useState("");
   const [selectedCard, setSelectedCard] = useState<ActionCard | null>(null);
   const [targetSelectorOpen, setTargetSelectorOpen] = useState(false);
-  const [selectedTargetPlayerId, setSelectedTargetPlayerId] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(5);
   const [nameError, setNameError] = useState<string | null>(null);
   const [hoveredCardIndex, setHoveredCardIndex] = useState<number | null>(null);
@@ -487,18 +486,6 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
 
   // 5. واجهة اللعب الأساسية (Playing State)
   const opponents = Object.values(room.players).filter((p) => p.id !== playerId);
-
-  useEffect(() => {
-    if (selectedCard) {
-      if (opponents.length === 1) {
-        setSelectedTargetPlayerId(opponents[0].id);
-      } else {
-        setSelectedTargetPlayerId(null);
-      }
-    } else {
-      setSelectedTargetPlayerId(null);
-    }
-  }, [selectedCard, opponents]);
 
   const handleCardClick = (card: ActionCard) => {
     if (room.isPaused) {
@@ -1073,81 +1060,45 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
               </div>
 
               <div className="space-y-4 flex-1 overflow-y-auto pr-1 scrollbar-thin">
-                {(selectedCard.type === "attack" || selectedCard.subType === "infection") && (
-                  selectedTargetPlayerId === null ? (
-                    /* Step 1: Choose target player */
-                    <div className="space-y-3">
-                      <p className="text-xs text-slate-400">اختر اللاعب الذي تريد مهاجمته:</p>
-                      <div className="grid grid-cols-1 gap-2">
-                        {opponents.map((opp) => (
-                          <button
-                            key={opp.id}
-                            onClick={() => setSelectedTargetPlayerId(opp.id)}
-                            disabled={opp.isZombie}
-                            className="w-full rounded-2xl bg-slate-800/80 border border-white/5 py-4 text-xs font-black hover:bg-rose-900/20 hover:border-rose-500 disabled:opacity-30 transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
-                          >
-                            <span>{opp.name}</span>
-                            {opp.isZombie ? "🧟 (ميت)" : ""}
-                          </button>
-                        ))}
+                {(selectedCard.type === "attack" || selectedCard.subType === "infection") &&
+                  opponents.map((opp) => (
+                    <div key={opp.id} className="rounded-2xl border border-white/5 bg-[#181E2F]/30 p-3 text-right">
+                      <span className="text-xs font-bold block mb-2.5 text-rose-300">{opp.name}</span>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {opp.organs?.map((o) => {
+                          const isLegitimate = selectedCard.targetOrganId === "any" || selectedCard.targetOrganId === o.id || selectedCard.subType === "infection";
+                          const isClickable = !o.isDead && isLegitimate;
+                          const hps = o.isDead ? 0 : o.hp;
+
+                          return (
+                            <button
+                              key={o.id}
+                              disabled={!isClickable}
+                              onClick={() => executePlayOnTarget(opp.id, o.id)}
+                              className={`relative rounded-2xl border p-3 flex flex-col items-center justify-between transition-all active:scale-95 cursor-pointer h-24 ${
+                                isClickable
+                                  ? "border-white/5 bg-slate-800/60 hover:bg-rose-900/30 hover:border-rose-500/50 hover:shadow-lg hover:shadow-rose-950/20"
+                                  : "border-slate-850 bg-slate-950/40 opacity-40 cursor-not-allowed"
+                              }`}
+                            >
+                              <span className="text-xs font-bold text-slate-200">{o.name}</span>
+                              
+                              <img
+                                src={o.isDead ? `/${o.id}_died.png` : `/${o.id}.png`}
+                                alt={o.name}
+                                className="w-8 h-8 object-contain my-1 select-none"
+                              />
+
+                              <div className="flex gap-1.5 justify-center w-full mt-1">
+                                <div className={`h-1.5 w-3.5 rounded-full ${hps >= 1 ? (hps === 2 ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.3)]" : "bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.3)]") : "bg-slate-800"}`} />
+                                <div className={`h-1.5 w-3.5 rounded-full ${hps === 2 ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.3)]" : "bg-slate-800"}`} />
+                              </div>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
-                  ) : (
-                    /* Step 2: Choose target organ for the selected player */
-                    (() => {
-                      const opp = opponents.find((o) => o.id === selectedTargetPlayerId);
-                      if (!opp) return null;
-                      return (
-                        <div className="rounded-2xl border border-white/5 bg-[#181E2F]/30 p-3 text-right">
-                          <div className="flex justify-between items-center mb-3">
-                            <span className="text-xs font-bold text-rose-300">أعضاء اللاعب: {opp.name}</span>
-                            {opponents.length > 1 && (
-                              <button
-                                onClick={() => setSelectedTargetPlayerId(null)}
-                                className="text-[10px] text-slate-400 hover:text-white px-2 py-0.5 rounded border border-white/10 hover:bg-slate-800/60 transition cursor-pointer"
-                              >
-                                ⬅️ تغيير اللاعب
-                              </button>
-                            )}
-                          </div>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                            {opp.organs?.map((o) => {
-                              const isLegitimate = selectedCard.targetOrganId === "any" || selectedCard.targetOrganId === o.id || selectedCard.subType === "infection";
-                              const isClickable = !o.isDead && isLegitimate;
-                              const hps = o.isDead ? 0 : o.hp;
-
-                              return (
-                                <button
-                                  key={o.id}
-                                  disabled={!isClickable}
-                                  onClick={() => executePlayOnTarget(opp.id, o.id)}
-                                  className={`relative rounded-2xl border p-3 flex flex-col items-center justify-between transition-all active:scale-95 cursor-pointer h-24 ${
-                                    isClickable
-                                      ? "border-white/5 bg-slate-800/60 hover:bg-rose-900/30 hover:border-rose-500/50 hover:shadow-lg hover:shadow-rose-950/20"
-                                      : "border-slate-850 bg-slate-950/40 opacity-40 cursor-not-allowed"
-                                  }`}
-                                >
-                                  <span className="text-xs font-bold text-slate-200">{o.name}</span>
-                                  
-                                  <img
-                                    src={o.isDead ? `/${o.id}_died.png` : `/${o.id}.png`}
-                                    alt={o.name}
-                                    className="w-8 h-8 object-contain my-1 select-none"
-                                  />
-
-                                  <div className="flex gap-1.5 justify-center w-full mt-1">
-                                    <div className={`h-1.5 w-3.5 rounded-full ${hps >= 1 ? (hps === 2 ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.3)]" : "bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.3)]") : "bg-slate-800"}`} />
-                                    <div className={`h-1.5 w-3.5 rounded-full ${hps === 2 ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.3)]" : "bg-slate-800"}`} />
-                                  </div>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })()
-                  )
-                )}
+                  ))}
 
                 {(selectedCard.type === "cure" || selectedCard.subType === "vaccine" || selectedCard.subType === "organicDiet") && me && (
                   <div className="rounded-2xl border border-white/5 bg-[#181E2F]/30 p-3 text-right">
