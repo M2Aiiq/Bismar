@@ -69,6 +69,17 @@ export function HomeScreen() {
   const [isJoinExpanded, setIsJoinExpanded] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
   const [isConfirmingReset, setIsConfirmingReset] = useState(false);
+  const [clashStats, setClashStats] = useState<{ played: number; won: number; lost: number }>({ played: 0, won: 0, lost: 0 });
+  const [activeStatsTab, setActiveStatsTab] = useState<"clash" | "blitz">("clash");
+
+  useEffect(() => {
+    const rawClash = localStorage.getItem("clash-game-stats");
+    if (rawClash) {
+      try {
+        setClashStats(JSON.parse(rawClash));
+      } catch {}
+    }
+  }, []);
 
 
 
@@ -209,30 +220,72 @@ export function HomeScreen() {
         {/* خط فاصل */}
         <div className="border-t border-white/5"></div>
 
+        {/* أزرار تبديل الإحصائيات */}
+        <div className="flex bg-slate-950/40 border border-white/5 rounded-xl p-0.5 mt-2.5 mb-1.5 select-none">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveStatsTab("clash");
+              setIsConfirmingReset(false);
+            }}
+            className={`flex-1 py-1 text-[10px] font-black rounded-lg transition-all cursor-pointer ${
+              activeStatsTab === "clash"
+                ? "bg-rose-600/20 text-rose-400 border border-rose-500/10 shadow-sm"
+                : "text-slate-450 hover:text-slate-200"
+            }`}
+          >
+            صراع الأعضاء ⚔️
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveStatsTab("blitz");
+              setIsConfirmingReset(false);
+            }}
+            className={`flex-1 py-1 text-[10px] font-black rounded-lg transition-all cursor-pointer ${
+              activeStatsTab === "blitz"
+                ? "bg-[#3B82F6]/20 text-[#60A5FA] border border-[#3B82F6]/10 shadow-sm"
+                : "text-slate-450 hover:text-slate-200"
+            }`}
+          >
+            شفرة الكلمات (بليتز) 🕵️
+          </button>
+        </div>
+
         {/* الجزء الأوسط: الإحصائيات بشكل أفقي مع فواصل عمودية */}
         <div className="grid grid-cols-4 gap-1 text-center py-2">
           {/* لعبت */}
           <div className="flex flex-col items-center">
-            <span className="text-base font-black text-[#F8FAFC]">{playerStats?.played ?? 0}</span>
+            <span className="text-base font-black text-[#F8FAFC]">
+              {activeStatsTab === "clash" ? clashStats.played : (playerStats?.played ?? 0)}
+            </span>
             <span className="text-[10px] font-bold text-[#94A3B8] mt-0.5">لعبت</span>
           </div>
 
           {/* فزت */}
           <div className="flex flex-col items-center border-r border-white/5">
-            <span className="text-base font-black text-[#34D399]">{playerStats?.won ?? 0}</span>
+            <span className="text-base font-black text-[#34D399]">
+              {activeStatsTab === "clash" ? clashStats.won : (playerStats?.won ?? 0)}
+            </span>
             <span className="text-[10px] font-bold text-[#94A3B8] mt-0.5">فوز</span>
           </div>
 
           {/* خسرت */}
           <div className="flex flex-col items-center border-r border-white/5">
-            <span className="text-base font-black text-[#F87171]">{playerStats?.lost ?? 0}</span>
+            <span className="text-base font-black text-[#F87171]">
+              {activeStatsTab === "clash" ? clashStats.lost : (playerStats?.lost ?? 0)}
+            </span>
             <span className="text-[10px] font-bold text-[#94A3B8] mt-0.5">خسارة</span>
           </div>
 
           {/* نسبة الفوز */}
           <div className="flex flex-col items-center border-r border-white/5">
             <span className="text-base font-black text-[#FBBF24]">
-              {playerStats && playerStats.played > 0 ? Math.round((playerStats.won / playerStats.played) * 100) : 0}%
+              {(() => {
+                const played = activeStatsTab === "clash" ? clashStats.played : (playerStats?.played ?? 0);
+                const won = activeStatsTab === "clash" ? clashStats.won : (playerStats?.won ?? 0);
+                return played > 0 ? Math.round((won / played) * 100) : 0;
+              })()}%
             </span>
             <span className="text-[10px] font-bold text-[#94A3B8] mt-0.5">نسبة الفوز</span>
           </div>
@@ -247,7 +300,13 @@ export function HomeScreen() {
             type="button"
             onClick={() => {
               if (isConfirmingReset) {
-                resetPlayerStats();
+                if (activeStatsTab === "clash") {
+                  localStorage.removeItem("clash-game-stats");
+                  localStorage.removeItem("clash-game-processed-games");
+                  setClashStats({ played: 0, won: 0, lost: 0 });
+                } else {
+                  resetPlayerStats();
+                }
                 setIsConfirmingReset(false);
               } else {
                 setIsConfirmingReset(true);
@@ -258,7 +317,7 @@ export function HomeScreen() {
                 setTimeout(() => setIsConfirmingReset(false), 2000);
               }
             }}
-            className={`text-[10px] font-semibold transition-all duration-200 ${isConfirmingReset
+            className={`text-[10px] font-semibold transition-all duration-205 ${isConfirmingReset
                 ? "text-[#EF4444] animate-pulse"
                 : "text-[#94A3B8]/50 hover:text-[#EF4444]"
               }`}

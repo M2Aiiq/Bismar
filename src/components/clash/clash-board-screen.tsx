@@ -287,6 +287,52 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
     }
   }, [toastMessage]);
 
+  // تحديث إحصائيات صراع الأعضاء عند انتهاء اللعبة
+  useEffect(() => {
+    if (!room || room.status !== "ended" || !room.winnerId || !playerId) {
+      return;
+    }
+
+    // بصمة فريدة للعبة المنتهية لمنع التكرار
+    const fingerprint = `clash-${roomId}-${room.winnerId}`;
+    const STATS_KEY = "clash-game-stats";
+    const PROCESSED_GAMES_KEY = "clash-game-processed-games";
+
+    const rawProcessed = localStorage.getItem(PROCESSED_GAMES_KEY);
+    let processed: string[] = [];
+    try {
+      processed = rawProcessed ? JSON.parse(rawProcessed) : [];
+    } catch {
+      processed = [];
+    }
+
+    if (processed.includes(fingerprint)) {
+      return;
+    }
+
+    // تحديث الإحصائيات
+    const rawStats = localStorage.getItem(STATS_KEY);
+    let stats = { played: 0, won: 0, lost: 0 };
+    try {
+      if (rawStats) {
+        stats = JSON.parse(rawStats);
+      }
+    } catch {
+      // افتراضي
+    }
+
+    stats.played += 1;
+    if (room.winnerId === playerId) {
+      stats.won += 1;
+    } else {
+      stats.lost += 1;
+    }
+
+    localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+    processed.push(fingerprint);
+    localStorage.setItem(PROCESSED_GAMES_KEY, JSON.stringify(processed));
+  }, [room, roomId, playerId]);
+
   useEffect(() => {
     if (settingsOpen && room?.settings?.turnTimerSeconds) {
       setLocalTimer(room.settings.turnTimerSeconds);
