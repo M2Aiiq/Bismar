@@ -40,21 +40,21 @@ export function createInitialDeck(organsCount: number = 7): ActionCard[] {
 
   // A. Afflictions (35 cards)
   const afflictionTypes = [
-    { subType: "caffeine", target: "heart", name: "جرعة كافيين زائدة", desc: "ُنقص نقاط حياة (HP) قلب الخصم المستهدف بمقدار 1 HP." },
-    { subType: "brokenHeart", target: "heart", name: "قلب مكسور", desc: "يُنقص نقاط حياة (HP) قلب الخصم بمقدار 1 HP." },
-    { subType: "cholesterol", target: "heart", name: "انسداد كوليسترول", desc: "يُنقص نقاط حياة (HP) قلب الخصم بمقدار 1 HP." },
-    { subType: "insomnia", target: "mind", name: "أرق", desc: "يُنقص نقاط حياة (HP) عقل الخصم بمقدار 1 HP." },
-    { subType: "brainFreeze", target: "mind", name: "تجمد الدماغ", desc: "يُنقص نقاط حياة (HP) عقل الخصم بمقدار 1 HP." },
-    { subType: "forgetfulness", target: "mind", name: "نوبة نسيان", desc: "يُنقص نقاط حياة (HP) عقل الخصم بمقدار 1 HP." },
-    { subType: "toxicDose", target: "liver", name: "جرعة سامة", desc: "يُنقص نقاط حياة (HP) كبد الخصم بمقدار 1 HP." },
-    { subType: "fattyLiver", target: "liver", name: "كبد دهني", desc: "يُنقص نقاط حياة (HP) كبد الخصم بمقدار 1 HP." },
-    { subType: "smoke", target: "lung", name: "سحابة دخان", desc: "يُنقص نقاط حياة (HP) رئة الخصم بمقدار 1 HP." },
-    { subType: "cough", target: "lung", name: "نوبة سعال", desc: "يُنقص نقاط حياة (HP) رئة الخصم بمقدار 1 HP." },
-    { subType: "spicyFood", target: "stomach", name: "طعام حار", desc: "يُنقص نقاط حياة (HP) معدة الخصم بمقدار 1 HP." },
-    { subType: "foodPoisoning", target: "stomach", name: "تسمم غذائي", desc: "يُنقص نقاط حياة (HP) معدة الخصم بمقدار 1 HP." },
-    { subType: "kidneyStone", target: "kidney", name: "حصوة كلى", desc: "يُنقص نقاط حياة (HP) كلية الخصم بمقدار 1 HP." },
-    { subType: "dehydration", target: "kidney", name: "جفاف", desc: "يُنقص نقاط حياة (HP) كلية الخصم بمقدار 1 HP." },
-    { subType: "appendicitis", target: "intestines", name: "التهاب زائدة", desc: "يُنقص نقاط حياة (HP) الأمعاء للخصم بمقدار 1 HP." }
+    { subType: "caffeine", target: "heart", name: "جرعة كافيين زائدة", desc: "يُنقص نقاط حياة (HP) العضو المستهدف للخصم بمقدار 1 HP." },
+    { subType: "brokenHeart", target: "heart", name: "قلب مكسور", desc: "يُنقص نقاط حياة (HP) العضو المستهدف للخصم بمقدار 1 HP." },
+    { subType: "cholesterol", target: "heart", name: "انسداد كوليسترول", desc: "يُنقص نقاط حياة (HP) العضو المستهدف للخصم بمقدار 1 HP." },
+    { subType: "insomnia", target: "mind", name: "أرق", desc: "يُنقص نقاط حياة (HP) العضو المستهدف للخصم بمقدار 1 HP." },
+    { subType: "brainFreeze", target: "mind", name: "تجمد الدماغ", desc: "يُنقص نقاط حياة (HP) العضو المستهدف للخصم بمقدار 1 HP." },
+    { subType: "forgetfulness", target: "mind", name: "نوبة نسيان", desc: "يُنقص نقاط حياة (HP) العضو المستهدف للخصم بمقدار 1 HP." },
+    { subType: "toxicDose", target: "liver", name: "جرعة سامة", desc: "يُنقص نقاط حياة (HP) العضو المستهدف للخصم بمقدار 1 HP." },
+    { subType: "fattyLiver", target: "liver", name: "كبد دهني", desc: "يُنقص نقاط حياة (HP) العضو المستهدف للخصم بمقدار 1 HP." },
+    { subType: "smoke", target: "lung", name: "سحابة دخان", desc: "يُنقص نقاط حياة (HP) العضو المستهدف للخصم بمقدار 1 HP." },
+    { subType: "cough", target: "lung", name: "نوبة سعال", desc: "يُنقص نقاط حياة (HP) العضو المستهدف للخصم بمقدار 1 HP." },
+    { subType: "spicyFood", target: "stomach", name: "طعام حار", desc: "يُنقص نقاط حياة (HP) العضو المستهدف للخصم بمقدار 1 HP." },
+    { subType: "foodPoisoning", target: "stomach", name: "تسمم غذائي", desc: "يُنقص نقاط حياة (HP) العضو المستهدف للخصم بمقدار 1 HP." },
+    { subType: "kidneyStone", target: "kidney", name: "حصوة كلى", desc: "يُنقص نقاط حياة (HP) العضو المستهدف للخصم بمقدار 1 HP." },
+    { subType: "dehydration", target: "kidney", name: "جفاف", desc: "يُنقص نقاط حياة (HP) العضو المستهدف للخصم بمقدار 1 HP." },
+    { subType: "appendicitis", target: "intestines", name: "التهاب زائدة", desc: "يُنقص نقاط حياة (HP) العضو المستهدف للخصم بمقدار 1 HP." }
   ] as const;
 
   const activeAffTypes = afflictionTypes.filter((aff) => activeOrganIds.includes(aff.target));

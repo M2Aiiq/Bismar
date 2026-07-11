@@ -231,6 +231,16 @@ function OpponentsRadar({ opponents, currentTurnPlayerId, gameStatus }: Opponent
   );
 }
 
+const organNames: Record<string, string> = {
+  heart: "القلب",
+  mind: "الدماغ",
+  liver: "الكبد",
+  lung: "الرئتين",
+  stomach: "المعدة",
+  kidney: "الكلى",
+  intestines: "الأمعاء",
+};
+
 interface ClashBoardScreenProps {
   roomId: string;
 }
@@ -1150,9 +1160,16 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   className={`min-w-[95px] w-[95px] sm:min-w-[115px] sm:w-[115px] aspect-[2/3] rounded-2xl border-2 bg-slate-900/95 p-2 flex flex-col justify-between cursor-pointer snap-center relative overflow-hidden select-none ${borderColors[card.type]}`}
                 >
                   <div className="flex flex-col gap-1 w-full text-right">
-                    <span className={`text-[7px] sm:text-[8px] px-1.5 py-0.5 rounded font-black self-start ${badgeColors[card.type]}`}>
-                      {cardTypeLabels[card.type]}
-                    </span>
+                    <div className="flex gap-1 flex-wrap">
+                      <span className={`text-[7px] sm:text-[8px] px-1.5 py-0.5 rounded font-black self-start ${badgeColors[card.type]}`}>
+                        {cardTypeLabels[card.type]}
+                      </span>
+                      {card.type === "attack" && card.targetOrganId && card.targetOrganId !== "any" && organNames[card.targetOrganId] && (
+                        <span className={`text-[7px] sm:text-[8px] px-1.5 py-0.5 rounded font-black self-start ${badgeColors[card.type]}`}>
+                          {organNames[card.targetOrganId]}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-[10px] sm:text-[12px] font-black leading-tight text-white">{card.name}</span>
                   </div>
                   <span className="text-[7px] sm:text-[8.5px] text-slate-400 leading-normal line-clamp-3 text-right">{card.description}</span>
@@ -1773,9 +1790,16 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 transition={{ type: "spring", stiffness: 350, damping: 25 }}
               >
                 <div className="flex flex-col gap-1.5 w-full text-right">
-                  <span className={`text-[7px] sm:text-[8px] px-1.5 py-0.5 rounded font-black self-start ${badgeColors[card.type]}`}>
-                    {cardTypeLabels[card.type]}
-                  </span>
+                  <div className="flex gap-1 flex-wrap">
+                    <span className={`text-[7px] sm:text-[8px] px-1.5 py-0.5 rounded font-black self-start ${badgeColors[card.type]}`}>
+                      {cardTypeLabels[card.type]}
+                    </span>
+                    {card.type === "attack" && card.targetOrganId && card.targetOrganId !== "any" && organNames[card.targetOrganId] && (
+                      <span className={`text-[7px] sm:text-[8px] px-1.5 py-0.5 rounded font-black self-start ${badgeColors[card.type]}`}>
+                        {organNames[card.targetOrganId]}
+                      </span>
+                    )}
+                  </div>
                   <span className="text-sm font-black leading-tight text-white">{card.name}</span>
                 </div>
 
