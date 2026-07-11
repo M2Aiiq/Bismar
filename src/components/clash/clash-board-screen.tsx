@@ -256,6 +256,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
     updateClashRoomSettings,
     drawAndReplaceCard,
     togglePauseClashGame,
+    setClashHost,
   } = useClashRoom(roomId);
 
   const {
@@ -279,6 +280,27 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [selectedHandCardId, setSelectedHandCardId] = useState<string | null>(null);
   const [selectedTargetPlayerId, setSelectedTargetPlayerId] = useState<string | null>(null);
+  const [selectedLobbyPlayerId, setSelectedLobbyPlayerId] = useState<string | null>(null);
+  const [lobbyActionOpen, setLobbyActionOpen] = useState(false);
+  const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const startLongPress = (targetPlayerId: string) => {
+    if (!isHost || targetPlayerId === playerId) return;
+    if (longPressTimeoutRef.current) {
+      clearTimeout(longPressTimeoutRef.current);
+    }
+    longPressTimeoutRef.current = setTimeout(() => {
+      setSelectedLobbyPlayerId(targetPlayerId);
+      setLobbyActionOpen(true);
+    }, 600);
+  };
+
+  const cancelLongPress = () => {
+    if (longPressTimeoutRef.current) {
+      clearTimeout(longPressTimeoutRef.current);
+      longPressTimeoutRef.current = null;
+    }
+  };
 
   useEffect(() => {
     if (toastMessage) {
@@ -753,38 +775,18 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 <div className="flex flex-col items-center gap-2">
                   {Object.values(room.players)
                     .filter((roomPlayer) => roomPlayer.isHost)
-                    .map((roomPlayer) => (
-                      <span
-                        key={roomPlayer.id}
-                        className="inline-flex items-center justify-center rounded-full border border-amber-400/30 bg-amber-500/10 px-4 py-1 text-[11px] font-bold text-amber-300"
-                      >
-                        <span className="max-w-[12rem] truncate">{roomPlayer.name}</span>
-                        {roomPlayer.isMuted !== undefined && (
-                          <span className="mr-1.5 flex items-center">
-                            {roomPlayer.isMuted ? (
-                              <img
-                                src="/mute.png"
-                                className="w-3 h-3 object-contain"
-                                style={{ filter: "invert(40%) sepia(70%) saturate(3000%) hue-rotate(330deg) brightness(95%) contrast(100%)" }}
-                                alt="Muted"
-                              />
-                            ) : (
-                              <span className="text-[9px]">🎤</span>
-                            )}
-                          </span>
-                        )}
-                      </span>
-                    ))}
-
-                  <div className="flex flex-col items-center gap-2">
-                    {Object.values(room.players)
-                      .filter((roomPlayer) => !roomPlayer.isHost)
-                      .map((roomPlayer) => (
+                    .map((roomPlayer) => {
+                      const isOnline = room.presence?.[roomPlayer.id] === true;
+                      return (
                         <span
                           key={roomPlayer.id}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-800/80 px-3 py-1 text-[11px] font-bold text-slate-200"
+                          className={`inline-flex items-center justify-center rounded-full border px-4 py-1 text-[11px] font-bold transition-all ${
+                            isOnline
+                              ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.3)] animate-pulse"
+                              : "border-rose-500/60 bg-rose-500/10 text-rose-300 shadow-[0_0_10px_rgba(244,63,94,0.3)]"
+                          }`}
                         >
-                          <span className="max-w-[10rem] truncate">{roomPlayer.name}</span>
+                          <span className="max-w-[12rem] truncate">{roomPlayer.name} (المضيف 👑)</span>
                           {roomPlayer.isMuted !== undefined && (
                             <span className="mr-1.5 flex items-center">
                               {roomPlayer.isMuted ? (
@@ -800,7 +802,51 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                             </span>
                           )}
                         </span>
-                      ))}
+                      );
+                    })}
+
+                  <div className="flex flex-col items-center gap-2">
+                    {Object.values(room.players)
+                      .filter((roomPlayer) => !roomPlayer.isHost)
+                      .map((roomPlayer) => {
+                        const isOnline = room.presence?.[roomPlayer.id] === true;
+                        const canManage = isHost && roomPlayer.id !== playerId;
+                        return (
+                          <span
+                            key={roomPlayer.id}
+                            onMouseDown={() => startLongPress(roomPlayer.id)}
+                            onMouseUp={cancelLongPress}
+                            onMouseLeave={cancelLongPress}
+                            onTouchStart={() => startLongPress(roomPlayer.id)}
+                            onTouchEnd={cancelLongPress}
+                            onTouchMove={cancelLongPress}
+                            title={canManage ? "اضغط مطولاً لإدارة اللاعب" : undefined}
+                            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold transition-all ${
+                              canManage ? "cursor-pointer active:scale-95" : ""
+                            } ${
+                              isOnline
+                                ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.3)] animate-pulse"
+                                : "border-rose-500/60 bg-rose-500/10 text-rose-300 shadow-[0_0_10px_rgba(244,63,94,0.3)]"
+                            }`}
+                          >
+                            <span className="max-w-[10rem] truncate">{roomPlayer.name}</span>
+                            {roomPlayer.isMuted !== undefined && (
+                              <span className="mr-1.5 flex items-center">
+                                {roomPlayer.isMuted ? (
+                                  <img
+                                    src="/mute.png"
+                                    className="w-3 h-3 object-contain"
+                                    style={{ filter: "invert(40%) sepia(70%) saturate(3000%) hue-rotate(330deg) brightness(95%) contrast(100%)" }}
+                                    alt="Muted"
+                                  />
+                                ) : (
+                                  <span className="text-[9px]">🎤</span>
+                                )}
+                              </span>
+                            )}
+                          </span>
+                        );
+                      })}
                   </div>
                 </div>
               </div>
@@ -1737,6 +1783,61 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
             </div>
           );
         })()}
+      </AnimatePresence>
+
+      {/* 8. نافذة إدارة اللاعبين في اللوبي (Lobby Player Action Menu) */}
+      <AnimatePresence>
+        {lobbyActionOpen && selectedLobbyPlayerId && room.players[selectedLobbyPlayerId] && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-sm rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl text-center"
+            >
+              <h3 className="text-base font-black text-white mb-2">إدارة اللاعب</h3>
+              <p className="text-xs text-slate-400 mb-6">
+                اللاعب الحالي: <span className="text-rose-400 font-bold">{room.players[selectedLobbyPlayerId].name}</span>
+              </p>
+
+              <div className="space-y-3">
+                <button
+                  onClick={async () => {
+                    await setClashHost(selectedLobbyPlayerId);
+                    setLobbyActionOpen(false);
+                    setSelectedLobbyPlayerId(null);
+                    setToastMessage("تم نقل صلاحيات المضيف بنجاح!");
+                  }}
+                  className="w-full rounded-2xl bg-amber-600 py-3 text-xs font-black text-white hover:bg-amber-500 transition active:scale-95 cursor-pointer"
+                >
+                  تعيين كمضيف للغرفة 👑
+                </button>
+                
+                <button
+                  onClick={async () => {
+                    await kickClashPlayer(selectedLobbyPlayerId);
+                    setLobbyActionOpen(false);
+                    setSelectedLobbyPlayerId(null);
+                    setToastMessage("تم طرد اللاعب من الغرفة.");
+                  }}
+                  className="w-full rounded-2xl bg-rose-600 py-3 text-xs font-black text-white hover:bg-rose-500 transition active:scale-95 cursor-pointer"
+                >
+                  طرد من الغرفة 🚪
+                </button>
+
+                <button
+                  onClick={() => {
+                    setLobbyActionOpen(false);
+                    setSelectedLobbyPlayerId(null);
+                  }}
+                  className="w-full rounded-2xl border border-white/10 py-3 text-xs font-bold text-slate-400 hover:bg-slate-800 hover:text-white transition active:scale-95 cursor-pointer"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </AnimatePresence>
     </div>
   );

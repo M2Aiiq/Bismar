@@ -550,6 +550,26 @@ export function useClashRoom(roomId: string) {
     [roomId, playerId]
   );
 
+  const setClashHost = useCallback(
+    async (targetPlayerId: string) => {
+      if (!roomId || !playerId) return;
+
+      const database = getRealtimeDatabase() || getDatabase();
+      const roomPathRef = ref(database, `clashRooms/${roomId}`);
+
+      await runTransaction(roomPathRef, (currentRoom: ClashRoomState | null) => {
+        if (!currentRoom || !currentRoom.players || !currentRoom.players[targetPlayerId]) return currentRoom;
+
+        Object.keys(currentRoom.players).forEach((pid) => {
+          currentRoom.players[pid].isHost = (pid === targetPlayerId);
+        });
+
+        return currentRoom;
+      });
+    },
+    [roomId, playerId]
+  );
+
   const startClashGame = useCallback(
     async (maxPlayers: number, initialHandSize: number, turnTimerSeconds?: number, organsCount: number = 7) => {
       const currentRoom = roomRef.current;
@@ -1404,5 +1424,6 @@ export function useClashRoom(roomId: string) {
     updateClashRoomSettings,
     drawAndReplaceCard,
     togglePauseClashGame,
+    setClashHost,
   };
 }
