@@ -999,11 +999,9 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (!voiceActive) {
-                      void initVoice();
-                    } else {
-                      void toggleMute();
-                    }
+                    // زر المايك: سواء كان الصوت مفعلاً أم لا، نستدعي toggleMute مباشرة
+                    // toggleMute ستُفعّل voiceActive تلقائياً إذا لم يكن مفعلاً
+                    void toggleMute();
                   }}
                   title={
                     !voiceActive
@@ -1052,7 +1050,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   }}
                   title={
                     !voiceActive
-                      ? "تشغيل الصوت والمايك"
+                      ? "تشغيل الصوت للاستماع"
                       : isDeafened
                         ? "تشغيل صوت الأعضاء"
                         : "كتم صوت الأعضاء"

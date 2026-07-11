@@ -43,8 +43,13 @@ export function useClashVoice(
       el.hidden = true;
       document.body.appendChild(el);
     }
-    const stream = new MediaStream([track]);
-    el.srcObject = stream;
+    // استخدام stream موجود أو إنشاء جديد
+    const existing = el.srcObject as MediaStream | null;
+    if (existing) {
+      existing.addTrack(track);
+    } else {
+      el.srcObject = new MediaStream([track]);
+    }
     el.muted = isDeafenedRef.current;
   }, []);
 
@@ -68,26 +73,21 @@ export function useClashVoice(
     }
   };
 
+  // تفعيل نظام الصوت للاستماع فقط (بدون فتح المايك)
+  // سيبدأ بناء الـ peer connections للاستقبال فوراً
   const initVoice = useCallback(async () => {
     try {
       setError(null);
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      localStreamRef.current = stream;
-
-      // Start muted by default: stop tracks immediately so the red browser recording dot disappears
-      stream.getAudioTracks().forEach((track) => {
-        track.stop();
-      });
-      localStreamRef.current = null;
+      // فعّل نظام الصوت - سيبدأ useEffect ببناء الـ peer connections تلقائياً
       setIsMuted(true);
       setVoiceActive(true);
 
-      // Set mute state in firebase
+      // ضع حالة الكتم في Firebase
       const playerMuteRef = ref(database, `clashRooms/${roomId}/players/${playerId}/isMuted`);
       await set(playerMuteRef, true);
     } catch (err: any) {
-      console.error("Error requesting microphone:", err);
-      setError("لم يتم تفعيل صلاحيات المايكروفون. يرجى السماح للمتصفح بالوصول.");
+      console.error("Error initializing voice:", err);
+      setError("تعذر تفعيل نظام الصوت.");
     }
   }, [roomId, playerId, database]);
 
@@ -95,7 +95,7 @@ export function useClashVoice(
     const nextMuted = !isMuted;
     try {
       if (nextMuted) {
-        // Mute: Stop local tracks so the browser recording dot disappears
+        // كتم: أوقف مسارات المايك المحلية
         if (localStreamRef.current) {
           localStreamRef.current.getTracks().forEach((track) => {
             track.stop();
@@ -103,7 +103,7 @@ export function useClashVoice(
           localStreamRef.current = null;
         }
 
-        // Replace tracks in all peer connections with null
+        // أزل المسارات من جميع الـ peer connections
         Object.values(pcsRef.current).forEach((pc) => {
           pc.getSenders().forEach((sender) => {
             if (sender.track?.kind === "audio" || sender.track === null) {
@@ -114,13 +114,17 @@ export function useClashVoice(
 
         setIsMuted(true);
       } else {
-        // Unmute: Re-acquire getUserMedia stream
+        // إذا لم يكن الصوت مفعلاً، فعّله أولاً
+        if (!voiceActive) {
+          setVoiceActive(true);
+        }
+
+        // فتح المايك: احصل على stream جديد
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         localStreamRef.current = stream;
-
         const newTrack = stream.getAudioTracks()[0];
 
-        // Replace tracks in all peer connections with the new track
+        // أضف المسار لجميع الـ peer connections الموجودة
         Object.values(pcsRef.current).forEach((pc) => {
           pc.getSenders().forEach((sender) => {
             if (sender.track?.kind === "audio" || sender.track === null) {
@@ -138,20 +142,22 @@ export function useClashVoice(
       console.error("Error toggling mute/unmute:", err);
       setError("تعذر فتح المايك. يرجى التأكد من صلاحيات المايكروفون.");
     }
-  }, [isMuted, roomId, playerId, database]);
+  }, [isMuted, voiceActive, roomId, playerId, database]);
 
   const toggleDeafen = useCallback(() => {
     const nextDeafened = !isDeafened;
     setIsDeafened(nextDeafened);
+    isDeafenedRef.current = nextDeafened;
 
-    // Mute/unmute all active remote audio elements
+    // كتم/فتح جميع عناصر الصوت البعيدة
     const audios = document.querySelectorAll("audio[id^='audio-peer-']");
     audios.forEach((el) => {
       (el as HTMLAudioElement).muted = nextDeafened;
     });
   }, [isDeafened]);
 
-  // Handle building and breaking peer connections with other players
+  // بناء وكسر الـ peer connections مع اللاعبين الآخرين
+  // يعمل بمجرد تفعيل voiceActive حتى بدون مايك (للاستماع فقط)
   useEffect(() => {
     if (!voiceActive || !players) return;
 
@@ -159,7 +165,7 @@ export function useClashVoice(
       (pid) => pid !== playerId && !players[pid].isZombie
     );
 
-    // 1. Clean up disconnected peers
+    // 1. تنظيف الاتصالات المنقطعة
     Object.keys(pcsRef.current).forEach((peerId) => {
       if (!alivePeers.includes(peerId)) {
         pcsRef.current[peerId].close();
@@ -170,15 +176,17 @@ export function useClashVoice(
       }
     });
 
-    // 2. Establish connections with new peers
+    // 2. إنشاء اتصالات مع اللاعبين الجدد
     alivePeers.forEach(async (peerId) => {
-      if (pcsRef.current[peerId]) return; // Connection already exists
+      if (pcsRef.current[peerId]) return; // الاتصال موجود بالفعل
 
       const isInitiator = playerId < peerId;
       const pc = new RTCPeerConnection(peerConfig);
       pcsRef.current[peerId] = pc;
 
-      // Add audio transceiver
+      // أضف transceiver للصوت
+      // sendrecv: إذا كان هناك مسار صوت محلي (المايك مفعّل)
+      // sendrecv أيضاً في وضع الاستماع فقط لأن الطرف الآخر يحتاج لـ sendrecv لإرسال صوته
       const transceiver = pc.addTransceiver("audio", { direction: "sendrecv" });
       if (localStreamRef.current) {
         const track = localStreamRef.current.getAudioTracks()[0];
@@ -186,9 +194,13 @@ export function useClashVoice(
           transceiver.sender.replaceTrack(track).catch(console.error);
         }
       }
+      // إذا لم يكن هناك مسار محلي، نترك الـ sender بدون track (null)
+      // هذا يسمح لنا بالاستقبال بينما لا نرسل شيئاً
 
       pc.ontrack = (event) => {
-        handleTrack(peerId, event.track);
+        if (event.track.kind === "audio") {
+          handleTrack(peerId, event.track);
+        }
       };
 
       const signalingPath = isInitiator
@@ -207,13 +219,13 @@ export function useClashVoice(
       };
 
       if (isInitiator) {
-        // Initiator flow
+        // المبادر بالاتصال
         try {
           const offer = await pc.createOffer();
           await pc.setLocalDescription(offer);
           await set(ref(database, `${signalingPath}/offer`), { sdp: offer.sdp, type: offer.type });
 
-          // Listen to answer
+          // استمع للرد
           addDbListener(peerId, `${signalingPath}/answer`, (snapshot) => {
             if (snapshot.exists() && pc.signalingState === "have-local-offer") {
               const answer = snapshot.val();
@@ -221,7 +233,7 @@ export function useClashVoice(
             }
           });
 
-          // Listen to receiver candidates
+          // استمع لمرشحي المستقبِل
           const addedCands = new Set<string>();
           addDbListener(peerId, `${signalingPath}/receiverCandidates`, (snapshot) => {
             if (snapshot.exists()) {
@@ -241,8 +253,7 @@ export function useClashVoice(
           console.error("Error initiating connection to", peerId, err);
         }
       } else {
-        // Receiver flow
-        // Listen to offer
+        // المستقبِل
         addDbListener(peerId, `${signalingPath}/offer`, async (snapshot) => {
           if (snapshot.exists() && pc.signalingState === "stable") {
             const offer = snapshot.val();
@@ -257,7 +268,7 @@ export function useClashVoice(
           }
         });
 
-        // Listen to caller candidates
+        // استمع لمرشحي المبادر
         const addedCands = new Set<string>();
         addDbListener(peerId, `${signalingPath}/callerCandidates`, (snapshot) => {
           if (snapshot.exists()) {
@@ -277,15 +288,13 @@ export function useClashVoice(
     });
   }, [voiceActive, players, roomId, playerId, database, handleTrack]);
 
-  // Cleanup on unmount or session leave
+  // تنظيف عند إلغاء التحميل أو مغادرة الجلسة
   useEffect(() => {
     return () => {
-      // Stop local tracks
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach((track) => track.stop());
         localStreamRef.current = null;
       }
-      // Close connections
       Object.keys(pcsRef.current).forEach((peerId) => {
         pcsRef.current[peerId].close();
         clearDbListeners(peerId);
