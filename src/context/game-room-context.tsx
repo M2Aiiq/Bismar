@@ -237,7 +237,7 @@ interface GameRoomContextValue {
   firebaseReady: boolean;
   clearError: () => void;
   savePlayerName: (name: string) => Promise<void>;
-  createRoom: (name: string) => Promise<void>;
+  createRoom: (name: string) => Promise<string>;
   joinRoom: (roomCode: string, name: string) => Promise<void>;
   leaveRoom: () => Promise<void>;
   chooseTeam: (team: Team) => Promise<void>;
@@ -411,7 +411,7 @@ function applyTeamCountToPlayers(players: Player[], teamCount: TeamCount) {
   );
 }
 
-export function GameRoomProvider({ children }: { children: ReactNode }) {
+export function GameRoomProvider({ children, initialRoomId }: { children: ReactNode; initialRoomId?: string }) {
   const [roomId, setRoomId] = useState("");
   const [room, setRoom] = useState<Room | null>(null);
   const [playerId, setPlayerId] = useState("");
@@ -517,12 +517,12 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
 
       setPlayerId(nextPlayerId);
       setPlayerName(session?.playerName ?? "");
-      setRoomId(session?.roomId ?? "");
+      setRoomId(initialRoomId ?? session?.roomId ?? "");
       setIsReady(true);
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, []);
+  }, [initialRoomId]);
 
   useEffect(() => {
     if (!isReady || !roomId || !isFirebaseConfigured) {
@@ -619,12 +619,12 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
     return room?.players.find((currentPlayer) => currentPlayer.id === playerId) ?? null;
   }, [playerId, room]);
 
-  const runAction = useCallback(async (action: () => Promise<void>, fallback: string) => {
+  const runAction = useCallback(async <T,>(action: () => Promise<T>, fallback: string): Promise<T> => {
     setIsBusy(true);
     setError(null);
 
     try {
-      await action();
+      return await action();
     } catch (actionError) {
       setError(buildMessage(actionError, fallback));
       throw actionError;
@@ -672,7 +672,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
   );
 
   const createRoom = useCallback(
-    async (name: string) =>
+    async (name: string): Promise<string> =>
       runAction(async () => {
         const database = getRealtimeDatabase();
 
@@ -691,6 +691,7 @@ export function GameRoomProvider({ children }: { children: ReactNode }) {
         setRoomId(nextRoomId);
         saveSessionRoom(nextRoomId, playerId, sanitizedName);
         setLeftRoomCode(null);
+        return nextRoomId;
       }, "تعذر إنشاء الغرفة."),
     [playerId, runAction],
   );

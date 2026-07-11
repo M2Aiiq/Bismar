@@ -54,8 +54,7 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
       return "";
     }
 
-    const params = new URLSearchParams({ room: roomId });
-    return `${origin}/?${params.toString()}`;
+    return `${origin}/room/${roomId}`;
   }, [origin, roomId]);
 
   async function copyValue(value: string, type: "code" | "link") {

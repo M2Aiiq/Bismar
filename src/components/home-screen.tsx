@@ -136,7 +136,9 @@ export function HomeScreen() {
     }
 
     autoJoinAttemptRef.current = inviteRoomCode;
-    void joinRoom(inviteRoomCode, playerName).catch(() => {
+    void joinRoom(inviteRoomCode, playerName).then(() => {
+      router.replace(`/room/${inviteRoomCode}`);
+    }).catch(() => {
       autoJoinAttemptRef.current = null;
     });
   }, [firebaseReady, inviteRoomCode, isNameDialogOpen, joinRoom, playerName, leftRoomCode, router]);
@@ -172,6 +174,14 @@ export function HomeScreen() {
         const clashSnapshot = await get(ref(database, `clashRooms/${roomCode}`));
         if (clashSnapshot.exists()) {
           router.push(`/clash/${roomCode}`);
+          setIsJoinExpanded(false);
+          return;
+        }
+
+        // التحقق من وجود غرفة كود نيمز بهذا الرمز
+        const codenamesSnapshot = await get(ref(database, `rooms/${roomCode}`));
+        if (codenamesSnapshot.exists()) {
+          router.push(`/room/${roomCode}`);
           setIsJoinExpanded(false);
           return;
         }
@@ -354,7 +364,12 @@ export function HomeScreen() {
         <div className="flex gap-2 w-full">
           <button
             type="button"
-            onClick={() => createRoom(playerName)}
+            onClick={async () => {
+              const nextRoomId = await createRoom(playerName);
+              if (nextRoomId) {
+                router.push(`/room/${nextRoomId}`);
+              }
+            }}
             disabled={isBusy || !firebaseReady || !playerName}
             className="flex-1 rounded-2xl bg-[#2563EB] px-5 py-4 text-base font-black text-[#F8FAFC] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#2563EB]/40"
           >
