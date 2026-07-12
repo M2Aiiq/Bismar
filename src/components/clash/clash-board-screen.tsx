@@ -336,13 +336,6 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
     toggleDeafen,
   } = useClashVoice(roomId, playerId, room?.players);
 
-  // تفعيل نظام الصوت والاتصال تلقائياً فور بدء اللعب لضمان سماع جميع الأطراف لبعضهم البعض
-  useEffect(() => {
-    if (room && room.status === "playing") {
-      void initVoice();
-    }
-  }, [room?.status, initVoice]);
-
   const [lobbyName, setLobbyName] = useState("");
   const [selectedCard, setSelectedCard] = useState<ActionCard | null>(null);
   const [targetSelectorOpen, setTargetSelectorOpen] = useState(false);
