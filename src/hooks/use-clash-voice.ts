@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getDatabase, ref, set, push, onValue, off } from "firebase/database";
+import { getDatabase, ref, set, push, onValue, off, remove } from "firebase/database";
 import { getRealtimeDatabase } from "../lib/firebase";
 import type { ClashPlayer } from "../types/organClash";
 
@@ -10,6 +10,8 @@ const peerConfig: RTCConfiguration = {
     { urls: "stun:stun.l.google.com:19302" },
     { urls: "stun:stun1.l.google.com:19302" },
     { urls: "stun:stun2.l.google.com:19302" },
+    { urls: "stun:stun3.l.google.com:19302" },
+    { urls: "stun:stun4.l.google.com:19302" },
   ],
 };
 
@@ -57,8 +59,14 @@ export function useClashVoice(
   const localStreamRef = useRef<MediaStream | null>(null);
   const pcsRef = useRef<Record<string, RTCPeerConnection>>({});
   const listenersRef = useRef<Record<string, { path: string; cb: any }[]>>({});
+  // تخزين ICE candidates مؤقتاً حتى يتم setRemoteDescription
+  const pendingCandidatesRef = useRef<Record<string, RTCIceCandidateInit[]>>({});
+  const remoteDescSetRef = useRef<Record<string, boolean>>({});
 
   const database = getRealtimeDatabase() || getDatabase();
+
+  // تتبع قائمة اللاعبين الأحياء لتجنب re-render المتكرر
+  const prevPeerIdsRef = useRef<string>("");
 
   const handleTrack = useCallback((peerId: string, track: MediaStreamTrack) => {
     let el = document.getElementById(`audio-peer-${peerId}`) as HTMLAudioElement;
@@ -66,17 +74,25 @@ export function useClashVoice(
       el = document.createElement("audio");
       el.id = `audio-peer-${peerId}`;
       el.autoplay = true;
+      el.setAttribute("playsinline", "");
       el.hidden = true;
       document.body.appendChild(el);
     }
-    // استخدام stream موجود أو إنشاء جديد
-    const existing = el.srcObject as MediaStream | null;
-    if (existing) {
-      existing.addTrack(track);
-    } else {
-      el.srcObject = new MediaStream([track]);
-    }
+    // إنشاء stream جديد دائماً لتجنب مشاكل التداخل
+    el.srcObject = new MediaStream([track]);
     el.muted = isDeafenedRef.current;
+
+    // محاولة التشغيل (قد تفشل بسبب سياسة autoplay)
+    el.play().catch(() => {
+      // ننتظر تفاعل المستخدم
+      const resumePlay = () => {
+        el.play().catch(console.error);
+        document.removeEventListener("click", resumePlay);
+        document.removeEventListener("touchstart", resumePlay);
+      };
+      document.addEventListener("click", resumePlay, { once: true });
+      document.addEventListener("touchstart", resumePlay, { once: true });
+    });
   }, []);
 
   const addDbListener = (peerId: string, pathStr: string, callback: (snap: any) => void) => {
@@ -98,6 +114,39 @@ export function useClashVoice(
       delete listenersRef.current[peerId];
     }
   };
+
+  // إضافة ICE candidate مع التحقق من جاهزية remote description
+  const safeAddIceCandidate = useCallback((peerId: string, candidateInit: RTCIceCandidateInit) => {
+    const pc = pcsRef.current[peerId];
+    if (!pc) return;
+
+    if (remoteDescSetRef.current[peerId]) {
+      // remote description جاهزة، أضف مباشرة
+      pc.addIceCandidate(new RTCIceCandidate(candidateInit)).catch((err) => {
+        console.warn("Failed to add ICE candidate for", peerId, err);
+      });
+    } else {
+      // خزّن مؤقتاً
+      if (!pendingCandidatesRef.current[peerId]) {
+        pendingCandidatesRef.current[peerId] = [];
+      }
+      pendingCandidatesRef.current[peerId].push(candidateInit);
+    }
+  }, []);
+
+  // تطبيق ICE candidates المخزنة مؤقتاً
+  const flushPendingCandidates = useCallback((peerId: string) => {
+    const pc = pcsRef.current[peerId];
+    const pending = pendingCandidatesRef.current[peerId];
+    if (!pc || !pending) return;
+
+    pending.forEach((c) => {
+      pc.addIceCandidate(new RTCIceCandidate(c)).catch((err) => {
+        console.warn("Failed to add buffered ICE candidate for", peerId, err);
+      });
+    });
+    delete pendingCandidatesRef.current[peerId];
+  }, []);
 
   // حفظ الحالة في localStorage عند كل تغيير
   useEffect(() => {
@@ -122,9 +171,7 @@ export function useClashVoice(
       navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
         localStreamRef.current = stream;
         setIsMuted(false);
-        // المسارات ستُضاف للـ peer connections عبر الـ useEffect الخاص بالاتصالات
       }).catch(() => {
-        // إذا فشل فتح المايك، ابقَ في وضع الاستماع فقط
         setIsMuted(true);
       });
     } else {
@@ -134,15 +181,12 @@ export function useClashVoice(
   }, []);
 
   // تفعيل نظام الصوت للاستماع فقط (بدون فتح المايك)
-  // سيبدأ بناء الـ peer connections للاستقبال فوراً
   const initVoice = useCallback(async () => {
     try {
       setError(null);
-      // فعّل نظام الصوت - سيبدأ useEffect ببناء الـ peer connections تلقائياً
       setIsMuted(true);
       setVoiceActive(true);
 
-      // ضع حالة الكتم في Firebase
       const playerMuteRef = ref(database, `clashRooms/${roomId}/players/${playerId}/isMuted`);
       await set(playerMuteRef, true);
     } catch (err: any) {
@@ -185,12 +229,15 @@ export function useClashVoice(
         const newTrack = stream.getAudioTracks()[0];
 
         // أضف المسار لجميع الـ peer connections الموجودة
-        Object.values(pcsRef.current).forEach((pc) => {
-          pc.getSenders().forEach((sender) => {
-            if (sender.track?.kind === "audio" || sender.track === null) {
-              sender.replaceTrack(newTrack).catch(console.error);
-            }
-          });
+        Object.entries(pcsRef.current).forEach(([, pc]) => {
+          const senders = pc.getSenders();
+          const audioSender = senders.find((s) => s.track?.kind === "audio" || s.track === null);
+          if (audioSender) {
+            audioSender.replaceTrack(newTrack).catch(console.error);
+          } else {
+            // لا يوجد sender صوتي، أضف track جديد
+            pc.addTrack(newTrack, stream);
+          }
         });
 
         setIsMuted(false);
@@ -216,137 +263,190 @@ export function useClashVoice(
     });
   }, [isDeafened]);
 
+  // تنظيف اتصال peer واحد
+  const cleanupPeer = useCallback((peerId: string) => {
+    if (pcsRef.current[peerId]) {
+      pcsRef.current[peerId].close();
+      delete pcsRef.current[peerId];
+    }
+    clearDbListeners(peerId);
+    delete pendingCandidatesRef.current[peerId];
+    delete remoteDescSetRef.current[peerId];
+    const el = document.getElementById(`audio-peer-${peerId}`);
+    if (el) el.remove();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // إنشاء اتصال مع peer واحد
+  const connectToPeer = useCallback(async (peerId: string) => {
+    // تنظيف أي اتصال سابق
+    cleanupPeer(peerId);
+
+    const isInitiator = playerId < peerId;
+    const pc = new RTCPeerConnection(peerConfig);
+    pcsRef.current[peerId] = pc;
+    remoteDescSetRef.current[peerId] = false;
+
+    // أضف transceiver للصوت
+    const transceiver = pc.addTransceiver("audio", { direction: "sendrecv" });
+    if (localStreamRef.current) {
+      const track = localStreamRef.current.getAudioTracks()[0];
+      if (track) {
+        transceiver.sender.replaceTrack(track).catch(console.error);
+      }
+    }
+
+    pc.ontrack = (event) => {
+      if (event.track.kind === "audio") {
+        handleTrack(peerId, event.track);
+      }
+    };
+
+    // مراقبة حالة الاتصال لإعادة المحاولة عند الفشل
+    pc.oniceconnectionstatechange = () => {
+      const state = pc.iceConnectionState;
+      console.log(`[Voice] ICE state with ${peerId}: ${state}`);
+      if (state === "failed") {
+        console.warn(`[Voice] Connection failed with ${peerId}, restarting...`);
+        // أعد المحاولة
+        pc.restartIce();
+      }
+      if (state === "disconnected") {
+        // انتظر قليلاً ثم تحقق إذا لم يُعاد الاتصال
+        setTimeout(() => {
+          if (pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed") {
+            console.warn(`[Voice] Peer ${peerId} still disconnected, reconnecting...`);
+            connectToPeer(peerId).catch(console.error);
+          }
+        }, 5000);
+      }
+    };
+
+    // مسار الإشارات في Firebase
+    const signalingBase = isInitiator
+      ? `clashRooms/${roomId}/voiceSignals/${playerId}_to_${peerId}`
+      : `clashRooms/${roomId}/voiceSignals/${peerId}_to_${playerId}`;
+
+    // تنظيف بيانات signaling القديمة قبل البدء
+    if (isInitiator) {
+      await remove(ref(database, signalingBase)).catch(() => {});
+    }
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        const candPath = isInitiator
+          ? `${signalingBase}/callerCandidates`
+          : `${signalingBase}/receiverCandidates`;
+        const listRef = ref(database, candPath);
+        const newRef = push(listRef);
+        set(newRef, event.candidate.toJSON());
+      }
+    };
+
+    if (isInitiator) {
+      // المبادر بالاتصال
+      try {
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        await set(ref(database, `${signalingBase}/offer`), { sdp: offer.sdp, type: offer.type });
+
+        // استمع للرد
+        addDbListener(peerId, `${signalingBase}/answer`, (snapshot: any) => {
+          if (!snapshot.exists()) return;
+          if (pc.signalingState !== "have-local-offer") return;
+
+          const answer = snapshot.val();
+          pc.setRemoteDescription(new RTCSessionDescription(answer))
+            .then(() => {
+              remoteDescSetRef.current[peerId] = true;
+              flushPendingCandidates(peerId);
+            })
+            .catch(console.error);
+        });
+
+        // استمع لمرشحي المستقبِل
+        const addedCands = new Set<string>();
+        addDbListener(peerId, `${signalingBase}/receiverCandidates`, (snapshot: any) => {
+          if (!snapshot.exists()) return;
+          const data = snapshot.val();
+          if (!data) return;
+          Object.values(data).forEach((val: any) => {
+            const str = JSON.stringify(val);
+            if (!addedCands.has(str)) {
+              addedCands.add(str);
+              safeAddIceCandidate(peerId, val);
+            }
+          });
+        });
+      } catch (err) {
+        console.error("Error initiating connection to", peerId, err);
+      }
+    } else {
+      // المستقبِل
+      addDbListener(peerId, `${signalingBase}/offer`, async (snapshot: any) => {
+        if (!snapshot.exists()) return;
+        // قبول العرض حتى لو لم يكن stable (إعادة negotiation)
+        if (pc.signalingState !== "stable" && pc.signalingState !== "have-local-offer") return;
+
+        const offer = snapshot.val();
+        try {
+          await pc.setRemoteDescription(new RTCSessionDescription(offer));
+          remoteDescSetRef.current[peerId] = true;
+          flushPendingCandidates(peerId);
+
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          await set(ref(database, `${signalingBase}/answer`), { sdp: answer.sdp, type: answer.type });
+        } catch (err) {
+          console.error("Error answering WebRTC call:", err);
+        }
+      });
+
+      // استمع لمرشحي المبادر
+      const addedCands = new Set<string>();
+      addDbListener(peerId, `${signalingBase}/callerCandidates`, (snapshot: any) => {
+        if (!snapshot.exists()) return;
+        const data = snapshot.val();
+        if (!data) return;
+        Object.values(data).forEach((val: any) => {
+          const str = JSON.stringify(val);
+          if (!addedCands.has(str)) {
+            addedCands.add(str);
+            safeAddIceCandidate(peerId, val);
+          }
+        });
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playerId, roomId, database, handleTrack, cleanupPeer, safeAddIceCandidate, flushPendingCandidates]);
+
   // بناء وكسر الـ peer connections مع اللاعبين الآخرين
-  // يعمل بمجرد تفعيل voiceActive حتى بدون مايك (للاستماع فقط)
   useEffect(() => {
     if (!voiceActive || !players) return;
 
-    const alivePeers = Object.keys(players).filter(
-      (pid) => pid !== playerId && !players[pid].isZombie
-    );
+    const alivePeers = Object.keys(players)
+      .filter((pid) => pid !== playerId && !players[pid].isZombie)
+      .sort();
 
-    // 1. تنظيف الاتصالات المنقطعة
+    const peerIdsStr = alivePeers.join(",");
+
+    // تجنب إعادة التنفيذ إذا لم تتغير قائمة اللاعبين
+    if (peerIdsStr === prevPeerIdsRef.current) return;
+    prevPeerIdsRef.current = peerIdsStr;
+
+    // 1. تنظيف الاتصالات مع لاعبين رحلوا
     Object.keys(pcsRef.current).forEach((peerId) => {
       if (!alivePeers.includes(peerId)) {
-        pcsRef.current[peerId].close();
-        delete pcsRef.current[peerId];
-        clearDbListeners(peerId);
-        const el = document.getElementById(`audio-peer-${peerId}`);
-        if (el) el.remove();
+        cleanupPeer(peerId);
       }
     });
 
     // 2. إنشاء اتصالات مع اللاعبين الجدد
-    alivePeers.forEach(async (peerId) => {
+    alivePeers.forEach((peerId) => {
       if (pcsRef.current[peerId]) return; // الاتصال موجود بالفعل
-
-      const isInitiator = playerId < peerId;
-      const pc = new RTCPeerConnection(peerConfig);
-      pcsRef.current[peerId] = pc;
-
-      // أضف transceiver للصوت
-      // sendrecv: إذا كان هناك مسار صوت محلي (المايك مفعّل)
-      // sendrecv أيضاً في وضع الاستماع فقط لأن الطرف الآخر يحتاج لـ sendrecv لإرسال صوته
-      const transceiver = pc.addTransceiver("audio", { direction: "sendrecv" });
-      if (localStreamRef.current) {
-        const track = localStreamRef.current.getAudioTracks()[0];
-        if (track) {
-          transceiver.sender.replaceTrack(track).catch(console.error);
-        }
-      }
-      // إذا لم يكن هناك مسار محلي، نترك الـ sender بدون track (null)
-      // هذا يسمح لنا بالاستقبال بينما لا نرسل شيئاً
-
-      pc.ontrack = (event) => {
-        if (event.track.kind === "audio") {
-          handleTrack(peerId, event.track);
-        }
-      };
-
-      const signalingPath = isInitiator
-        ? `clashRooms/${roomId}/voiceSignals/${playerId}_to_${peerId}`
-        : `clashRooms/${roomId}/voiceSignals/${peerId}_to_${playerId}`;
-
-      pc.onicecandidate = (event) => {
-        if (event.candidate) {
-          const candPath = isInitiator
-            ? `${signalingPath}/callerCandidates`
-            : `${signalingPath}/receiverCandidates`;
-          const listRef = ref(database, candPath);
-          const newRef = push(listRef);
-          set(newRef, event.candidate.toJSON());
-        }
-      };
-
-      if (isInitiator) {
-        // المبادر بالاتصال
-        try {
-          const offer = await pc.createOffer();
-          await pc.setLocalDescription(offer);
-          await set(ref(database, `${signalingPath}/offer`), { sdp: offer.sdp, type: offer.type });
-
-          // استمع للرد
-          addDbListener(peerId, `${signalingPath}/answer`, (snapshot) => {
-            if (snapshot.exists() && pc.signalingState === "have-local-offer") {
-              const answer = snapshot.val();
-              pc.setRemoteDescription(new RTCSessionDescription(answer)).catch(console.error);
-            }
-          });
-
-          // استمع لمرشحي المستقبِل
-          const addedCands = new Set<string>();
-          addDbListener(peerId, `${signalingPath}/receiverCandidates`, (snapshot) => {
-            if (snapshot.exists()) {
-              const data = snapshot.val();
-              if (data) {
-                Object.values(data).forEach((val: any) => {
-                  const str = JSON.stringify(val);
-                  if (!addedCands.has(str)) {
-                    addedCands.add(str);
-                    pc.addIceCandidate(new RTCIceCandidate(val)).catch(console.error);
-                  }
-                });
-              }
-            }
-          });
-        } catch (err) {
-          console.error("Error initiating connection to", peerId, err);
-        }
-      } else {
-        // المستقبِل
-        addDbListener(peerId, `${signalingPath}/offer`, async (snapshot) => {
-          if (snapshot.exists() && pc.signalingState === "stable") {
-            const offer = snapshot.val();
-            try {
-              await pc.setRemoteDescription(new RTCSessionDescription(offer));
-              const answer = await pc.createAnswer();
-              await pc.setLocalDescription(answer);
-              await set(ref(database, `${signalingPath}/answer`), { sdp: answer.sdp, type: answer.type });
-            } catch (err) {
-              console.error("Error answering WebRTC call:", err);
-            }
-          }
-        });
-
-        // استمع لمرشحي المبادر
-        const addedCands = new Set<string>();
-        addDbListener(peerId, `${signalingPath}/callerCandidates`, (snapshot) => {
-          if (snapshot.exists()) {
-            const data = snapshot.val();
-            if (data) {
-              Object.values(data).forEach((val: any) => {
-                const str = JSON.stringify(val);
-                if (!addedCands.has(str)) {
-                  addedCands.add(str);
-                  pc.addIceCandidate(new RTCIceCandidate(val)).catch(console.error);
-                }
-              });
-            }
-          }
-        });
-      }
+      connectToPeer(peerId).catch(console.error);
     });
-  }, [voiceActive, players, roomId, playerId, database, handleTrack]);
+  }, [voiceActive, players, roomId, playerId, cleanupPeer, connectToPeer]);
 
   // تنظيف عند إلغاء التحميل أو مغادرة الجلسة
   useEffect(() => {
@@ -362,7 +462,10 @@ export function useClashVoice(
         if (el) el.remove();
       });
       pcsRef.current = {};
+      pendingCandidatesRef.current = {};
+      remoteDescSetRef.current = {};
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {
