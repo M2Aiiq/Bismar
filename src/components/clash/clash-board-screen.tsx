@@ -1050,7 +1050,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]"
                   : "bg-slate-800";
 
-              const activeAnim = activeAnimations[o.id];
+              const activeAnim = activeAnimations[`${playerId}:${o.id}`];
               const animClass = activeAnim === "damage" || activeAnim === "death"
                 ? "clash-animate-shake clash-animate-flash-red"
                 : activeAnim === "heal"
