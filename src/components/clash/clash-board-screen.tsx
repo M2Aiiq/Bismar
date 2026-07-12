@@ -14,6 +14,11 @@ import {
   playDeathSound,
   playTurnSound,
   playWinSound,
+  playCardSelectSound,
+  playCardSwooshSound,
+  playTickSound,
+  playErrorSound,
+  playJoinSound,
 } from "../../lib/clash-sound";
 
 function MiniOrganBadge({
@@ -340,6 +345,26 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [localTimer, setLocalTimer] = useState(30);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (message: string, isError = true) => {
+    setToastMessage(message);
+    if (isError) {
+      playErrorSound();
+    } else {
+      playCardSelectSound();
+    }
+  };
+
+  const prevPlayersCountRef = useRef<number>(0);
+  useEffect(() => {
+    if (!room) return;
+    const currentCount = Object.keys(room.players).length;
+    if (currentCount > prevPlayersCountRef.current && prevPlayersCountRef.current > 0) {
+      playJoinSound();
+    }
+    prevPlayersCountRef.current = currentCount;
+  }, [room]);
+
   const [selectedHandCardId, setSelectedHandCardId] = useState<string | null>(null);
   const [selectedTargetPlayerId, setSelectedTargetPlayerId] = useState<string | null>(null);
   const [selectedLobbyPlayerId, setSelectedLobbyPlayerId] = useState<string | null>(null);
@@ -696,21 +721,22 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
 
   const handleCardClick = (card: ActionCard) => {
     if (room.isPaused) {
-      setToastMessage("اللعبة متوقفة مؤقتاً!");
+      showToast("اللعبة متوقفة مؤقتاً!");
       return;
     }
     if (!isMyTurn) {
-      setToastMessage("ليس دورك!");
+      showToast("ليس دورك!");
       return;
     }
     if (room.turnPhase !== "play" || room.pendingAction) return;
 
     if (selectedHandCardId === card.id) {
       setSelectedHandCardId(null);
+      playCardSwooshSound();
 
       // منع لعب كروت المقاطعة (أجسام مضادة وعدوى متحورة) في الدور العادي
       if (card.type === "instant") {
-        setToastMessage("كروت المقاطعة تلعب فقط في نافذة التنبيه الحرج!");
+        showToast("كروت المقاطعة تلعب فقط في نافذة التنبيه الحرج!");
         return;
       }
 
@@ -735,7 +761,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
           if (targetOrgan) {
             void playActionCard(card.id, targetOpp.id, card.targetOrganId);
           } else {
-            setToastMessage("العضو المستهدف غير متوفر أو مدمر لدى الخصم!");
+            showToast("العضو المستهدف غير متوفر أو مدمر لدى الخصم!");
           }
           return;
         }
@@ -751,6 +777,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
       }
     } else {
       setSelectedHandCardId(card.id);
+      playCardSelectSound();
     }
   };
 
@@ -885,7 +912,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   type="button"
                   onClick={() => {
                     navigator.clipboard.writeText(room.roomId);
-                    setToastMessage("تم نسخ رمز الغرفة بنجاح!");
+                    showToast("تم نسخ رمز الغرفة بنجاح!", false);
                   }}
                   className="flex-1 rounded-xl border border-white/5 bg-slate-800 py-2 text-xs font-bold text-slate-300 transition hover:bg-slate-700 cursor-pointer"
                 >
@@ -896,7 +923,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   onClick={() => {
                     const joinUrl = `${window.location.origin}/clash/${room.roomId}`;
                     navigator.clipboard.writeText(joinUrl);
-                    setToastMessage("تم نسخ رابط الغرفة بنجاح!");
+                    showToast("تم نسخ رابط الغرفة بنجاح!", false);
                   }}
                   className="flex-1 rounded-xl border border-white/5 bg-slate-800 py-2 text-xs font-bold text-slate-300 transition hover:bg-slate-700 cursor-pointer"
                 >
@@ -1119,19 +1146,20 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                   onClick={async (e) => {
                     e.stopPropagation();
                     if (room.isPaused) {
-                      setToastMessage("اللعبة متوقفة مؤقتاً!");
+                      showToast("اللعبة متوقفة مؤقتاً!");
                       return;
                     }
                     if (!isMyTurn) {
-                      setToastMessage("ليس دورك!");
+                      showToast("ليس دورك!");
                       return;
                     }
                     if (room.hasReplacedCardThisTurn) {
-                      setToastMessage("لقد استبدلت كارتاً بالفعل هذا الدور!");
+                      showToast("لقد استبدلت كارتاً بالفعل هذا الدور!");
                       return;
                     }
+                    playCardSwooshSound();
                     await drawAndReplaceCard();
-                    setToastMessage("تم استبدال كارت عشوائي!");
+                    showToast("تم استبدال كارت عشوائي!", false);
                   }}
                   disabled={room.hasReplacedCardThisTurn || !!room.isPaused}
                   className="px-3 py-1 bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 text-amber-400 font-bold rounded-xl text-[9px] cursor-pointer transition disabled:opacity-30 disabled:cursor-not-allowed"
@@ -1144,7 +1172,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                     onClick={(e) => {
                       e.stopPropagation();
                       if (room.isPaused) {
-                        setToastMessage("اللعبة متوقفة مؤقتاً!");
+                        showToast("اللعبة متوقفة مؤقتاً!");
                         return;
                       }
                       void endClashTurn(false);
@@ -1314,7 +1342,11 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                 <motion.div
                   key={card.id}
                   layoutId={`card-${card.id}`}
-                  whileHover={{ y: -6, scale: 1.02 }}
+                  initial={{ opacity: 0, y: 60, scale: 0.8, rotate: -3 }}
+                  animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
+                  exit={{ opacity: 0, y: 30, scale: 0.8 }}
+                  transition={{ type: "spring", stiffness: 280, damping: 22 }}
+                  whileHover={{ y: -10, scale: 1.04, zIndex: 10 }}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleCardClick(card);
@@ -2002,7 +2034,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                     await setClashHost(selectedLobbyPlayerId);
                     setLobbyActionOpen(false);
                     setSelectedLobbyPlayerId(null);
-                    setToastMessage("تم نقل صلاحيات المضيف بنجاح!");
+                    showToast("تم نقل صلاحيات المضيف بنجاح!", false);
                   }}
                   className="w-full rounded-2xl bg-amber-600 py-3 text-xs font-black text-white hover:bg-amber-500 transition active:scale-95 cursor-pointer"
                 >
@@ -2014,7 +2046,7 @@ export function ClashBoardScreen({ roomId }: ClashBoardScreenProps) {
                     await kickClashPlayer(selectedLobbyPlayerId);
                     setLobbyActionOpen(false);
                     setSelectedLobbyPlayerId(null);
-                    setToastMessage("تم طرد اللاعب من الغرفة.");
+                    showToast("تم طرد اللاعب من الغرفة.");
                   }}
                   className="w-full rounded-2xl bg-rose-600 py-3 text-xs font-black text-white hover:bg-rose-500 transition active:scale-95 cursor-pointer"
                 >
