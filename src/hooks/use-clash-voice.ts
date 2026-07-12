@@ -209,11 +209,10 @@ export function useClashVoice(
 
         // أزل المسارات من جميع الـ peer connections
         Object.values(pcsRef.current).forEach((pc) => {
-          pc.getSenders().forEach((sender) => {
-            if (sender.track?.kind === "audio" || sender.track === null) {
-              sender.replaceTrack(null).catch(console.error);
-            }
-          });
+          const transceiver = pc.getTransceivers().find(t => t.receiver.track.kind === "audio");
+          if (transceiver) {
+            transceiver.sender.replaceTrack(null).catch(console.error);
+          }
         });
 
         setIsMuted(true);
@@ -230,12 +229,11 @@ export function useClashVoice(
 
         // أضف المسار لجميع الـ peer connections الموجودة
         Object.entries(pcsRef.current).forEach(([, pc]) => {
-          const senders = pc.getSenders();
-          const audioSender = senders.find((s) => s.track?.kind === "audio" || s.track === null);
-          if (audioSender) {
-            audioSender.replaceTrack(newTrack).catch(console.error);
+          const transceiver = pc.getTransceivers().find(t => t.receiver.track.kind === "audio");
+          if (transceiver) {
+            transceiver.sender.replaceTrack(newTrack).catch(console.error);
           } else {
-            // لا يوجد sender صوتي، أضف track جديد
+            // لا يوجد transceiver صوتي، أضف track جديد
             pc.addTrack(newTrack, stream);
           }
         });
@@ -299,6 +297,14 @@ export function useClashVoice(
     pc.ontrack = (event) => {
       if (event.track.kind === "audio") {
         handleTrack(peerId, event.track);
+        
+        event.track.onunmute = () => {
+          console.log(`[Voice] Remote track from ${peerId} onunmuted, playing audio...`);
+          const el = document.getElementById(`audio-peer-${peerId}`) as HTMLAudioElement;
+          if (el) {
+            el.play().catch(console.error);
+          }
+        };
       }
     };
 
@@ -447,6 +453,23 @@ export function useClashVoice(
       connectToPeer(peerId).catch(console.error);
     });
   }, [voiceActive, players, roomId, playerId, cleanupPeer, connectToPeer]);
+
+  // مراقبة تغيير حالة كتم الميكروفون للاعبين الآخرين لإعادة تفعيل الصوت فور إلغاء الكتم
+  useEffect(() => {
+    if (!players) return;
+    Object.entries(players).forEach(([pid, player]) => {
+      if (pid === playerId) return;
+      const el = document.getElementById(`audio-peer-${pid}`) as HTMLAudioElement;
+      if (el) {
+        if (!player.isMuted && !isDeafened) {
+          el.muted = false;
+          el.play().catch((err) => {
+            console.warn(`[Voice] Failed to force play audio for peer ${pid}:`, err);
+          });
+        }
+      }
+    });
+  }, [players, isDeafened, playerId]);
 
   // تنظيف عند إلغاء التحميل أو مغادرة الجلسة
   useEffect(() => {
