@@ -166,24 +166,39 @@ export function useClashVoice(
     isDeafenedRef.current = saved.isDeafened;
     setVoiceActive(true);
 
-    if (!saved.isMuted) {
-      // المايك كان مفتوحاً - أعد فتحه
-      navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-        localStreamRef.current = stream;
-        setIsMuted(false);
-      }).catch(() => {
-        setIsMuted(true);
-      });
-    } else {
+    // حاول دائماً الحصول على الـ stream إذا كان الصوت مفعلاً، لنحصل على الـ track ونعطله ككتم
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      localStreamRef.current = stream;
+      const track = stream.getAudioTracks()[0];
+      if (track) {
+        track.enabled = !saved.isMuted;
+      }
+      setIsMuted(saved.isMuted);
+    }).catch((err) => {
+      console.warn("Could not get media stream on restore, entering listen-only:", err);
       setIsMuted(true);
-    }
+    });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // تفعيل نظام الصوت للاستماع فقط (بدون فتح المايك)
+  // تفعيل نظام الصوت والمايك مع طلب الإذن وتجهيزه صامتاً افتراضياً
   const initVoice = useCallback(async () => {
     try {
       setError(null);
+      
+      // طلب إذن المايك فور تفعيل الصوت ليكون الـ track جاهزاً للمفاوضة
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        localStreamRef.current = stream;
+        // صامت افتراضياً عند البدء
+        const track = stream.getAudioTracks()[0];
+        if (track) {
+          track.enabled = false;
+        }
+      } catch (e) {
+        console.warn("Microphone access denied or unavailable, entering listen-only mode.", e);
+      }
+
       setIsMuted(true);
       setVoiceActive(true);
 
@@ -199,22 +214,13 @@ export function useClashVoice(
     const nextMuted = !isMuted;
     try {
       if (nextMuted) {
-        // كتم: أوقف مسارات المايك المحلية
+        // كتم: عطل مسار المايكروفون المحلي دون إغلاق الجهاز
         if (localStreamRef.current) {
-          localStreamRef.current.getTracks().forEach((track) => {
-            track.stop();
-          });
-          localStreamRef.current = null;
-        }
-
-        // أزل المسارات من جميع الـ peer connections
-        Object.values(pcsRef.current).forEach((pc) => {
-          const transceiver = pc.getTransceivers().find(t => t.receiver.track.kind === "audio");
-          if (transceiver) {
-            transceiver.sender.replaceTrack(null).catch(console.error);
+          const track = localStreamRef.current.getAudioTracks()[0];
+          if (track) {
+            track.enabled = false;
           }
-        });
-
+        }
         setIsMuted(true);
       } else {
         // إذا لم يكن الصوت مفعلاً، فعّله أولاً
@@ -222,21 +228,37 @@ export function useClashVoice(
           setVoiceActive(true);
         }
 
-        // فتح المايك: احصل على stream جديد
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        localStreamRef.current = stream;
-        const newTrack = stream.getAudioTracks()[0];
+        let newTrack: MediaStreamTrack | null = null;
 
-        // أضف المسار لجميع الـ peer connections الموجودة
-        Object.entries(pcsRef.current).forEach(([, pc]) => {
-          const transceiver = pc.getTransceivers().find(t => t.receiver.track.kind === "audio");
-          if (transceiver) {
-            transceiver.sender.replaceTrack(newTrack).catch(console.error);
-          } else {
-            // لا يوجد transceiver صوتي، أضف track جديد
-            pc.addTrack(newTrack, stream);
+        if (localStreamRef.current) {
+          // المايكروفون جاهز مسبقاً، فقط أعد تفعيله
+          newTrack = localStreamRef.current.getAudioTracks()[0];
+          if (newTrack) {
+            newTrack.enabled = true;
           }
-        });
+        } else {
+          // لم نكن نملك إذن المايكروفون سابقاً، فلنطلبه الآن
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          localStreamRef.current = stream;
+          newTrack = stream.getAudioTracks()[0];
+          newTrack.enabled = true;
+        }
+
+        if (newTrack) {
+          // أضف أو استبدل المسار لجميع الـ peer connections الموجودة
+          const trackToSet = newTrack;
+          Object.entries(pcsRef.current).forEach(([, pc]) => {
+            const transceiver = pc.getTransceivers().find(t => t.receiver.track.kind === "audio");
+            if (transceiver) {
+              transceiver.sender.replaceTrack(trackToSet).catch(console.error);
+            } else {
+              // لا يوجد transceiver صوتي، أضف track جديد
+              if (localStreamRef.current) {
+                pc.addTrack(trackToSet, localStreamRef.current);
+              }
+            }
+          });
+        }
 
         setIsMuted(false);
       }
