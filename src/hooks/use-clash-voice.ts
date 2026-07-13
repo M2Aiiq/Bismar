@@ -166,39 +166,24 @@ export function useClashVoice(
     isDeafenedRef.current = saved.isDeafened;
     setVoiceActive(true);
 
-    // حاول دائماً الحصول على الـ stream إذا كان الصوت مفعلاً، لنحصل على الـ track ونعطله ككتم
-    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-      localStreamRef.current = stream;
-      const track = stream.getAudioTracks()[0];
-      if (track) {
-        track.enabled = !saved.isMuted;
-      }
-      setIsMuted(saved.isMuted);
-    }).catch((err) => {
-      console.warn("Could not get media stream on restore, entering listen-only:", err);
+    if (!saved.isMuted) {
+      // المايك كان مفتوحاً - أعد فتحه
+      navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+        localStreamRef.current = stream;
+        setIsMuted(false);
+      }).catch(() => {
+        setIsMuted(true);
+      });
+    } else {
       setIsMuted(true);
-    });
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // تفعيل نظام الصوت والمايك مع طلب الإذن وتجهيزه صامتاً افتراضياً
+  // تفعيل نظام الصوت للاستماع فقط (بدون فتح المايك)
   const initVoice = useCallback(async () => {
     try {
       setError(null);
-      
-      // طلب إذن المايك فور تفعيل الصوت ليكون الـ track جاهزاً للمفاوضة
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        localStreamRef.current = stream;
-        // صامت افتراضياً عند البدء
-        const track = stream.getAudioTracks()[0];
-        if (track) {
-          track.enabled = false;
-        }
-      } catch (e) {
-        console.warn("Microphone access denied or unavailable, entering listen-only mode.", e);
-      }
-
       setIsMuted(true);
       setVoiceActive(true);
 
@@ -214,13 +199,23 @@ export function useClashVoice(
     const nextMuted = !isMuted;
     try {
       if (nextMuted) {
-        // كتم: عطل مسار المايكروفون المحلي دون إغلاق الجهاز
+        // كتم: أوقف مسارات المايك المحلية
         if (localStreamRef.current) {
-          const track = localStreamRef.current.getAudioTracks()[0];
-          if (track) {
-            track.enabled = false;
-          }
+          localStreamRef.current.getTracks().forEach((track) => {
+            track.stop();
+          });
+          localStreamRef.current = null;
         }
+
+        // أزل المسارات من جميع الـ peer connections
+        Object.values(pcsRef.current).forEach((pc) => {
+          pc.getSenders().forEach((sender) => {
+            if (sender.track?.kind === "audio" || sender.track === null) {
+              sender.replaceTrack(null).catch(console.error);
+            }
+          });
+        });
+
         setIsMuted(true);
       } else {
         // إذا لم يكن الصوت مفعلاً، فعّله أولاً
@@ -228,37 +223,22 @@ export function useClashVoice(
           setVoiceActive(true);
         }
 
-        let newTrack: MediaStreamTrack | null = null;
+        // فتح المايك: احصل على stream جديد
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        localStreamRef.current = stream;
+        const newTrack = stream.getAudioTracks()[0];
 
-        if (localStreamRef.current) {
-          // المايكروفون جاهز مسبقاً، فقط أعد تفعيله
-          newTrack = localStreamRef.current.getAudioTracks()[0];
-          if (newTrack) {
-            newTrack.enabled = true;
+        // أضف المسار لجميع الـ peer connections الموجودة
+        Object.entries(pcsRef.current).forEach(([, pc]) => {
+          const senders = pc.getSenders();
+          const audioSender = senders.find((s) => s.track?.kind === "audio" || s.track === null);
+          if (audioSender) {
+            audioSender.replaceTrack(newTrack).catch(console.error);
+          } else {
+            // لا يوجد sender صوتي، أضف track جديد
+            pc.addTrack(newTrack, stream);
           }
-        } else {
-          // لم نكن نملك إذن المايكروفون سابقاً، فلنطلبه الآن
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          localStreamRef.current = stream;
-          newTrack = stream.getAudioTracks()[0];
-          newTrack.enabled = true;
-        }
-
-        if (newTrack) {
-          // أضف أو استبدل المسار لجميع الـ peer connections الموجودة
-          const trackToSet = newTrack;
-          Object.entries(pcsRef.current).forEach(([, pc]) => {
-            const transceiver = pc.getTransceivers().find(t => t.receiver.track.kind === "audio");
-            if (transceiver) {
-              transceiver.sender.replaceTrack(trackToSet).catch(console.error);
-            } else {
-              // لا يوجد transceiver صوتي، أضف track جديد
-              if (localStreamRef.current) {
-                pc.addTrack(trackToSet, localStreamRef.current);
-              }
-            }
-          });
-        }
+        });
 
         setIsMuted(false);
       }
@@ -319,14 +299,6 @@ export function useClashVoice(
     pc.ontrack = (event) => {
       if (event.track.kind === "audio") {
         handleTrack(peerId, event.track);
-        
-        event.track.onunmute = () => {
-          console.log(`[Voice] Remote track from ${peerId} onunmuted, playing audio...`);
-          const el = document.getElementById(`audio-peer-${peerId}`) as HTMLAudioElement;
-          if (el) {
-            el.play().catch(console.error);
-          }
-        };
       }
     };
 
@@ -475,23 +447,6 @@ export function useClashVoice(
       connectToPeer(peerId).catch(console.error);
     });
   }, [voiceActive, players, roomId, playerId, cleanupPeer, connectToPeer]);
-
-  // مراقبة تغيير حالة كتم الميكروفون للاعبين الآخرين لإعادة تفعيل الصوت فور إلغاء الكتم
-  useEffect(() => {
-    if (!players) return;
-    Object.entries(players).forEach(([pid, player]) => {
-      if (pid === playerId) return;
-      const el = document.getElementById(`audio-peer-${pid}`) as HTMLAudioElement;
-      if (el) {
-        if (!player.isMuted && !isDeafened) {
-          el.muted = false;
-          el.play().catch((err) => {
-            console.warn(`[Voice] Failed to force play audio for peer ${pid}:`, err);
-          });
-        }
-      }
-    });
-  }, [players, isDeafened, playerId]);
 
   // تنظيف عند إلغاء التحميل أو مغادرة الجلسة
   useEffect(() => {
