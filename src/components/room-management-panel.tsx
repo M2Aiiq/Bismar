@@ -99,23 +99,25 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
   const canApplyDraft = player.isHost && !isBusy && draftSettings !== null;
   const shouldShowHostControls = player.isHost;
 
-  const handleApplyAndStart = () => {
+  const handleApplyAndStart = async () => {
     if (!draftSettings) {
       return;
     }
 
-    void launchGameWithSettings({
-      teamCount: draftSettings.teamCount,
-      wordCategory: draftSettings.wordCategory,
-      roundTimerSeconds: Number(draftSettings.roundTimerSeconds),
-      lossCardCount: draftSettings.lossCardCount,
-      extraRows: draftSettings.extraRows,
-      difficulty: draftSettings.difficulty,
-    }).then(() => {
+    try {
+      await launchGameWithSettings({
+        teamCount: draftSettings.teamCount,
+        wordCategory: draftSettings.wordCategory,
+        roundTimerSeconds: Number(draftSettings.roundTimerSeconds),
+        lossCardCount: draftSettings.lossCardCount,
+        extraRows: draftSettings.extraRows,
+        difficulty: draftSettings.difficulty,
+      });
+
       if (mode === "modal") {
         onClose?.();
       }
-    });
+    } catch {}
   };
 
   const handleNameSave = async () => {

@@ -89,5 +89,7 @@ export const IRAQI_WORDS_BY_CATEGORY: Record<WordCategory, string[]> = {
 };
 
 export function getWordsByCategory(category: WordCategory) {
-  return IRAQI_WORDS_BY_CATEGORY[category];
+  return IRAQI_WORDS_BY_CATEGORY[category]
+    .map((word) => word.trim())
+    .filter((word) => word.length > 0 && word.length <= 20);
 }
