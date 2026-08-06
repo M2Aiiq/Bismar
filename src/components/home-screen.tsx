@@ -51,6 +51,7 @@ export function HomeScreen() {
     createRoom,
     joinRoom,
     leaveRoom,
+    roomId: activeRoomId,
     playerName,
     isBusy,
     firebaseReady,
@@ -61,10 +62,11 @@ export function HomeScreen() {
     clearLeftRoomCode,
   } = useGameRoom();
   const inviteRoomCode = normalizeRoomCode(searchParams.get("room"));
+  const targetRoomCode = inviteRoomCode || activeRoomId;
   const autoJoinAttemptRef = useRef<string | null>(null);
   const hasLeftRoomRef = useRef(false);
   const joinInputRef = useRef<HTMLInputElement | null>(null);
-  const [roomCode, setRoomCode] = useState(inviteRoomCode);
+  const [roomCode, setRoomCode] = useState(targetRoomCode);
   const [draftName, setDraftName] = useState(playerName);
   const [isNameDialogOpen, setIsNameDialogOpen] = useState(!playerName);
   const [isJoinExpanded, setIsJoinExpanded] = useState(false);
@@ -118,11 +120,11 @@ export function HomeScreen() {
   }
 
   useEffect(() => {
-    if (!inviteRoomCode || !playerName || !firebaseReady || isNameDialogOpen) {
+    if (!targetRoomCode || !playerName || !firebaseReady || isNameDialogOpen) {
       return;
     }
 
-    if (leftRoomCode === inviteRoomCode) {
+    if (leftRoomCode === targetRoomCode) {
       // تنظيف الرابط عبر راوتر Next.js لتحديث حالة searchParams بشكل تفاعلي
       router.replace(window.location.pathname);
       return;
@@ -132,22 +134,22 @@ export function HomeScreen() {
       return;
     }
 
-    if (autoJoinAttemptRef.current === inviteRoomCode) {
+    if (autoJoinAttemptRef.current === targetRoomCode) {
       return;
     }
 
-    autoJoinAttemptRef.current = inviteRoomCode;
-    void joinRoom(inviteRoomCode, playerName).catch(() => {
+    autoJoinAttemptRef.current = targetRoomCode;
+    void joinRoom(targetRoomCode, playerName).catch(() => {
       autoJoinAttemptRef.current = null;
     });
-  }, [firebaseReady, inviteRoomCode, isNameDialogOpen, joinRoom, playerName, leftRoomCode, router]);
+  }, [firebaseReady, targetRoomCode, isNameDialogOpen, joinRoom, playerName, leftRoomCode, router]);
 
   // في حال خلو العنوان من معامل الغرفة، نقوم بتصفير كود الغرفة المغادَرة لتمكين الدخول إليها مجدداً عند الطلب
   useEffect(() => {
-    if (!inviteRoomCode && leftRoomCode) {
+    if (!targetRoomCode && leftRoomCode) {
       clearLeftRoomCode();
     }
-  }, [inviteRoomCode, leftRoomCode, clearLeftRoomCode]);
+  }, [targetRoomCode, leftRoomCode, clearLeftRoomCode]);
 
   useEffect(() => {
     if (!isJoinExpanded) {
