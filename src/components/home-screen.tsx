@@ -120,14 +120,6 @@ export function HomeScreen() {
   }
 
   useEffect(() => {
-    if (!targetRoomCode) {
-      return;
-    }
-
-    setRoomCode(targetRoomCode);
-  }, [targetRoomCode]);
-
-  useEffect(() => {
     if (!targetRoomCode || !playerName || !firebaseReady || isNameDialogOpen) {
       return;
     }
