@@ -421,6 +421,7 @@ export function GameRoomProvider({ children, initialRoomId }: { children: ReactN
   const [error, setError] = useState<string | null>(null);
   const [playerStats, setPlayerStats] = useState<{ played: number; won: number; lost: number } | null>(null);
   const isLeavingRef = useRef(false);
+  const wasInRoomRef = useRef(false);
   const [leftRoomCode, setLeftRoomCode] = useState<string | null>(null);
   const clearLeftRoomCode = useCallback(() => setLeftRoomCode(null), []);
 
@@ -541,6 +542,7 @@ export function GameRoomProvider({ children, initialRoomId }: { children: ReactN
       roomRef,
       (snapshot) => {
         if (!snapshot.exists()) {
+          wasInRoomRef.current = false;
           setLeftRoomCode(roomId);
           setRoom(null);
           setRoomId("");
@@ -554,6 +556,7 @@ export function GameRoomProvider({ children, initialRoomId }: { children: ReactN
         const nextRoom = normalizeRoom(snapshot.val());
 
         if (!nextRoom) {
+          wasInRoomRef.current = false;
           setLeftRoomCode(roomId);
           setRoom(null);
           setRoomId("");
@@ -565,21 +568,20 @@ export function GameRoomProvider({ children, initialRoomId }: { children: ReactN
         const isPlayerInRoom = nextRoom.players.some((currentPlayer) => currentPlayer.id === playerId);
 
         if (!isPlayerInRoom) {
-          const wasPlayerInRoom = room?.players.some((currentPlayer) => currentPlayer.id === playerId) ?? false;
-
-          setRoom(null);
-
-          if (wasPlayerInRoom) {
+          if (wasInRoomRef.current && !isLeavingRef.current) {
+            wasInRoomRef.current = false;
             setLeftRoomCode(roomId);
+            setRoom(null);
             setRoomId("");
             saveSessionRoom(null, playerId, playerName);
-            if (!isLeavingRef.current) {
-              setError("تم إخراجك من الغرفة.");
-            }
+            setError("تم إخراجك من الغرفة.");
+            return;
           }
+          setRoom(nextRoom);
           return;
         }
 
+        wasInRoomRef.current = true;
         setRoom(nextRoom);
       },
       () => {
@@ -589,6 +591,10 @@ export function GameRoomProvider({ children, initialRoomId }: { children: ReactN
       },
     );
   }, [isReady, playerId, playerName, room, roomId]);
+
+  const player = useMemo(() => {
+    return room?.players.find((currentPlayer) => currentPlayer.id === playerId) ?? null;
+  }, [playerId, room]);
 
   useEffect(() => {
     if (!isReady || !roomId || !playerId || !isFirebaseConfigured) {
@@ -621,10 +627,6 @@ export function GameRoomProvider({ children, initialRoomId }: { children: ReactN
       void set(presenceRef, false);
     };
   }, [isReady, playerId, roomId]);
-
-  const player = useMemo(() => {
-    return room?.players.find((currentPlayer) => currentPlayer.id === playerId) ?? null;
-  }, [playerId, room]);
 
   const runAction = useCallback(async <T,>(action: () => Promise<T>, fallback: string): Promise<T> => {
     setIsBusy(true);
@@ -694,6 +696,7 @@ export function GameRoomProvider({ children, initialRoomId }: { children: ReactN
 
         await set(ref(database, getRoomPath(nextRoomId)), nextRoom);
 
+        wasInRoomRef.current = true;
         setPlayerName(sanitizedName);
         setRoomId(nextRoomId);
         saveSessionRoom(nextRoomId, playerId, sanitizedName);
@@ -748,6 +751,7 @@ export function GameRoomProvider({ children, initialRoomId }: { children: ReactN
           };
         });
 
+        wasInRoomRef.current = true;
         setPlayerName(sanitizedName);
         setRoomId(normalizedRoomCode);
         saveSessionRoom(normalizedRoomCode, playerId, sanitizedName);
@@ -755,6 +759,28 @@ export function GameRoomProvider({ children, initialRoomId }: { children: ReactN
       }, "تعذر الانضمام إلى الغرفة."),
     [playerId, runAction],
   );
+
+  useEffect(() => {
+    if (
+      !isReady ||
+      !roomId ||
+      !room ||
+      !playerName ||
+      player ||
+      isLeavingRef.current ||
+      leftRoomCode === roomId
+    ) {
+      return;
+    }
+
+    const autoJoinTimer = setTimeout(() => {
+      void joinRoom(roomId, playerName).catch((err) => {
+        console.warn("Auto-join failed:", err);
+      });
+    }, 100);
+
+    return () => clearTimeout(autoJoinTimer);
+  }, [isReady, roomId, room, playerName, player, leftRoomCode, joinRoom]);
 
   const leaveRoom = useCallback(
     async () =>
@@ -770,6 +796,7 @@ export function GameRoomProvider({ children, initialRoomId }: { children: ReactN
         }
 
         const leavingRoomId = roomId;
+        wasInRoomRef.current = false;
         setLeftRoomCode(leavingRoomId);
         isLeavingRef.current = true;
         try {
