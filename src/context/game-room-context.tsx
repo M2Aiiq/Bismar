@@ -562,13 +562,20 @@ export function GameRoomProvider({ children, initialRoomId }: { children: ReactN
           return;
         }
 
-        if (!nextRoom.players.some((currentPlayer) => currentPlayer.id === playerId)) {
-          setLeftRoomCode(roomId);
+        const isPlayerInRoom = nextRoom.players.some((currentPlayer) => currentPlayer.id === playerId);
+
+        if (!isPlayerInRoom) {
+          const wasPlayerInRoom = room?.players.some((currentPlayer) => currentPlayer.id === playerId) ?? false;
+
           setRoom(null);
-          setRoomId("");
-          saveSessionRoom(null, playerId, playerName);
-          if (!isLeavingRef.current) {
-            setError("تم إخراجك من الغرفة.");
+
+          if (wasPlayerInRoom) {
+            setLeftRoomCode(roomId);
+            setRoomId("");
+            saveSessionRoom(null, playerId, playerName);
+            if (!isLeavingRef.current) {
+              setError("تم إخراجك من الغرفة.");
+            }
           }
           return;
         }
@@ -581,7 +588,7 @@ export function GameRoomProvider({ children, initialRoomId }: { children: ReactN
         }
       },
     );
-  }, [isReady, playerId, playerName, roomId]);
+  }, [isReady, playerId, playerName, room, roomId]);
 
   useEffect(() => {
     if (!isReady || !roomId || !playerId || !isFirebaseConfigured) {
