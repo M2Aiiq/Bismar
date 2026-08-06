@@ -556,12 +556,7 @@ export function GameRoomProvider({ children, initialRoomId }: { children: ReactN
         const nextRoom = normalizeRoom(snapshot.val());
 
         if (!nextRoom) {
-          wasInRoomRef.current = false;
-          setLeftRoomCode(roomId);
-          setRoom(null);
-          setRoomId("");
-          saveSessionRoom(null, playerId, playerName);
-          setError("تعذر قراءة بيانات الغرفة.");
+          console.warn("Failed to normalize room snapshot:", snapshot.val());
           return;
         }
 

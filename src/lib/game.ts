@@ -378,15 +378,25 @@ function sanitizeClues(value: unknown): Clue[] {
 }
 
 function parseFirebaseArray<T>(value: unknown): T[] {
+  if (!value) {
+    return [];
+  }
   if (Array.isArray(value)) {
     return value.filter((item): item is T => item !== null && item !== undefined);
   }
-  if (value && typeof value === "object") {
-    const keys = Object.keys(value).filter((key) => !Number.isNaN(Number(key)));
-    return keys
-      .sort((a, b) => Number(a) - Number(b))
-      .map((key) => (value as Record<string, T>)[key])
-      .filter((item): item is T => item !== null && item !== undefined);
+  if (typeof value === "object") {
+    const keys = Object.keys(value);
+    if (keys.length === 0) {
+      return [];
+    }
+    const allNumeric = keys.every((k) => !Number.isNaN(Number(k)));
+    if (allNumeric) {
+      return keys
+        .sort((a, b) => Number(a) - Number(b))
+        .map((key) => (value as Record<string, T>)[key])
+        .filter((item): item is T => item !== null && item !== undefined);
+    }
+    return Object.values(value).filter((item): item is T => item !== null && item !== undefined);
   }
   return [];
 }
@@ -400,7 +410,7 @@ export function normalizeRoom(value: unknown): Room | null {
   const players = parseFirebaseArray<Player>(room.players);
   const board = parseFirebaseArray<Card>(room.board);
 
-  if (!room.roomId || players.length === 0 || board.length === 0) {
+  if (!room.roomId || players.length === 0) {
     return null;
   }
 
