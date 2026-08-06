@@ -96,23 +96,23 @@ export function RoomManagementPanel({ mode = "lobby", onClose }: RoomManagementP
   const isLobbyModal = isModal && room.gameState === "Lobby";
   const setupControlsDisabled = isBusy;
   const teamCountControlsDisabled = isBusy || !player.isHost;
-  const canApplyDraft = player.isHost && !isBusy && draftSettings !== null;
+  const canApplyDraft = player.isHost && !isBusy;
   const shouldShowHostControls = player.isHost;
 
   const handleApplyAndStart = async () => {
-    if (!draftSettings) {
-      return;
-    }
-
     try {
-      await launchGameWithSettings({
-        teamCount: draftSettings.teamCount,
-        wordCategory: draftSettings.wordCategory,
-        roundTimerSeconds: Number(draftSettings.roundTimerSeconds),
-        lossCardCount: draftSettings.lossCardCount,
-        extraRows: draftSettings.extraRows,
-        difficulty: draftSettings.difficulty,
-      });
+      const settingsToUse = draftSettings
+        ? {
+            teamCount: draftSettings.teamCount,
+            wordCategory: draftSettings.wordCategory,
+            roundTimerSeconds: Number(draftSettings.roundTimerSeconds),
+            lossCardCount: draftSettings.lossCardCount,
+            extraRows: draftSettings.extraRows,
+            difficulty: draftSettings.difficulty,
+          }
+        : room.settings;
+
+      await launchGameWithSettings(settingsToUse);
 
       if (mode === "modal") {
         onClose?.();

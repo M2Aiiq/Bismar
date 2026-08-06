@@ -542,7 +542,6 @@ export function GameRoomProvider({ children, initialRoomId }: { children: ReactN
       roomRef,
       (snapshot) => {
         if (!snapshot.exists()) {
-          wasInRoomRef.current = false;
           setLeftRoomCode(roomId);
           setRoom(null);
           setRoomId("");
@@ -560,23 +559,6 @@ export function GameRoomProvider({ children, initialRoomId }: { children: ReactN
           return;
         }
 
-        const isPlayerInRoom = nextRoom.players.some((currentPlayer) => currentPlayer.id === playerId);
-
-        if (!isPlayerInRoom) {
-          if (wasInRoomRef.current && !isLeavingRef.current) {
-            wasInRoomRef.current = false;
-            setLeftRoomCode(roomId);
-            setRoom(null);
-            setRoomId("");
-            saveSessionRoom(null, playerId, playerName);
-            setError("تم إخراجك من الغرفة.");
-            return;
-          }
-          setRoom(nextRoom);
-          return;
-        }
-
-        wasInRoomRef.current = true;
         setRoom(nextRoom);
       },
       () => {
@@ -585,7 +567,7 @@ export function GameRoomProvider({ children, initialRoomId }: { children: ReactN
         }
       },
     );
-  }, [isReady, playerId, playerName, room, roomId]);
+  }, [isReady, playerId, playerName, roomId]);
 
   const player = useMemo(() => {
     return room?.players.find((currentPlayer) => currentPlayer.id === playerId) ?? null;
