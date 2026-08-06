@@ -1160,8 +1160,15 @@ export function GameRoomProvider({ children, initialRoomId }: { children: ReactN
   const launchGameWithSettings = useCallback(
     async (settings: Partial<RoomSettings>) =>
       runAction(async () => {
-        if (!roomId || !player?.isHost) {
+        if (!roomId || !player?.isHost || !room) {
           throw new Error("فقط المضيف يمكنه بدء الجولة.");
+        }
+
+        const nextSettingsPreview = sanitizeSettingsUpdate(room.settings, settings);
+        const nextPlayersPreview = applyTeamCountToPlayers(room.players, nextSettingsPreview.teamCount);
+
+        if (!ensurePlayableTeams(nextPlayersPreview, nextSettingsPreview.teamCount)) {
+          throw new Error("يجب تجهيز قائد ومحقق لكل فريق نشط قبل بدء الجولة.");
         }
 
         const database = getRealtimeDatabase();
@@ -1169,6 +1176,8 @@ export function GameRoomProvider({ children, initialRoomId }: { children: ReactN
         if (!database) {
           return;
         }
+
+        let rejectedBecauseTeamSetup = false;
 
         await runTransaction(ref(database, getRoomPath(roomId)), (currentValue) => {
           const currentRoom = normalizeRoom(currentValue);
@@ -1181,7 +1190,8 @@ export function GameRoomProvider({ children, initialRoomId }: { children: ReactN
           const nextPlayers = applyTeamCountToPlayers(currentRoom.players, nextSettings.teamCount);
 
           if (!ensurePlayableTeams(nextPlayers, nextSettings.teamCount)) {
-            throw new Error("يجب تجهيز قائد ومحقق لكل فريق نشط قبل بدء الجولة.");
+            rejectedBecauseTeamSetup = true;
+            return currentValue;
           }
 
           const seedRecentWords = nextSettings.wordCategory !== currentRoom.settings.wordCategory ? [] : currentRoom.recentWords;
@@ -1202,8 +1212,12 @@ export function GameRoomProvider({ children, initialRoomId }: { children: ReactN
             gameState: "Playing",
           };
         });
+
+        if (rejectedBecauseTeamSetup) {
+          throw new Error("يجب تجهيز قائد ومحقق لكل فريق نشط قبل بدء الجولة.");
+        }
       }, "تعذر بدء اللعبة بالإعدادات الجديدة."),
-    [player, roomId, runAction],
+    [player, room, roomId, runAction],
   );
 
   const sendClue = useCallback(
